@@ -1,70 +1,206 @@
-# Getting Started with Create React App
+Resumé du projet du 05-10-2025
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+**********************************************************************************************************************************
+Résumé Complet du Projet - Application de Gestion d'Assurance v2
+📋 Vue d'ensemble
+Application web de gestion pour cabinet d'assurance "Sirius Assurance", développée avec React et Supabase.
 
-## Available Scripts
+🛠️ Stack Technique
+Frontend
 
-In the project directory, you can run:
+React 19.2.0 (Create React App)
+React Router DOM 7.9.3
+Tailwind CSS 3.4.18
+Supabase JS 2.58.0
 
-### `npm start`
+Backend
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Supabase (PostgreSQL, Auth, Storage, Realtime)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
 
-### `npm test`
+🗄️ Structure de la Base de Données
+Tables principales
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+clients - Clients du cabinet
+compagnies - Compagnies d'assurance partenaires
+contrats - Contrats d'assurance
+paiements - Paiements (primes clients et commissions)
+medias - Documents et fichiers
+dossiers - Organisation des médias
+partages - Partage de documents
+notifications ⭐ NEW - Système de notifications
 
-### `npm run build`
+Table notifications (nouvelle)
+sql- id (UUID, PK)
+- type (contrat_expirant, paiement_retard, commission_recue, nouveau_contrat)
+- titre (TEXT)
+- message (TEXT)
+- contrat_id (UUID, FK nullable)
+- statut (lu, non_lu)
+- priorite (basse, normale, haute, urgente)
+- created_at (TIMESTAMPTZ)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+🔐 Authentification
+Système actuel
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Pas de table profiles (supprimée pour simplifier)
+Pas de gestion de rôles
+Tous les utilisateurs authentifiés ont les mêmes droits
+Auth par email/password via Supabase Auth
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Variables d'environnement
+envREACT_APP_SUPABASE_URL=https://vyuhqagimyvfrkuhkfyy.supabase.co
+REACT_APP_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Utilisateurs de test
+admin@gmail.com / Admin123!
+superadmin@gmail.com / MotDePasse123!
+gestionnaire@gmail.com / MotDePasse123!
 
-### `npm run eject`
+📁 Structure des Pages
+Pages opérationnelles
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Login (/login) - Connexion
+Dashboard (/dashboard) - Vue d'ensemble avec KPIs et activités récentes
+Clients (/clients) - Gestion des clients
+Compagnies (/compagnies) - Gestion des compagnies
+Contrats (/contrats) - Gestion des contrats
+Paiements (/paiements) - Gestion des paiements
+Médias (/medias) - Gestion des documents
+Paramètres (/parametres) - Paramètres utilisateur
+Register (/register) - Création nouveaux utilisateurs
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+🎨 Fonctionnalités UI
+Thème
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Mode Jour/Nuit ✅
+Context : ThemeContext.jsx
+Sauvegarde localStorage
+Classes Tailwind : dark:
 
-## Learn More
+Layout
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Sidebar pliable (w-64 / w-20)
+Header avec :
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Bouton thème
+Cloche de notifications ⭐ NEW
+Info utilisateur (avec point vert "Actif")
+Bouton déconnexion
 
-### Code Splitting
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+Footer avec copyright
 
-### Analyzing the Bundle Size
+Composants clés
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+Layout.jsx - Structure globale
+ProtectedRoute.jsx - Protection des routes (sans rôles)
+Footer.jsx - Pied de page
+NotificationBell.jsx ⭐ NEW - Système de notifications
+ThemeContext.jsx - Gestion du thème
 
-### Making a Progressive Web App
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+🔔 Système de Notifications (NOUVEAU)
+Fonctionnalités
 
-### Advanced Configuration
+Génération automatique des notifications pour contrats expirants
+Cron job quotidien à 8h (via pg_cron)
+Temps réel avec Supabase Realtime
+Cloche avec badge affichant le nombre de notifications non lues
+Dropdown avec liste complète des notifications
+Priorités visuelles par couleur (urgente, haute, normale, basse)
+Actions : marquer comme lu, supprimer
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Fonction automatique
+sqlgenerer_notifications_contrats_expirants()
 
-### Deployment
+Vérifie les contrats expirant dans 60 jours
+Détermine la priorité selon jours restants :
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+≤ 7 jours : urgente
+≤ 15 jours : haute
+≤ 30 jours : normale
 
-### `npm run build` fails to minify
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+30 jours : basse
+
+
+
+
+Évite les doublons (24h)
+
+Cron job
+sqlSELECT cron.schedule(
+    'generer-notifications-quotidien',
+    '0 8 * * *',
+    $$SELECT generer_notifications_contrats_expirants()$$
+);
+
+📊 Fonctionnalités Métier
+Dashboard
+
+4 KPIs : Clients, Contrats actifs, Commissions, Primes
+Alertes : Contrats expirants, Commissions en attente
+Graphiques : Répartition par type, Top compagnies
+Activités récentes : Derniers contrats, paiements, expirations
+Actions rapides : Boutons "+ Nouveau client" et "+ Nouveau contrat"
+
+Gestion des données
+
+CRUD complet sur clients, compagnies, contrats
+Calcul automatique des commissions
+Suivi des paiements (primes et commissions)
+Gestion des dates d'expiration
+
+
+🔧 Configuration
+Bucket Storage Supabase
+
+Nom : documents
+Usage : Avatars (dossier avatars/{user_id}/)
+RLS Policies : Configurées pour upload/lecture sécurisés
+
+Extensions PostgreSQL activées
+
+pg_cron - Pour les tâches planifiées
+
+
+⚠️ Décisions Architecturales
+
+Pas de table profiles - Authentification simplifiée sans rôles
+Tous les users = mêmes droits - Pas de hiérarchie
+Storage mutualisé - Bucket documents pour tout
+Notifications en temps réel - Supabase Realtime activé
+Dark mode natif - Tailwind CSS classes
+
+
+🚀 Fonctionnalités Implémentées
+✅ Authentification complète
+✅ Dashboard avec statistiques
+✅ CRUD Clients, Compagnies, Contrats
+✅ Mode jour/nuit
+✅ Système de notifications automatiques ⭐ NEW
+✅ Layout responsive avec sidebar
+✅ Footer professionnel
+
+📦 Commandes Utiles
+bash# Démarrer le projet
+npm start
+
+# Build production
+npm run build
+
+# Tester les notifications
+SELECT generer_notifications_contrats_expirants();
+SELECT * FROM notifications ORDER BY created_at DESC;
+
+🔜 Prochaines Étapes Suggérées
+
+Système de notifications (contrats expirants) ✅ FAIT
+Exports PDF/Excel pour rapports
+Recherche avancée globale
+Page profil utilisateur complète
+Module de communication (emails clients)
+Historique d'activité/audit logs
+
+**********************************************************************************************************************************
