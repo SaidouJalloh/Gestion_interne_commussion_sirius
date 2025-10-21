@@ -1,36 +1,24 @@
+
+
+
+// // code qui marche bien
 // import { createContext, useContext, useEffect, useState } from 'react';
-// import { supabase, getUserProfile } from '../lib/supabaseClient';
+// import { supabase } from '../lib/supabaseClient';
 
 // const AuthContext = createContext({});
 
-// export const useAuth = () => {
-//     const context = useContext(AuthContext);
-//     if (!context) {
-//         throw new Error('useAuth must be used within AuthProvider');
-//     }
-//     return context;
-// };
+// export const useAuth = () => useContext(AuthContext);
 
 // export const AuthProvider = ({ children }) => {
 //     const [user, setUser] = useState(null);
-//     const [profile, setProfile] = useState(null);
 //     const [loading, setLoading] = useState(true);
 
 //     useEffect(() => {
-//         // Vérifier la session active au chargement
 //         checkUser();
 
-//         // Écouter les changements d'authentification
 //         const { data: authListener } = supabase.auth.onAuthStateChange(
 //             async (event, session) => {
-//                 if (session?.user) {
-//                     const userProfile = await getUserProfile();
-//                     setUser(session.user);
-//                     setProfile(userProfile);
-//                 } else {
-//                     setUser(null);
-//                     setProfile(null);
-//                 }
+//                 setUser(session?.user ?? null);
 //                 setLoading(false);
 //             }
 //         );
@@ -43,11 +31,7 @@
 //     const checkUser = async () => {
 //         try {
 //             const { data: { user } } = await supabase.auth.getUser();
-//             if (user) {
-//                 const userProfile = await getUserProfile();
-//                 setUser(user);
-//                 setProfile(userProfile);
-//             }
+//             setUser(user);
 //         } catch (error) {
 //             console.error('Error checking user:', error);
 //         } finally {
@@ -55,7 +39,6 @@
 //         }
 //     };
 
-//     // Connexion
 //     const signIn = async (email, password) => {
 //         try {
 //             const { data, error } = await supabase.auth.signInWithPassword({
@@ -65,33 +48,25 @@
 
 //             if (error) throw error;
 
-//             const userProfile = await getUserProfile();
 //             setUser(data.user);
-//             setProfile(userProfile);
-
-//             return { data: userProfile, error: null };
+//             return { data: data.user, error: null };
 //         } catch (error) {
 //             console.error('Error signing in:', error);
 //             return { data: null, error };
 //         }
 //     };
 
-//     // Inscription (réservée aux superadmins)
-//     const signUp = async (email, password, fullName, role = 'gestionnaire') => {
+//     const signUp = async (email, password, fullName) => {
 //         try {
 //             const { data, error } = await supabase.auth.signUp({
 //                 email,
 //                 password,
 //                 options: {
-//                     data: {
-//                         full_name: fullName,
-//                         role: role,
-//                     },
-//                 },
+//                     data: { full_name: fullName }
+//                 }
 //             });
 
 //             if (error) throw error;
-
 //             return { data, error: null };
 //         } catch (error) {
 //             console.error('Error signing up:', error);
@@ -99,39 +74,22 @@
 //         }
 //     };
 
-//     // Déconnexion
 //     const signOut = async () => {
 //         try {
 //             const { error } = await supabase.auth.signOut();
 //             if (error) throw error;
-
 //             setUser(null);
-//             setProfile(null);
 //         } catch (error) {
 //             console.error('Error signing out:', error);
 //         }
 //     };
 
-//     // Vérifier si l'utilisateur a un rôle spécifique
-//     const hasRole = (allowedRoles = []) => {
-//         if (!profile) return false;
-//         return allowedRoles.includes(profile.role);
-//     };
-
-//     // Vérifier si l'utilisateur peut accéder au dashboard
-//     const canAccessDashboard = () => {
-//         return hasRole(['superadmin', 'admin']);
-//     };
-
 //     const value = {
 //         user,
-//         profile,
 //         loading,
 //         signIn,
 //         signUp,
 //         signOut,
-//         hasRole,
-//         canAccessDashboard,
 //     };
 
 //     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -139,43 +97,93 @@
 
 
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
 
+
+
+
+
+// n1
+
+import { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../lib/supabaseClient';
 const AuthContext = createContext({});
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error('useAuth doit être utilisé dans AuthProvider');
+    }
+    return context;
+};
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
+    const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        checkUser();
+    // Récupérer le profil utilisateur avec son rôle
+    const fetchUserProfile = async (userId) => {
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', userId)
+                .single();
 
-        const { data: authListener } = supabase.auth.onAuthStateChange(
+            if (error) {
+                console.error('Erreur récupération profil:', error);
+                return null;
+            }
+
+            return data;
+        } catch (error) {
+            console.error('fetchUserProfile error:', error);
+            return null;
+        }
+    };
+
+    // Initialiser l'utilisateur au chargement
+    useEffect(() => {
+        const initAuth = async () => {
+            try {
+                // Récupérer la session actuelle
+                const { data: { session } } = await supabase.auth.getSession();
+
+                if (session?.user) {
+                    setUser(session.user);
+                    const userProfile = await fetchUserProfile(session.user.id);
+                    setProfile(userProfile);
+                }
+            } catch (error) {
+                console.error('Erreur initialisation auth:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        initAuth();
+
+        // Écouter les changements d'authentification
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
-                setUser(session?.user ?? null);
+                if (session?.user) {
+                    setUser(session.user);
+                    const userProfile = await fetchUserProfile(session.user.id);
+                    setProfile(userProfile);
+                } else {
+                    setUser(null);
+                    setProfile(null);
+                }
                 setLoading(false);
             }
         );
 
         return () => {
-            authListener.subscription.unsubscribe();
+            subscription.unsubscribe();
         };
     }, []);
 
-    const checkUser = async () => {
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
-        } catch (error) {
-            console.error('Error checking user:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
+    // Connexion
     const signIn = async (email, password) => {
         try {
             const { data, error } = await supabase.auth.signInWithPassword({
@@ -185,49 +193,90 @@ export const AuthProvider = ({ children }) => {
 
             if (error) throw error;
 
-            setUser(data.user);
-            return { data: data.user, error: null };
+            if (data.user) {
+                setUser(data.user);
+                const userProfile = await fetchUserProfile(data.user.id);
+                setProfile(userProfile);
+            }
+
+            return { data, error: null };
         } catch (error) {
-            console.error('Error signing in:', error);
+            console.error('Erreur connexion:', error);
             return { data: null, error };
         }
     };
 
-    const signUp = async (email, password, fullName) => {
+    // Inscription
+    const signUp = async (email, password, metadata = {}) => {
         try {
             const { data, error } = await supabase.auth.signUp({
                 email,
                 password,
                 options: {
-                    data: { full_name: fullName }
+                    data: metadata
                 }
             });
 
             if (error) throw error;
+
             return { data, error: null };
         } catch (error) {
-            console.error('Error signing up:', error);
+            console.error('Erreur inscription:', error);
             return { data: null, error };
         }
     };
 
+    // Déconnexion
     const signOut = async () => {
         try {
             const { error } = await supabase.auth.signOut();
             if (error) throw error;
+
             setUser(null);
+            setProfile(null);
         } catch (error) {
-            console.error('Error signing out:', error);
+            console.error('Erreur déconnexion:', error);
         }
     };
 
+    // Fonctions de vérification des rôles
+    const hasRole = (roles) => {
+        if (!profile) return false;
+        return Array.isArray(roles)
+            ? roles.includes(profile.role)
+            : profile.role === roles;
+    };
+
+    const canAccessDashboard = () => hasRole(['admin', 'superadmin']);
+    const canAccessCompagnies = () => hasRole(['admin', 'superadmin']);
+    const canAccessClients = () => hasRole(['gestionnaire', 'admin', 'superadmin']);
+    const canAccessContrats = () => hasRole(['gestionnaire', 'admin', 'superadmin']);
+    const canAccessMedias = () => hasRole(['gestionnaire', 'admin', 'superadmin']);
+    const canManageUsers = () => hasRole('superadmin');
+    const isAdmin = () => hasRole(['admin', 'superadmin']);
+    const isSuperAdmin = () => hasRole('superadmin');
+
     const value = {
         user,
+        profile,
         loading,
         signIn,
         signUp,
         signOut,
+        hasRole,
+        canAccessDashboard,
+        canAccessCompagnies,
+        canAccessClients,
+        canAccessContrats,
+        canAccessMedias,
+        canManageUsers,
+        isAdmin,
+        isSuperAdmin,
     };
 
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+    return (
+        <AuthContext.Provider value={value}>
+            {children}
+        </AuthContext.Provider>
+    );
 };
