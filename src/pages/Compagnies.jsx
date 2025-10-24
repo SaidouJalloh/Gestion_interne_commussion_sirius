@@ -1688,8 +1688,162 @@
 
 
 // avec souscritpion
-// src/pages/Compagnies.jsx
-import { useState } from 'react';
+// // src/pages/Compagnies.jsx
+// import { useState } from 'react';
+// import { supabase } from '../lib/supabaseClient';
+// import { useAuth } from '../context/AuthContext';
+// import { useCompagniesData } from '../hooks/useCompagniesData';
+// import { CompagniesHeader } from '../components/compagnies/CompagniesHeader';
+// import { CompagniesSearch } from '../components/compagnies/CompagniesSearch';
+// import { CompagnieCard } from '../components/compagnies/CompagnieCard';
+// import { CompagnieModal } from '../components/compagnies/CompagnieModal';
+// import { TauxModal } from '../components/compagnies/TauxModal';
+// import { DeleteConfirmModal } from '../components/compagnies/DeleteConfirmModal';
+
+// export default function Compagnies() {
+//     const { profile } = useAuth();
+//     const { compagnies, loading, refetch } = useCompagniesData();
+
+//     const [searchTerm, setSearchTerm] = useState('');
+//     const [isModalOpen, setIsModalOpen] = useState(false);
+//     const [selectedCompagnie, setSelectedCompagnie] = useState(null);
+//     const [editTauxModal, setEditTauxModal] = useState(null);
+//     const [deleteConfirm, setDeleteConfirm] = useState(null);
+
+//     const [formData, setFormData] = useState({
+//         nom: '',
+//         sigle: '',
+//         description: '',
+//         logo_url: '',
+//         lien_souscription: '',  // ✅ AJOUTÉ
+//         actif: true,
+//     });
+
+//     // Filtrer les compagnies
+//     const filteredCompagnies = compagnies.filter(compagnie =>
+//         compagnie.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//         compagnie.sigle.toLowerCase().includes(searchTerm.toLowerCase())
+//     );
+
+//     // Reset form
+//     const resetForm = () => {
+//         setFormData({
+//             nom: '',
+//             sigle: '',
+//             description: '',
+//             logo_url: '',
+//             lien_souscription: '',  // ✅ AJOUTÉ
+//             actif: true
+//         });
+//     };
+
+//     // Ouvrir modal d'ajout
+//     const handleAdd = () => {
+//         resetForm();
+//         setSelectedCompagnie(null);
+//         setIsModalOpen(true);
+//     };
+
+//     // Ouvrir modal d'édition
+//     const handleEdit = (compagnie) => {
+//         setSelectedCompagnie(compagnie);
+//         setFormData({
+//             nom: compagnie.nom || '',
+//             sigle: compagnie.sigle || '',
+//             description: compagnie.description || '',
+//             logo_url: compagnie.logo_url || '',
+//             lien_souscription: compagnie.lien_souscription || '',  // ✅ AJOUTÉ
+//             actif: compagnie.actif,
+//         });
+//         setIsModalOpen(true);
+//     };
+
+//     // Supprimer une compagnie
+//     const handleDelete = async (compagnieId) => {
+//         try {
+//             const { error } = await supabase
+//                 .from('compagnies')
+//                 .delete()
+//                 .eq('id', compagnieId);
+
+//             if (error) throw error;
+
+//             await refetch();
+//             setDeleteConfirm(null);
+//         } catch (error) {
+//             alert('Erreur lors de la suppression');
+//         }
+//     };
+
+//     // Ouvrir modal gestion des taux
+//     const openEditTaux = (compagnie) => {
+//         setEditTauxModal(compagnie);
+//     };
+
+//     const canDelete = profile?.role === 'admin' || profile?.role === 'superadmin';
+
+//     return (
+//         <>
+//             <CompagniesHeader count={filteredCompagnies.length} onAdd={handleAdd} />
+
+//             <CompagniesSearch searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+
+//             {loading ? (
+//                 <div className="flex items-center justify-center py-12">
+//                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+//                 </div>
+//             ) : (
+//                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+//                     {filteredCompagnies.map((compagnie) => (
+//                         <CompagnieCard
+//                             key={compagnie.id}
+//                             compagnie={compagnie}
+//                             onEdit={handleEdit}
+//                             onDelete={setDeleteConfirm}
+//                             onEditTaux={openEditTaux}
+//                             canDelete={canDelete}
+//                         />
+//                     ))}
+//                 </div>
+//             )}
+
+//             <CompagnieModal
+//                 isOpen={isModalOpen}
+//                 onClose={() => setIsModalOpen(false)}
+//                 selectedCompagnie={selectedCompagnie}
+//                 formData={formData}
+//                 setFormData={setFormData}
+//                 onSuccess={refetch}
+//             />
+
+//             <TauxModal
+//                 compagnie={editTauxModal}
+//                 onClose={() => setEditTauxModal(null)}
+//                 onSuccess={refetch}
+//             />
+
+//             <DeleteConfirmModal
+//                 compagnieId={deleteConfirm}
+//                 onConfirm={handleDelete}
+//                 onCancel={() => setDeleteConfirm(null)}
+//             />
+//         </>
+//     );
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+// code optimise rapdie
+import { useState, useCallback, useMemo } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { useCompagniesData } from '../hooks/useCompagniesData';
@@ -1699,6 +1853,7 @@ import { CompagnieCard } from '../components/compagnies/CompagnieCard';
 import { CompagnieModal } from '../components/compagnies/CompagnieModal';
 import { TauxModal } from '../components/compagnies/TauxModal';
 import { DeleteConfirmModal } from '../components/compagnies/DeleteConfirmModal';
+import toast from 'react-hot-toast';
 
 export default function Compagnies() {
     const { profile } = useAuth();
@@ -1715,75 +1870,91 @@ export default function Compagnies() {
         sigle: '',
         description: '',
         logo_url: '',
-        lien_souscription: '',  // ✅ AJOUTÉ
+        lien_souscription: '',
         actif: true,
     });
 
-    // Filtrer les compagnies
-    const filteredCompagnies = compagnies.filter(compagnie =>
-        compagnie.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        compagnie.sigle.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // ⚡ OPTIMISATION : Memoize le filtrage
+    const filteredCompagnies = useMemo(() => {
+        if (!searchTerm) return compagnies;
 
-    // Reset form
-    const resetForm = () => {
+        const search = searchTerm.toLowerCase();
+        return compagnies.filter(compagnie =>
+            compagnie.nom.toLowerCase().includes(search) ||
+            compagnie.sigle.toLowerCase().includes(search)
+        );
+    }, [compagnies, searchTerm]);
+
+    // ⚡ OPTIMISATION : useCallback pour reset
+    const resetForm = useCallback(() => {
         setFormData({
             nom: '',
             sigle: '',
             description: '',
             logo_url: '',
-            lien_souscription: '',  // ✅ AJOUTÉ
+            lien_souscription: '',
             actif: true
         });
-    };
+    }, []);
 
-    // Ouvrir modal d'ajout
-    const handleAdd = () => {
+    // ⚡ OPTIMISATION : useCallback pour handleAdd
+    const handleAdd = useCallback(() => {
         resetForm();
         setSelectedCompagnie(null);
         setIsModalOpen(true);
-    };
+    }, [resetForm]);
 
-    // Ouvrir modal d'édition
-    const handleEdit = (compagnie) => {
+    // ⚡ OPTIMISATION : useCallback pour handleEdit
+    const handleEdit = useCallback((compagnie) => {
         setSelectedCompagnie(compagnie);
         setFormData({
             nom: compagnie.nom || '',
             sigle: compagnie.sigle || '',
             description: compagnie.description || '',
             logo_url: compagnie.logo_url || '',
-            lien_souscription: compagnie.lien_souscription || '',  // ✅ AJOUTÉ
+            lien_souscription: compagnie.lien_souscription || '',
             actif: compagnie.actif,
         });
         setIsModalOpen(true);
-    };
+    }, []);
 
-    // Supprimer une compagnie
-    const handleDelete = async (compagnieId) => {
+    // ⚡ OPTIMISATION : useCallback pour handleDelete
+    const handleDelete = useCallback(async (compagnieId) => {
         try {
-            const { error } = await supabase
+            const promise = supabase
                 .from('compagnies')
                 .delete()
                 .eq('id', compagnieId);
 
-            if (error) throw error;
+            await toast.promise(promise, {
+                loading: 'Suppression...',
+                success: 'Compagnie supprimée ! 🗑️',
+                error: 'Erreur lors de la suppression',
+            });
 
             await refetch();
             setDeleteConfirm(null);
         } catch (error) {
-            alert('Erreur lors de la suppression');
+            console.error('Erreur:', error);
         }
-    };
+    }, [refetch]);
 
-    // Ouvrir modal gestion des taux
-    const openEditTaux = (compagnie) => {
+    // ⚡ OPTIMISATION : useCallback pour openEditTaux
+    const openEditTaux = useCallback((compagnie) => {
         setEditTauxModal(compagnie);
-    };
+    }, []);
+
+    // ⚡ OPTIMISATION : useCallback pour closeModal
+    const closeModal = useCallback(() => {
+        setIsModalOpen(false);
+        setSelectedCompagnie(null);
+        resetForm();
+    }, [resetForm]);
 
     const canDelete = profile?.role === 'admin' || profile?.role === 'superadmin';
 
     return (
-        <>
+        <div className="animate-fade-in">
             <CompagniesHeader count={filteredCompagnies.length} onAdd={handleAdd} />
 
             <CompagniesSearch searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
@@ -1791,6 +1962,13 @@ export default function Compagnies() {
             {loading ? (
                 <div className="flex items-center justify-center py-12">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+                </div>
+            ) : filteredCompagnies.length === 0 ? (
+                <div className="text-center py-12">
+                    <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    <p className="text-gray-500 text-lg font-medium">Aucune compagnie trouvée</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1809,11 +1987,15 @@ export default function Compagnies() {
 
             <CompagnieModal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                onClose={closeModal}
                 selectedCompagnie={selectedCompagnie}
                 formData={formData}
                 setFormData={setFormData}
-                onSuccess={refetch}
+                onSuccess={async () => {
+                    await refetch();
+                    closeModal();
+                    toast.success(selectedCompagnie ? 'Compagnie mise à jour ! 🎉' : 'Compagnie créée ! 🎉');
+                }}
             />
 
             <TauxModal
@@ -1827,6 +2009,6 @@ export default function Compagnies() {
                 onConfirm={handleDelete}
                 onCancel={() => setDeleteConfirm(null)}
             />
-        </>
+        </div>
     );
 }
