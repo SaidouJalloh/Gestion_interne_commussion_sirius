@@ -2150,10 +2150,43 @@ export default function Clients() {
                 return;
             }
 
+            // ✅ NETTOYER les données : string vide → null
+            const cleanData = {
+                nom: formData.nom.trim(),
+                prenom: formData.prenom.trim(),
+                email: formData.email?.trim() || null,  // ← FIX ICI
+                telephone: formData.telephone?.trim() || null,
+                type_client: formData.type_client,
+                adresse: formData.adresse?.trim() || null,
+                ville: formData.ville?.trim() || null,
+                code_postal: formData.code_postal?.trim() || null,
+                notes: formData.notes?.trim() || null,
+            };
+
+            // ✅ Vérifier si l'email existe déjà (sauf pour le client actuel)
+            if (cleanData.email) {
+                let query = supabase
+                    .from('clients')
+                    .select('id')
+                    .eq('email', cleanData.email);
+
+                if (selectedClient) {
+                    query = query.neq('id', selectedClient.id);
+                }
+
+                const { data: existingClient } = await query.maybeSingle();
+
+                if (existingClient) {
+                    setFormError('Cet email est déjà utilisé par un autre client');
+                    setFormLoading(false);
+                    return;
+                }
+            }
+
             if (selectedClient) {
                 const { error } = await supabase
                     .from('clients')
-                    .update(formData)
+                    .update(cleanData)  // ← Utilise cleanData au lieu de formData
                     .eq('id', selectedClient.id);
 
                 if (error) throw error;
@@ -2161,7 +2194,7 @@ export default function Clients() {
             } else {
                 const { error } = await supabase
                     .from('clients')
-                    .insert([formData]);
+                    .insert([cleanData]);  // ← Utilise cleanData
 
                 if (error) throw error;
                 toast.success('Client créé ! 🎉');
@@ -2170,7 +2203,14 @@ export default function Clients() {
             await refetch();
             closeModal();
         } catch (err) {
-            setFormError(err.message || 'Une erreur est survenue');
+            console.error('Erreur:', err);
+
+            // ✅ Message d'erreur plus clair
+            if (err.code === '23505') {
+                setFormError('Cet email est déjà utilisé');
+            } else {
+                setFormError(err.message || 'Une erreur est survenue');
+            }
         } finally {
             setFormLoading(false);
         }

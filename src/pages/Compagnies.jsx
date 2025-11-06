@@ -1991,17 +1991,34 @@ export default function Compagnies() {
                 selectedCompagnie={selectedCompagnie}
                 formData={formData}
                 setFormData={setFormData}
-                onSuccess={async () => {
-                    await refetch();
+                onSuccess={() => {
+                    // 1. Ferme le modal
                     closeModal();
+
+                    // 2. Affiche le toast
                     toast.success(selectedCompagnie ? 'Compagnie mise à jour ! 🎉' : 'Compagnie créée ! 🎉');
+
+                    // 3. Refetch avec délai
+                    setTimeout(async () => {
+                        await refetch();
+                    }, 400);
                 }}
             />
-
+            {/* 
             <TauxModal
                 compagnie={editTauxModal}
                 onClose={() => setEditTauxModal(null)}
                 onSuccess={refetch}
+            /> */}
+            <TauxModal
+                compagnie={editTauxModal}
+                onClose={() => setEditTauxModal(null)}
+                onSuccess={async () => {
+                    await refetch(); // Premier refetch
+                    setTimeout(async () => {
+                        await refetch(); // Deuxième refetch après 1s
+                    }, 1000);
+                }}
             />
 
             <DeleteConfirmModal

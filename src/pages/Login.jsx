@@ -206,7 +206,7 @@ export default function Login() {
                     </button>
                 </form>
 
-                <div className="mt-8 pt-6 border-t border-gray-200">
+                {/* <div className="mt-8 pt-6 border-t border-gray-200">
                     <p className="text-center text-sm text-gray-600 mb-3">
                         Comptes de test disponibles :
                     </p>
@@ -221,7 +221,7 @@ export default function Login() {
                             <strong>Gestionnaire:</strong> gestionnaire@gmail.com
                         </div>
                     </div>
-                </div>
+                </div> */}
 
                 <p className="text-center text-sm text-gray-600 mt-6">
                     Mot de passe oublié ? Contactez l'administrateur

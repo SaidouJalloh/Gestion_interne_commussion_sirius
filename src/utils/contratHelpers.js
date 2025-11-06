@@ -6,8 +6,17 @@ export const isSanteContract = (typeContrat) => {
 };
 
 // Vérifier si c'est un contrat auto
+// export const isAutoContract = (typeContrat) => {
+//     return typeContrat?.includes('AUTO') || typeContrat?.includes('AUTOMOBILE') || typeContrat?.includes('FLOTTE');
+// };
+
 export const isAutoContract = (typeContrat) => {
-    return typeContrat?.includes('AUTO') || typeContrat?.includes('AUTOMOBILE') || typeContrat?.includes('FLOTTE');
+    if (!typeContrat) return false;
+    const type = typeContrat.toUpperCase();
+    return type.includes('AUTO') ||
+        type.includes('AUTOMOBILE') ||
+        type.includes('MOTO') ||
+        type.includes('FLOTTE');
 };
 
 // Calculer la date d'expiration

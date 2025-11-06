@@ -265,7 +265,6 @@
 
 
 
-
 // // avec ttc
 // src/components/contrats/PaiementsModal.jsx
 import { useState, useEffect } from 'react';
