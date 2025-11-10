@@ -132,24 +132,21 @@ export default function Login() {
         setError('');
         setLoading(true);
 
-        const { data, error: signInError } = await signIn(email, password);
+        try {
+            const { error } = await signIn(email, password);
 
-        if (signInError) {
-            setError(signInError.message || 'Une erreur est survenue lors de la connexion');
-            setLoading(false);
-            return;
+            if (error) {
+                throw error;
+            }
+
+            // La redirection se fait maintenant directement après une connexion réussie.
+            // Le AuthContext met à jour l'état de l'utilisateur en arrière-plan.
+            navigate('/clients');
+
+        } catch (error) {
+            setError(error.message || 'Une erreur est survenue lors de la connexion');
+            setLoading(false); // S'assurer que le chargement s'arrête en cas d'erreur
         }
-
-        // Attendre un peu pour que le profil soit chargé
-        setTimeout(() => {
-            // Récupérer le profil depuis le contexte après connexion
-            // Le AuthContext charge automatiquement le profil après signIn
-            setLoading(false);
-
-            // Redirection : Les gestionnaires vont sur /clients, les autres sur /dashboard
-            // Note: Le profil sera disponible après le rechargement du AuthContext
-            navigate('/clients'); // On laisse le Layout rediriger selon les permissions
-        }, 500);
     };
 
     return (

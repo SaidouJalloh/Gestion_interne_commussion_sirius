@@ -515,6 +515,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useProfileContext } from '../context/ProfileContext';
 import { useTheme } from '../context/ThemeContext';
 import { NotificationBell } from './notifications/NotificationBell';
 // import NotificationBell from './notifications/NotificationBell';
@@ -524,7 +525,8 @@ import Footer from './Footer';
 
 export default function Layout({ children }) {
     const [sidebarOpen, setSidebarOpen] = useState(true);
-    const { user, profile, signOut, canAccessDashboard, canAccessCompagnies, canManageUsers } = useAuth();
+    const { user, signOut } = useAuth();
+    const { profile } = useProfileContext();
     const { darkMode, toggleTheme } = useTheme();
     const navigate = useNavigate();
     const location = useLocation();

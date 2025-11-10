@@ -13,7 +13,13 @@ if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error('Les variables d\'environnement Supabase sont manquantes');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+    },
+});
 
 export const getUserProfile = async () => {
     try {

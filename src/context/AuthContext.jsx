@@ -118,29 +118,7 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
-    const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
-
-    // Récupérer le profil utilisateur avec son rôle
-    const fetchUserProfile = async (userId) => {
-        try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', userId)
-                .single();
-
-            if (error) {
-                console.error('Erreur récupération profil:', error);
-                return null;
-            }
-
-            return data;
-        } catch (error) {
-            console.error('fetchUserProfile error:', error);
-            return null;
-        }
-    };
 
     // Initialiser l'utilisateur au chargement
     useEffect(() => {
@@ -151,8 +129,6 @@ export const AuthProvider = ({ children }) => {
 
                 if (session?.user) {
                     setUser(session.user);
-                    const userProfile = await fetchUserProfile(session.user.id);
-                    setProfile(userProfile);
                 }
             } catch (error) {
                 console.error('Erreur initialisation auth:', error);
@@ -168,11 +144,8 @@ export const AuthProvider = ({ children }) => {
             async (event, session) => {
                 if (session?.user) {
                     setUser(session.user);
-                    const userProfile = await fetchUserProfile(session.user.id);
-                    setProfile(userProfile);
                 } else {
                     setUser(null);
-                    setProfile(null);
                 }
                 setLoading(false);
             }
@@ -195,14 +168,14 @@ export const AuthProvider = ({ children }) => {
 
             if (data.user) {
                 setUser(data.user);
-                const userProfile = await fetchUserProfile(data.user.id);
-                setProfile(userProfile);
             }
 
             return { data, error: null };
         } catch (error) {
             console.error('Erreur connexion:', error);
             return { data: null, error };
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -233,45 +206,17 @@ export const AuthProvider = ({ children }) => {
             if (error) throw error;
 
             setUser(null);
-            setProfile(null);
         } catch (error) {
             console.error('Erreur déconnexion:', error);
         }
     };
 
-    // Fonctions de vérification des rôles
-    const hasRole = (roles) => {
-        if (!profile) return false;
-        return Array.isArray(roles)
-            ? roles.includes(profile.role)
-            : profile.role === roles;
-    };
-
-    const canAccessDashboard = () => hasRole(['admin', 'superadmin']);
-    const canAccessCompagnies = () => hasRole(['admin', 'superadmin']);
-    const canAccessClients = () => hasRole(['gestionnaire', 'admin', 'superadmin']);
-    const canAccessContrats = () => hasRole(['gestionnaire', 'admin', 'superadmin']);
-    const canAccessMedias = () => hasRole(['gestionnaire', 'admin', 'superadmin']);
-    const canManageUsers = () => hasRole('superadmin');
-    const isAdmin = () => hasRole(['admin', 'superadmin']);
-    const isSuperAdmin = () => hasRole('superadmin');
-
     const value = {
         user,
-        profile,
         loading,
         signIn,
         signUp,
         signOut,
-        hasRole,
-        canAccessDashboard,
-        canAccessCompagnies,
-        canAccessClients,
-        canAccessContrats,
-        canAccessMedias,
-        canManageUsers,
-        isAdmin,
-        isSuperAdmin,
     };
 
     return (

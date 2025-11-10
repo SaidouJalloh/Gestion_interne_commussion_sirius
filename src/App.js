@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import { Toaster } from 'react-hot-toast'; // ✅ Ajout de l'import
 import { AuthProvider } from './context/AuthContext';
+import { ProfileProvider } from './context/ProfileContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { RoleProtectedRoute } from './components/RoleProtectedRoute';
@@ -52,6 +53,7 @@ function App() {
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
+          <ProfileProvider>
           {/* ✅ Ajout du Toaster pour les notifications */}
           <Toaster
             position="top-right"
@@ -211,6 +213,7 @@ function App() {
               <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
           </Suspense>
+          </ProfileProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

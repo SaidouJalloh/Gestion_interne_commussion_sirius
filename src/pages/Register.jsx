@@ -227,6 +227,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
+import { useProfileContext } from '../context/ProfileContext';
 
 export default function Register() {
     const [formData, setFormData] = useState({
@@ -243,7 +244,7 @@ export default function Register() {
     const [loading, setLoading] = useState(false);
 
     const navigate = useNavigate();
-    const { profile } = useAuth();
+    const { profile } = useProfileContext();
 
     // Vérifier si l'utilisateur connecté est superadmin
     useEffect(() => {
