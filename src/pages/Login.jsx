@@ -117,6 +117,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useProfileContext } from '../context/ProfileContext';
 
 export default function Login() {
     const [email, setEmail] = useState('');
@@ -126,6 +127,7 @@ export default function Login() {
 
     const navigate = useNavigate();
     const { signIn } = useAuth();
+    const { refresh: refreshProfile } = useProfileContext();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -139,8 +141,10 @@ export default function Login() {
                 throw error;
             }
 
-            // La redirection se fait maintenant directement après une connexion réussie.
-            // Le AuthContext met à jour l'état de l'utilisateur en arrière-plan.
+            // Rafraîchir explicitement le profil (rôle) avant de naviguer
+            try {
+                await refreshProfile();
+            } catch {}
             navigate('/clients');
 
         } catch (error) {

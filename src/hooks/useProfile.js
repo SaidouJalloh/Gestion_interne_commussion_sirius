@@ -128,6 +128,11 @@ export function useProfile() {
           setStatus('not_found');
           return;
         }
+      if (event === 'SIGNED_IN') {
+        // Important: éviter d'afficher l'ancien profil juste après un nouveau login
+        setProfile(null);
+        setStatus('loading');
+      }
         if (session?.user) {
           await refresh();
         }

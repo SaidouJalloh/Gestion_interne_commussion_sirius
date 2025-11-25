@@ -5519,7 +5519,7 @@
 // code avec incorporation
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { useAuth } from '../context/AuthContext';
+import { useProfileContext } from '../context/ProfileContext';
 import toast from 'react-hot-toast';
 import { useDebounce } from '../hooks/useDebounce';
 import { useKeyboard } from '../hooks/useKeyboard';
@@ -5534,7 +5534,7 @@ import { IncorporationModal } from '../components/contrats/IncorporationModal'; 
 import { isSanteContract, isAutoContract } from '../utils/contratHelpers';
 
 export default function Contrats() {
-    const { profile } = useAuth();
+    const { profile } = useProfileContext();
     const { contrats, clients, compagnies, loading, refetch } = useContratsData();
 
     const [searchTerm, setSearchTerm] = useState('');

@@ -168,6 +168,12 @@ export const AuthProvider = ({ children }) => {
 
             if (data.user) {
                 setUser(data.user);
+                // Forcer un rafraîchissement de session pour propager les nouveaux tokens immédiatement
+                try {
+                    await supabase.auth.refreshSession();
+                } catch (e) {
+                    console.warn('refreshSession a échoué (non bloquant):', e);
+                }
             }
 
             return { data, error: null };
@@ -206,6 +212,7 @@ export const AuthProvider = ({ children }) => {
             if (error) throw error;
 
             setUser(null);
+            // Rien dans le localStorage n'est utilisé pour les rôles; le ProfileProvider écoute SIGNED_OUT et nettoiera le profil
         } catch (error) {
             console.error('Erreur déconnexion:', error);
         }
