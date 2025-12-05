@@ -1,24 +1,41 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Global ignore for backend & frontend
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
+# Node dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# testing
-/coverage
+# Builds / distributions
+dist/
+build/
+coverage/
+*.tsbuildinfo
 
-# production
-/build
-
-# misc
-.DS_Store
+# Environment files
+.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
-.env
 
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Backend-specific (safety, redondant avec backend/.gitignore)
+backend/node_modules/
+backend/dist/
+backend/coverage/
+
+# Frontend-specific
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+frontend/coverage/
+
+

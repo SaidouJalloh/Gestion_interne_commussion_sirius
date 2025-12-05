@@ -1,8 +1,8 @@
 // code optimisé rapide (TypeScript)
 import { useState, useCallback, useMemo } from 'react';
-import { supabase } from '../lib/supabaseClient';
 import { useProfileContext } from '../context/ProfileContext';
 import { useCompagniesData } from '../hooks/useCompagniesData';
+import { useCompagniesMutations } from '../hooks/useCompagniesMutations';
 import { CompagniesHeader } from '../components/compagnies/CompagniesHeader';
 import { CompagniesSearch } from '../components/compagnies/CompagniesSearch';
 import { CompagnieCard } from '../components/compagnies/CompagnieCard';
@@ -34,6 +34,7 @@ interface ProfileContextValue {
 export default function Compagnies() {
   const { profile } = useProfileContext() as ProfileContextValue;
   const { compagnies, loading, refetch } = useCompagniesData();
+  const { deleteCompagnie } = useCompagniesMutations();
 
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -103,14 +104,7 @@ export default function Compagnies() {
   const handleDelete = useCallback(
     async (compagnieId: string) => {
       try {
-        const promise = (async () => {
-          const { error } = await supabase
-            .from('compagnies')
-            .delete()
-            .eq('id', compagnieId);
-          
-          if (error) throw error;
-        })();
+        const promise = deleteCompagnie(compagnieId);
 
         await toast.promise(promise, {
           loading: 'Suppression...',
@@ -125,7 +119,7 @@ export default function Compagnies() {
         console.error('Erreur:', error);
       }
     },
-    [refetch],
+    [deleteCompagnie, refetch],
   );
 
   // ⚡ OPTIMISATION : useCallback pour openEditTaux
