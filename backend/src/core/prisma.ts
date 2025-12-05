@@ -20,15 +20,13 @@ const createPrismaClient = () =>
         : ['query', 'error', 'warn'],
   });
 
-export const prisma: PrismaClient =
-  global.prisma ??
-  (() => {
-    const client = createPrismaClient();
-    if (process.env.NODE_ENV !== 'production') {
-      global.prisma = client;
-    }
-    logger.info('Prisma client initialisé');
-    return client;
-  })();
+// On mutualise l'instance Prisma dans le scope global
+// pour éviter d'épuiser le pool de connexions, y compris en production.
+if (!global.prisma) {
+  global.prisma = createPrismaClient();
+  logger.info('Prisma client initialisé');
+}
+
+export const prisma: PrismaClient = global.prisma;
 
 
