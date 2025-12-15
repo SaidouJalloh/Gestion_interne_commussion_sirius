@@ -734,17 +734,19 @@
 
 
 
-// new code 
-import { useState, useEffect } from 'react';
+// new code
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
+import { API_ENDPOINTS } from '../config/api';
+import { useFoldersData } from '../hooks/useFoldersData';
+import { useFoldersMutations } from '../hooks/useFoldersMutations';
+import { useMediaData } from '../hooks/useMediaData';
+import { useMediaMutations } from '../hooks/useMediaMutations';
 
 export default function Medias() {
-    const [medias, setMedias] = useState([]);
-    const [dossiers, setDossiers] = useState([]);
     const [dossierActuel, setDossierActuel] = useState(null);
     const [breadcrumb, setBreadcrumb] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [viewMode, setViewMode] = useState('grid');
     const [showCorbeille, setShowCorbeille] = useState(false);
@@ -758,6 +760,20 @@ export default function Medias() {
     const [fileToMove, setFileToMove] = useState(null);
     const [notification, setNotification] = useState(null);
     const { profile } = useAuth();
+
+    const { folders: dossiers, loading: loadingFolders, refetch: refetchFolders } = useFoldersData({
+        parentId: dossierActuel || null,
+    });
+
+    const { media: medias, loading: loadingMedia, refetch: refetchMedia } = useMediaData({
+        folderId: dossierActuel || null,
+        trashed: showCorbeille,
+    });
+
+    const { createFolder, updateFolder, deleteFolder } = useFoldersMutations();
+    const { createMedia, updateMedia, trashMedia, restoreMedia, deleteMedia } = useMediaMutations();
+
+    const loading = loadingFolders || loadingMedia;
 
     const couleurs = [
         { nom: 'Bleu', value: 'blue', bg: 'bg-blue-100', text: 'text-blue-600', border: 'border-blue-300' },
@@ -775,45 +791,18 @@ export default function Medias() {
         setTimeout(() => setNotification(null), 3000);
     };
 
-    useEffect(() => {
-        fetchData();
-    }, [dossierActuel, showCorbeille]);
-
-    const fetchData = async () => {
-        try {
-            setLoading(true);
-            const [dossiersRes, mediasRes] = await Promise.all([
-                dossierActuel
-                    ? supabase.from('dossiers').select('*').eq('parent_id', dossierActuel).order('nom')
-                    : supabase.from('dossiers').select('*').is('parent_id', null).order('nom'),
-                dossierActuel
-                    ? supabase.from('medias').select('*, clients(nom, prenom), contrats(type_contrat)')
-                        .eq('dossier_id', dossierActuel)
-                        .eq('supprime', showCorbeille)
-                        .order('created_at', { ascending: false })
-                    : supabase.from('medias').select('*, clients(nom, prenom), contrats(type_contrat)')
-                        .is('dossier_id', null)
-                        .eq('supprime', showCorbeille)
-                        .order('created_at', { ascending: false })
-            ]);
-
-            if (dossiersRes.error) throw dossiersRes.error;
-            if (mediasRes.error) throw mediasRes.error;
-
-            setDossiers(dossiersRes.data || []);
-            setMedias(mediasRes.data || []);
-
-            if (dossierActuel) {
-                await buildBreadcrumb(dossierActuel);
-            } else {
-                setBreadcrumb([]);
-            }
-        } catch (error) {
-            console.error('Erreur:', error);
-            showNotification('Erreur lors du chargement des données: ' + error.message, 'error');
-        } finally {
-            setLoading(false);
+    const parseApiResponse = async (response) => {
+        const raw = await response.json().catch(() => null);
+        if (!response.ok) {
+            const message = raw && typeof raw === 'object' && 'message' in raw
+                ? String(raw.message)
+                : `Erreur HTTP ${response.status}`;
+            throw new Error(message);
         }
+        if (raw && typeof raw === 'object' && 'data' in raw) {
+            return raw.data;
+        }
+        return raw;
     };
 
     const buildBreadcrumb = async (dossierId) => {
@@ -822,13 +811,11 @@ export default function Medias() {
             let currentId = dossierId;
 
             while (currentId) {
-                const { data } = await supabase.from('dossiers').select('*').eq('id', currentId).single();
-                if (data) {
-                    path.unshift(data);
-                    currentId = data.parent_id;
-                } else {
-                    break;
-                }
+                const response = await fetch(API_ENDPOINTS.folders.byId(currentId));
+                const data = await parseApiResponse(response);
+                if (!data) break;
+                path.unshift(data);
+                currentId = data.parent_id;
             }
             setBreadcrumb(path);
         } catch (error) {
@@ -836,18 +823,24 @@ export default function Medias() {
         }
     };
 
+    useEffect(() => {
+        if (dossierActuel) {
+            buildBreadcrumb(dossierActuel);
+        } else {
+            setBreadcrumb([]);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dossierActuel]);
+
     const handleCreateDossier = async (e) => {
         e.preventDefault();
         try {
-            const { error } = await supabase.from('dossiers').insert([{
+            await createFolder({
                 nom: nouveauDossier.nom,
                 couleur: nouveauDossier.couleur,
-                parent_id: dossierActuel || null
-            }]);
-
-            if (error) throw error;
-
-            await fetchData();
+                parent_id: dossierActuel || null,
+            });
+            await refetchFolders();
             setCreateDossierModal(false);
             setNouveauDossier({ nom: '', couleur: 'blue' });
             showNotification('Dossier créé avec succès !');
@@ -903,21 +896,18 @@ export default function Medias() {
                     throw new Error('Impossible de générer l\'URL du fichier');
                 }
 
-                // Insérer dans la table medias (AVEC AWAIT - c'était le bug principal)
-                const { data: mediaData, error: insertError } = await supabase
-                    .from('medias')
-                    .insert([{
+                // Enregistrer les métadonnées en DB via backend API (upload reste Storage côté client)
+                try {
+                    await createMedia({
                         nom: file.name,
                         type_fichier: file.type || 'application/octet-stream',
                         taille: file.size,
                         url: urlData.publicUrl,
                         dossier_id: dossierActuel || null,
                         created_by: profile?.id || null
-                    }])
-                    .select();
-
-                if (insertError) {
-                    console.error('Erreur insertion base de données:', insertError);
+                    });
+                } catch (insertError) {
+                    console.error('Erreur insertion base de données (API backend):', insertError);
                     // Si l'insertion échoue, supprimer le fichier du storage
                     await supabase.storage.from('documents').remove([fileName]);
                     throw insertError;
@@ -940,7 +930,8 @@ export default function Medias() {
         // Message de synthèse
         if (successCount > 0) {
             showNotification(`${successCount} fichier(s) uploadé(s) avec succès !`);
-            await fetchData();
+            await refetchMedia();
+            await refetchFolders();
         }
         if (errorCount > 0) {
             showNotification(`${errorCount} fichier(s) en erreur`, 'error');
@@ -949,14 +940,8 @@ export default function Medias() {
 
     const handleRenameDossier = async (dossierId, nouveauNom) => {
         try {
-            const { error } = await supabase
-                .from('dossiers')
-                .update({ nom: nouveauNom, updated_at: new Date().toISOString() })
-                .eq('id', dossierId);
-
-            if (error) throw error;
-
-            await fetchData();
+            await updateFolder(dossierId, { nom: nouveauNom });
+            await refetchFolders();
             showNotification('Dossier renommé avec succès !');
         } catch (error) {
             console.error('Erreur renommage dossier:', error);
@@ -966,14 +951,8 @@ export default function Medias() {
 
     const handleRenameMedia = async (mediaId, nouveauNom) => {
         try {
-            const { error } = await supabase
-                .from('medias')
-                .update({ nom: nouveauNom, updated_at: new Date().toISOString() })
-                .eq('id', mediaId);
-
-            if (error) throw error;
-
-            await fetchData();
+            await updateMedia(mediaId, { nom: nouveauNom });
+            await refetchMedia();
             showNotification('Fichier renommé avec succès !');
         } catch (error) {
             console.error('Erreur renommage fichier:', error);
@@ -984,14 +963,8 @@ export default function Medias() {
     const handleDeleteMedia = async (mediaId) => {
         if (!window.confirm('Déplacer ce fichier vers la corbeille ?')) return;
         try {
-            const { error } = await supabase.from('medias').update({
-                supprime: true,
-                date_suppression: new Date().toISOString()
-            }).eq('id', mediaId);
-
-            if (error) throw error;
-
-            await fetchData();
+            await trashMedia(mediaId);
+            await refetchMedia();
             showNotification('Fichier déplacé vers la corbeille');
         } catch (error) {
             console.error('Erreur suppression:', error);
@@ -1001,14 +974,8 @@ export default function Medias() {
 
     const handleRestoreMedia = async (mediaId) => {
         try {
-            const { error } = await supabase.from('medias').update({
-                supprime: false,
-                date_suppression: null
-            }).eq('id', mediaId);
-
-            if (error) throw error;
-
-            await fetchData();
+            await restoreMedia(mediaId);
+            await refetchMedia();
             showNotification('Fichier restauré avec succès !');
         } catch (error) {
             console.error('Erreur restauration:', error);
@@ -1025,8 +992,7 @@ export default function Medias() {
             const filePath = pathParts[1];
 
             // Supprimer de la base de données
-            const { error: dbError } = await supabase.from('medias').delete().eq('id', mediaId);
-            if (dbError) throw dbError;
+            await deleteMedia(mediaId);
 
             // Supprimer du storage
             if (filePath) {
@@ -1039,7 +1005,7 @@ export default function Medias() {
                 }
             }
 
-            await fetchData();
+            await refetchMedia();
             showNotification('Fichier supprimé définitivement');
         } catch (error) {
             console.error('Erreur suppression permanente:', error);
@@ -1051,21 +1017,24 @@ export default function Medias() {
         if (!window.confirm('Supprimer ce dossier et tout son contenu ?')) return;
         try {
             // Vérifier s'il y a des sous-dossiers ou fichiers
-            const [subDossiers, subMedias] = await Promise.all([
-                supabase.from('dossiers').select('id').eq('parent_id', dossierId),
-                supabase.from('medias').select('id').eq('dossier_id', dossierId)
+            const [subFoldersRes, subMediasRes1, subMediasRes2] = await Promise.all([
+                fetch(`${API_ENDPOINTS.folders.list}?parentId=${dossierId}`),
+                fetch(`${API_ENDPOINTS.media.list}?folderId=${dossierId}&trashed=false`),
+                fetch(`${API_ENDPOINTS.media.list}?folderId=${dossierId}&trashed=true`),
             ]);
+            const subFolders = await parseApiResponse(subFoldersRes);
+            const subMedias1 = await parseApiResponse(subMediasRes1);
+            const subMedias2 = await parseApiResponse(subMediasRes2);
 
-            if (subDossiers.data?.length > 0 || subMedias.data?.length > 0) {
+            if ((subFolders?.length || 0) > 0 || (subMedias1?.length || 0) > 0 || (subMedias2?.length || 0) > 0) {
                 if (!window.confirm('Ce dossier contient des éléments. Confirmer la suppression complète ?')) {
                     return;
                 }
             }
 
-            const { error } = await supabase.from('dossiers').delete().eq('id', dossierId);
-            if (error) throw error;
-
-            await fetchData();
+            await deleteFolder(dossierId);
+            await refetchFolders();
+            await refetchMedia();
             showNotification('Dossier supprimé avec succès');
         } catch (error) {
             console.error('Erreur suppression dossier:', error);
@@ -1075,17 +1044,8 @@ export default function Medias() {
 
     const handleMoveFile = async (mediaId, newDossierId) => {
         try {
-            const { error } = await supabase
-                .from('medias')
-                .update({
-                    dossier_id: newDossierId,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', mediaId);
-
-            if (error) throw error;
-
-            await fetchData();
+            await updateMedia(mediaId, { dossier_id: newDossierId });
+            await refetchMedia();
             setShowMoveModal(false);
             setFileToMove(null);
             showNotification('Fichier déplacé avec succès !');

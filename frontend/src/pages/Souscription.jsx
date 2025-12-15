@@ -1,6 +1,6 @@
 // src/pages/Souscription.jsx
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { API_ENDPOINTS } from '../config/api';
 
 export default function Souscription() {
     const [compagnies, setCompagnies] = useState([]);
@@ -13,20 +13,26 @@ export default function Souscription() {
 
     const fetchCompagnies = async () => {
         try {
-            const { data, error } = await supabase
-                .from('compagnies')
-                .select('*')
-                .eq('actif', true)
-                .not('lien_souscription', 'is', null)
-                .order('nom');
+            const response = await fetch(
+                `${API_ENDPOINTS.compagnies.list}?active=true&hasSubscriptionLink=true`,
+            );
+            const raw = await response.json().catch(() => null);
 
-            if (error) throw error;
+            if (!response.ok) {
+                const message =
+                    raw && typeof raw === 'object' && 'message' in raw
+                        ? String(raw.message)
+                        : `Erreur HTTP ${response.status}`;
+                throw new Error(message);
+            }
 
-            setCompagnies(data || []);
+            const list = raw && typeof raw === 'object' && 'data' in raw ? raw.data : raw;
+
+            setCompagnies(Array.isArray(list) ? list : []);
 
             // Sélectionner automatiquement la première compagnie
-            if (data && data.length > 0) {
-                setSelectedCompagnie(data[0]);
+            if (Array.isArray(list) && list.length > 0) {
+                setSelectedCompagnie(list[0]);
             }
         } catch (error) {
             console.error('Erreur lors du chargement des compagnies:', error);

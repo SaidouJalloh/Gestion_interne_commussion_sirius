@@ -1,6 +1,12 @@
 // src/components/contrats/ContratsFilters.jsx
 
-export const ContratsFilters = ({ searchTerm, setSearchTerm, filterStatut, setFilterStatut }) => {
+export const ContratsFilters = ({
+    searchTerm,
+    setSearchTerm,
+    filterStatut,
+    setFilterStatut,
+    searchRef,
+}) => {
     return (
         <div className="bg-white rounded-xl shadow-soft p-4 mb-6">
             <div className="flex flex-col md:flex-row gap-4">
@@ -9,6 +15,7 @@ export const ContratsFilters = ({ searchTerm, setSearchTerm, filterStatut, setFi
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                     <input
+                        ref={searchRef}
                         type="text"
                         placeholder="Rechercher un contrat..."
                         value={searchTerm}

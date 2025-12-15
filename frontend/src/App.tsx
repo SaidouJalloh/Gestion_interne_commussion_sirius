@@ -16,6 +16,7 @@ const Compagnies = lazy(() => import('./pages/Compagnies'));
 const Contrats = lazy(() => import('./pages/Contrats'));
 const Souscription = lazy(() => import('./pages/Souscription'));
 const Medias = lazy(() => import('./pages/Medias'));
+const Paiements = lazy(() => import('./pages/Paiements'));
 const Parametres = lazy(() => import('./pages/Parametres'));
 const GestionUtilisateurs = lazy(() => import('./pages/GestionUtilisateurs'));
 
@@ -169,6 +170,19 @@ function App() {
                                             <RoleProtectedRoute allowedRoles={['gestionnaire', 'admin', 'superadmin']}>
                                                 <Layout>
                                                     <Medias />
+                                                </Layout>
+                                            </RoleProtectedRoute>
+                                        </ProtectedRoute>
+                                    }
+                                />
+
+                                <Route
+                                    path="/paiements"
+                                    element={
+                                        <ProtectedRoute>
+                                            <RoleProtectedRoute allowedRoles={['gestionnaire', 'admin', 'superadmin']}>
+                                                <Layout>
+                                                    <Paiements />
                                                 </Layout>
                                             </RoleProtectedRoute>
                                         </ProtectedRoute>

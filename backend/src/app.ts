@@ -19,16 +19,22 @@ const corsOptions: CorsOptions = {
       return callback(null, true);
     }
 
+    // Wildcard: autorise toutes les origines si configuré
+    if (allowedOrigins.includes('*')) {
+      return callback(null, true);
+    }
+
     // Vérifie si l'origine est autorisée
     if (allowedOrigins.includes(origin)) {
       return callback(null, origin);
     }
 
     // Bloque les origines non autorisées
-    return callback(
-      new Error(`Origine "${origin}" non autorisée par la configuration CORS`),
-      false,
-    );
+    const err = new Error(
+      `Origine "${origin}" non autorisée par la configuration CORS`,
+    ) as Error & { status?: number };
+    err.status = 403;
+    return callback(err, false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],

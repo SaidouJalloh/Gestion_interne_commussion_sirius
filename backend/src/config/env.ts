@@ -6,7 +6,8 @@ export const env = {
   frontendUrls:
     process.env.FRONTEND_URLS ??
     process.env.FRONTEND_URL ??
-    'http://localhost:3000',
+    // Valeurs par défaut en dev (CRA/React peut tourner sur 3000/3002, etc.)
+    'http://localhost:3000,http://localhost:3001,http://localhost:3002',
   supabaseUrl: process.env.SUPABASE_URL ?? '',
   supabaseAnonKey: process.env.SUPABASE_ANON_KEY ?? '',
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',

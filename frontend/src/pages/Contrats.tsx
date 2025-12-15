@@ -1,37 +1,72 @@
 // code avec incorporation
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { supabase } from '../lib/supabaseClient';
-import { useProfileContext } from '../context/ProfileContext';
 import toast from 'react-hot-toast';
+import { useProfileContext } from '../context/ProfileContext';
 import { useDebounce } from '../hooks/useDebounce';
 import { useKeyboard } from '../hooks/useKeyboard';
 import { useContratsData } from '../hooks/useContratsData';
+import { useContractsMutations } from '../hooks/useContractsMutations';
 import { ContratsFilters } from '../components/contrats/ContratsFilters';
 import { ContratsTable } from '../components/contrats/ContratsTable';
 import { ContratModal } from '../components/contrats/ContratModal';
 import { PaiementsModal } from '../components/contrats/PaiementsModal';
 import { DeleteConfirmModal } from '../components/contrats/DeleteConfirmModal';
 import { FlotteModal } from '../components/contrats/FlotteModal';
-import { IncorporationModal } from '../components/contrats/IncorporationModal'; // 👈 NOUVEAU
+import { IncorporationModal } from '../components/contrats/IncorporationModal';
 import { isSanteContract, isAutoContract } from '../utils/contratHelpers';
+
+// Migration progressive: on garde des types permissifs pour ne pas bloquer.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ContratLike = any;
+
+type TauxSante = {
+    commission_base: number;
+    evacuation_sanitaire: number;
+    commission_regulation: number;
+};
+
+type FormDataState = {
+    client_id: string;
+    compagnie_id: string;
+    type_contrat: string;
+    immatriculation: string;
+    prime_ttc: string;
+    prime_nette: string;
+    montant_accessoire: string;
+    fga: string;
+    taxes: string;
+    taux_commission: string | number;
+    commission: string;
+    date_effet: string;
+    date_expiration: string;
+    fractionnement: string;
+    statut: string;
+    notes: string;
+    client_telephone: string;
+    client_email: string;
+    evacuation_sanitaire: string;
+    prime_regulation: string;
+};
 
 export default function Contrats() {
     const { profile } = useProfileContext();
     const { contrats, clients, compagnies, loading, refetch } = useContratsData();
+    const { deleteContract } = useContractsMutations();
 
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterStatut, setFilterStatut] = useState('all');
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedContrat, setSelectedContrat] = useState(null);
-    const [deleteConfirm, setDeleteConfirm] = useState(null);
-    const [paiementsModal, setPaiementsModal] = useState(null);
-    const [flotteModal, setFlotteModal] = useState(null);
-    const [incorporationModal, setIncorporationModal] = useState(null); // 👈 NOUVEAU
-    const searchRef = useRef(null);
+    const [searchTerm, setSearchTerm] = useState<string>('');
+    const [filterStatut, setFilterStatut] = useState<string>('all');
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+    const [selectedContrat, setSelectedContrat] = useState<ContratLike | null>(null);
+    const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+    const [paiementsModal, setPaiementsModal] = useState<ContratLike | null>(null);
+    const [flotteModal, setFlotteModal] = useState<ContratLike | null>(null);
+    const [incorporationModal, setIncorporationModal] = useState<ContratLike | null>(null);
+
+    const searchRef = useRef<HTMLInputElement | null>(null);
 
     const debouncedSearch = useDebounce(searchTerm, 300);
 
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<FormDataState>({
         client_id: '',
         compagnie_id: '',
         type_contrat: '',
@@ -54,21 +89,28 @@ export default function Contrats() {
         prime_regulation: '',
     });
 
-    const [typesDisponibles, setTypesDisponibles] = useState([]);
-    const [tauxSante, setTauxSante] = useState(null);
+    const [typesDisponibles, setTypesDisponibles] = useState<string[]>([]);
+    const [tauxSante, setTauxSante] = useState<TauxSante | null>(null);
 
     const stats = useMemo(() => {
         const total = contrats.length;
-        const actifs = contrats.filter(c => c.statut === 'actif').length;
-        const totalPrimes = contrats.reduce((sum, c) => sum + parseFloat(c.prime_ttc || 0), 0);
-        const totalCommissions = contrats.reduce((sum, c) => sum + parseFloat(c.commission || 0), 0);
+        const actifs = contrats.filter((c: any) => c.statut === 'actif').length;
+        const totalPrimes = contrats.reduce(
+            (sum: number, c: any) => sum + parseFloat(c.prime_ttc || 0),
+            0,
+        );
+        const totalCommissions = contrats.reduce(
+            (sum: number, c: any) => sum + parseFloat(c.commission || 0),
+            0,
+        );
 
         return { total, actifs, totalPrimes, totalCommissions };
     }, [contrats]);
 
     const filteredContrats = useMemo(() => {
-        return contrats.filter(contrat => {
-            const matchSearch = !debouncedSearch ||
+        return contrats.filter((contrat: any) => {
+            const matchSearch =
+                !debouncedSearch ||
                 contrat.clients?.nom?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
                 contrat.clients?.prenom?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
                 contrat.compagnies?.nom?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
@@ -83,7 +125,7 @@ export default function Contrats() {
 
     useEffect(() => {
         if (formData.compagnie_id) {
-            const compagnie = compagnies.find(c => c.id === formData.compagnie_id);
+            const compagnie: any = compagnies.find((c: any) => c.id === formData.compagnie_id);
             if (compagnie?.taux_commissions) {
                 const types = Object.keys(compagnie.taux_commissions);
                 setTypesDisponibles(types);
@@ -98,26 +140,26 @@ export default function Contrats() {
 
     useEffect(() => {
         if (formData.compagnie_id && formData.type_contrat) {
-            const compagnie = compagnies.find(c => c.id === formData.compagnie_id);
+            const compagnie: any = compagnies.find((c: any) => c.id === formData.compagnie_id);
 
             if (compagnie?.taux_commissions?.[formData.type_contrat]) {
-                const tauxConfig = compagnie.taux_commissions[formData.type_contrat];
+                const tauxConfig: any = compagnie.taux_commissions[formData.type_contrat];
 
                 if (isSanteContract(formData.type_contrat) && typeof tauxConfig === 'object') {
                     setTauxSante({
                         commission_base: tauxConfig.commission_base || 0.16,
                         evacuation_sanitaire: tauxConfig.evacuation_sanitaire || 0.08,
-                        commission_regulation: tauxConfig.commission_regulation || 0.16
+                        commission_regulation: tauxConfig.commission_regulation || 0.16,
                     });
-                    setFormData(prev => ({
+                    setFormData((prev) => ({
                         ...prev,
-                        taux_commission: tauxConfig.commission_base || 0.16
+                        taux_commission: tauxConfig.commission_base || 0.16,
                     }));
                 } else {
                     setTauxSante(null);
-                    setFormData(prev => ({
+                    setFormData((prev) => ({
                         ...prev,
-                        taux_commission: tauxConfig
+                        taux_commission: tauxConfig,
                     }));
                 }
             }
@@ -128,9 +170,9 @@ export default function Contrats() {
     useEffect(() => {
         if (formData.type_contrat && !isAutoContract(formData.type_contrat)) {
             if (parseFloat(formData.fga) !== 0) {
-                setFormData(prev => ({
+                setFormData((prev) => ({
                     ...prev,
-                    fga: '0'
+                    fga: '0',
                 }));
             }
         }
@@ -154,17 +196,25 @@ export default function Contrats() {
         }
 
         if (primeNette >= 0 && primeNette !== parseFloat(formData.prime_nette)) {
-            setFormData(prev => ({
+            setFormData((prev) => ({
                 ...prev,
-                prime_nette: primeNette.toFixed(2)
+                prime_nette: primeNette.toFixed(2),
             }));
         } else if (primeNette < 0) {
-            setFormData(prev => ({
+            setFormData((prev) => ({
                 ...prev,
-                prime_nette: '0'
+                prime_nette: '0',
             }));
         }
-    }, [formData.prime_ttc, formData.montant_accessoire, formData.fga, formData.taxes, formData.evacuation_sanitaire, formData.type_contrat, formData.prime_nette]);
+    }, [
+        formData.prime_ttc,
+        formData.montant_accessoire,
+        formData.fga,
+        formData.taxes,
+        formData.evacuation_sanitaire,
+        formData.type_contrat,
+        formData.prime_nette,
+    ]);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
@@ -181,27 +231,29 @@ export default function Contrats() {
             const primeRegulation = parseFloat(formData.prime_regulation) || 0;
 
             if (primeRegulation > 0) {
-                commission = ((primeNette + primeRegulation) * tauxSante.commission_regulation)
-                    + (evacuationSanitaire * tauxSante.evacuation_sanitaire);
+                commission =
+                    (primeNette + primeRegulation) * tauxSante.commission_regulation +
+                    evacuationSanitaire * tauxSante.evacuation_sanitaire;
             } else if (evacuationSanitaire > 0) {
-                commission = (primeNette * tauxSante.commission_base)
-                    + (evacuationSanitaire * tauxSante.evacuation_sanitaire);
+                commission =
+                    primeNette * tauxSante.commission_base +
+                    evacuationSanitaire * tauxSante.evacuation_sanitaire;
             } else {
                 commission = primeNette * tauxSante.commission_base;
             }
         } else {
-            const tauxCommission = parseFloat(formData.taux_commission) || 0;
-            commission = (primeNette * tauxCommission) + montantAccessoire;
+            const tauxCommission = parseFloat(String(formData.taux_commission)) || 0;
+            commission = primeNette * tauxCommission + montantAccessoire;
         }
 
-        setFormData(prev => ({ ...prev, commission: commission.toFixed(2) }));
+        setFormData((prev) => ({ ...prev, commission: commission.toFixed(2) }));
     }, [
         formData.taux_commission,
         formData.montant_accessoire,
         formData.type_contrat,
         formData.evacuation_sanitaire,
         formData.prime_regulation,
-        tauxSante
+        tauxSante,
     ]);
 
     const resetForm = useCallback(() => {
@@ -237,7 +289,7 @@ export default function Contrats() {
         setIsModalOpen(true);
     }, [resetForm]);
 
-    const handleEdit = useCallback((contrat) => {
+    const handleEdit = useCallback((contrat: any) => {
         setSelectedContrat(contrat);
         setFormData({
             client_id: contrat.client_id || '',
@@ -264,36 +316,36 @@ export default function Contrats() {
         setIsModalOpen(true);
     }, []);
 
-    const handleDelete = useCallback(async (contratId) => {
-        try {
-            const promise = supabase
-                .from('contrats')
-                .delete()
-                .eq('id', contratId);
+    const handleDelete = useCallback(
+        async (contratId: string) => {
+            try {
+                const promise = deleteContract(contratId);
 
-            await toast.promise(promise, {
-                loading: 'Suppression...',
-                success: 'Contrat supprimé avec succès ! 🗑️',
-                error: 'Erreur lors de la suppression',
-            });
+                await toast.promise(promise, {
+                    loading: 'Suppression...',
+                    success: 'Contrat supprimé avec succès !',
+                    error: 'Erreur lors de la suppression',
+                });
 
-            await refetch();
-            setDeleteConfirm(null);
-        } catch (error) {
-            console.error('Erreur:', error);
-        }
-    }, [refetch]);
+                await refetch();
+                setDeleteConfirm(null);
+            } catch (error) {
+                // eslint-disable-next-line no-console
+                console.error('Erreur:', error);
+            }
+        },
+        [deleteContract, refetch],
+    );
 
-    const openPaiementsModal = useCallback((contrat) => {
+    const openPaiementsModal = useCallback((contrat: any) => {
         setPaiementsModal(contrat);
     }, []);
 
-    const openFlotteModal = useCallback((contrat) => {
+    const openFlotteModal = useCallback((contrat: any) => {
         setFlotteModal(contrat);
     }, []);
 
-    // 👇 NOUVELLE FONCTION
-    const openIncorporationModal = useCallback((contrat) => {
+    const openIncorporationModal = useCallback((contrat: any) => {
         setIncorporationModal(contrat);
     }, []);
 
@@ -305,25 +357,37 @@ export default function Contrats() {
 
     const canDelete = profile?.role === 'admin' || profile?.role === 'superadmin';
 
-    useKeyboard('n', (e) => {
-        if (e.ctrlKey || e.metaKey) {
+    useKeyboard(
+        'n',
+        (e: any) => {
+            if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                handleAdd();
+            }
+        },
+        [handleAdd],
+    );
+
+    useKeyboard(
+        'Escape',
+        () => {
+            if (isModalOpen) setIsModalOpen(false);
+            if (deleteConfirm) setDeleteConfirm(null);
+            if (paiementsModal) setPaiementsModal(null);
+            if (flotteModal) setFlotteModal(null);
+            if (incorporationModal) setIncorporationModal(null);
+        },
+        [isModalOpen, deleteConfirm, paiementsModal, flotteModal, incorporationModal],
+    );
+
+    useKeyboard(
+        '/',
+        (e: any) => {
             e.preventDefault();
-            handleAdd();
-        }
-    }, [handleAdd]);
-
-    useKeyboard('Escape', () => {
-        if (isModalOpen) setIsModalOpen(false);
-        if (deleteConfirm) setDeleteConfirm(null);
-        if (paiementsModal) setPaiementsModal(null);
-        if (flotteModal) setFlotteModal(null);
-        if (incorporationModal) setIncorporationModal(null); // 👈 NOUVEAU
-    }, [isModalOpen, deleteConfirm, paiementsModal, flotteModal, incorporationModal]);
-
-    useKeyboard('/', (e) => {
-        e.preventDefault();
-        searchRef.current?.focus();
-    }, []);
+            searchRef.current?.focus();
+        },
+        [],
+    );
 
     return (
         <div className="animate-fade-in">
@@ -352,9 +416,7 @@ export default function Contrats() {
                                 <p className="text-blue-100 text-sm font-medium">Total Contrats</p>
                                 <p className="text-3xl font-bold mt-1">{stats.total}</p>
                             </div>
-                            <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center text-2xl">
-                                📋
-                            </div>
+                            <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center text-2xl">📋</div>
                         </div>
                     </div>
 
@@ -364,9 +426,7 @@ export default function Contrats() {
                                 <p className="text-green-100 text-sm font-medium">Actifs</p>
                                 <p className="text-3xl font-bold mt-1">{stats.actifs}</p>
                             </div>
-                            <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center text-2xl">
-                                ✅
-                            </div>
+                            <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center text-2xl">✅</div>
                         </div>
                     </div>
 
@@ -376,9 +436,7 @@ export default function Contrats() {
                                 <p className="text-purple-100 text-sm font-medium">Total Primes TTC</p>
                                 <p className="text-2xl font-bold mt-1">{stats.totalPrimes.toLocaleString()} FCFA</p>
                             </div>
-                            <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center text-2xl">
-                                💰
-                            </div>
+                            <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center text-2xl">💰</div>
                         </div>
                     </div>
 
@@ -388,9 +446,7 @@ export default function Contrats() {
                                 <p className="text-orange-100 text-sm font-medium">Total Commissions</p>
                                 <p className="text-2xl font-bold mt-1">{stats.totalCommissions.toLocaleString()} FCFA</p>
                             </div>
-                            <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center text-2xl">
-                                💵
-                            </div>
+                            <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center text-2xl">💵</div>
                         </div>
                     </div>
                 </div>
@@ -404,7 +460,6 @@ export default function Contrats() {
                 searchRef={searchRef}
             />
 
-            {/* 👇 MODIFIÉ : Ajout de onIncorporer */}
             <ContratsTable
                 contrats={filteredContrats}
                 loading={loading}
@@ -412,7 +467,7 @@ export default function Contrats() {
                 onDelete={setDeleteConfirm}
                 onOpenPaiements={openPaiementsModal}
                 onManageFlotte={openFlotteModal}
-                onIncorporer={openIncorporationModal} // 👈 NOUVEAU
+                onIncorporer={openIncorporationModal}
                 canDelete={canDelete}
             />
 
@@ -428,17 +483,14 @@ export default function Contrats() {
                 compagnies={compagnies}
                 onSuccess={async () => {
                     closeModal();
-                    toast.success(selectedContrat ? 'Contrat mis à jour ! 🎉' : 'Contrat créé ! 🎉');
+                    toast.success(selectedContrat ? 'Contrat mis à jour !' : 'Contrat créé !');
                     setTimeout(async () => {
                         await refetch();
                     }, 400);
                 }}
             />
 
-            <PaiementsModal
-                contrat={paiementsModal}
-                onClose={() => setPaiementsModal(null)}
-            />
+            <PaiementsModal contrat={paiementsModal} onClose={() => setPaiementsModal(null)} />
 
             <DeleteConfirmModal
                 contratId={deleteConfirm}
@@ -446,21 +498,15 @@ export default function Contrats() {
                 onCancel={() => setDeleteConfirm(null)}
             />
 
-            {flotteModal && (
-                <FlotteModal
-                    contrat={flotteModal}
-                    onClose={() => setFlotteModal(null)}
-                />
-            )}
+            {flotteModal && <FlotteModal contrat={flotteModal} onClose={() => setFlotteModal(null)} />}
 
-            {/* 👇 NOUVEAU MODAL D'INCORPORATION */}
             {incorporationModal && (
                 <IncorporationModal
                     isOpen={true}
                     onClose={() => setIncorporationModal(null)}
                     contrat={incorporationModal}
                     onSuccess={async () => {
-                        toast.success('Incorporation enregistrée ! 🎉');
+                        toast.success('Incorporation enregistrée !');
                         setTimeout(async () => {
                             await refetch();
                         }, 500);
@@ -470,3 +516,4 @@ export default function Contrats() {
         </div>
     );
 }
+

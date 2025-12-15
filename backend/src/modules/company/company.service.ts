@@ -5,9 +5,14 @@ import type {
 } from './company.validation';
 
 export class CompanyService {
-  async getAll() {
+
+  async getAll(filters?: { active?: boolean; hasSubscriptionLink?: boolean }) {
     // On reproduit l’ordre actuel: ORDER BY nom ASC
     const compagnies = await prisma.compagnies.findMany({
+      where: {
+        ...(typeof filters?.active === 'boolean' ? { actif: filters.active } : {}),
+        ...(filters?.hasSubscriptionLink ? { lien_souscription: { not: null } } : {}),
+      },
       orderBy: { nom: 'asc' },
     });
     return compagnies;

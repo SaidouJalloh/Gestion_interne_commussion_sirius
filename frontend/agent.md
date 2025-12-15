@@ -2,6 +2,12 @@
 
 Ce document décrit l’architecture **réelle** du frontend aujourd’hui (CRA/React) et met en avant les zones de **migration** (mix API backend vs Supabase direct, JS→TS, normalisation des endpoints).
 
+## Règles (à appliquer strictement)
+
+- **Tout nouveau fichier doit être en TypeScript**: `.ts` ou `.tsx` (pas de nouveau `.js` / `.jsx`).
+- **Toute URL backend** doit passer par `src/config/api.ts` (pas d’URL hardcodée).
+- **Tout accès Supabase** doit passer par `src/lib/supabaseClient` (pas d’anciens clients/keys en dur).
+
 ## Stack & exécution
 
 - **Framework**: React (Create React App / `react-scripts`)
@@ -101,9 +107,10 @@ Si adopté, migrer hook par hook (commencer par list pages + mutations) pour sta
 ### 4) Migration JS → TS (progressive)
 
 Le code est mixte (`.jsx`, `.js`, `.tsx`, `.ts`).
-Conserver une règle simple:
+Conserver une règle simple (et non négociable pour le futur):
 
-- Toucher un fichier → opportunité de le **typer** et/ou d’extraire des types communs (sans “big bang”).
+- **Nouveau code = TypeScript** (`.ts` / `.tsx`).
+- Toucher un fichier existant → opportunité de le **typer** et/ou d’extraire des types communs (sans “big bang”).
 
 ## Conventions recommandées (pour rester cohérent)
 
@@ -111,5 +118,3 @@ Conserver une règle simple:
 - **Supabase client**: importer depuis `src/lib/supabaseClient` (éviter les anciens fichiers/keys).
 - **Auth**: les composants/pages protégés doivent passer par `ProtectedRoute` (+ `RoleProtectedRoute` si nécessaire).
 - **Types DB**: utiliser `Tables<'table'>` depuis `src/types/supabase.ts` pour les listes simples.
-
-

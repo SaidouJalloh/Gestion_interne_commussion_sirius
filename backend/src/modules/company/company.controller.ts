@@ -11,12 +11,28 @@ const service = new CompanyService();
 
 export class CompanyController {
   async getAll(
-    _req: Request,
+    req: Request,
     res: Response,
     next: NextFunction,
   ): Promise<void> {
     try {
-      const compagnies = await service.getAll();
+      const activeRaw = req.query.active;
+      const hasSubscriptionLinkRaw = req.query.hasSubscriptionLink;
+
+      const active =
+        typeof activeRaw === 'string'
+          ? activeRaw.trim().toLowerCase() === 'true'
+          : undefined;
+
+      const hasSubscriptionLink =
+        typeof hasSubscriptionLinkRaw === 'string'
+          ? hasSubscriptionLinkRaw.trim().toLowerCase() === 'true'
+          : undefined;
+
+      const compagnies = await service.getAll({
+        active: typeof active === 'boolean' ? active : undefined,
+        hasSubscriptionLink: !!hasSubscriptionLink,
+      });
       res.json(apiResponse.success(compagnies));
     } catch (error) {
       next(error);
