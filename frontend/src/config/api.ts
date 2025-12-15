@@ -43,6 +43,64 @@ export const API_ENDPOINTS = {
         delete: (id: string) => `${API_BASE_URL}/api/clients/${id}`,
     },
 
+    // Dashboard
+    dashboard: {
+        get: `${API_BASE_URL}/api/dashboard`,
+    },
+
+    // Payments
+    payments: {
+        list: `${API_BASE_URL}/api/payments`,
+        byId: (id: string) => `${API_BASE_URL}/api/payments/${id}`,
+        create: `${API_BASE_URL}/api/payments`,
+        update: (id: string) => `${API_BASE_URL}/api/payments/${id}`,
+        delete: (id: string) => `${API_BASE_URL}/api/payments/${id}`,
+    },
+
+    // Folders (Medias)
+    folders: {
+        list: `${API_BASE_URL}/api/folders`,
+        byId: (id: string) => `${API_BASE_URL}/api/folders/${id}`,
+        create: `${API_BASE_URL}/api/folders`,
+        update: (id: string) => `${API_BASE_URL}/api/folders/${id}`,
+        delete: (id: string) => `${API_BASE_URL}/api/folders/${id}`,
+    },
+
+    // Media (Medias)
+    media: {
+        list: `${API_BASE_URL}/api/media`,
+        byId: (id: string) => `${API_BASE_URL}/api/media/${id}`,
+        create: `${API_BASE_URL}/api/media`,
+        update: (id: string) => `${API_BASE_URL}/api/media/${id}`,
+        delete: (id: string) => `${API_BASE_URL}/api/media/${id}`,
+        trash: (id: string) => `${API_BASE_URL}/api/media/${id}/trash`,
+        restore: (id: string) => `${API_BASE_URL}/api/media/${id}/restore`,
+    },
+
+    // Vehicules (Flottes)
+    vehicules: {
+        list: `${API_BASE_URL}/api/vehicules`,
+        byId: (id: string) => `${API_BASE_URL}/api/vehicules/${id}`,
+        create: `${API_BASE_URL}/api/vehicules`,
+        update: (id: string) => `${API_BASE_URL}/api/vehicules/${id}`,
+        delete: (id: string) => `${API_BASE_URL}/api/vehicules/${id}`,
+    },
+
+    // Incorporations
+    incorporations: {
+        list: `${API_BASE_URL}/api/incorporations`,
+        byId: (id: string) => `${API_BASE_URL}/api/incorporations/${id}`,
+        create: `${API_BASE_URL}/api/incorporations`,
+    },
+
+    // Notifications
+    notifications: {
+        list: `${API_BASE_URL}/api/notifications`,
+        byId: (id: string) => `${API_BASE_URL}/api/notifications/${id}`,
+        update: (id: string) => `${API_BASE_URL}/api/notifications/${id}`,
+        delete: (id: string) => `${API_BASE_URL}/api/notifications/${id}`,
+    },
+
     // Autres endpoints à ajouter selon les besoins
     // paiements: { ... },
     // vehicules: { ... },

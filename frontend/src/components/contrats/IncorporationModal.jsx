@@ -417,10 +417,11 @@
 
 
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabaseClient';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { calculerPrimeNette, calculerCommission, isAutoFlotte } from '../../utils/incorporationHelpers';
+import { API_ENDPOINTS } from '../../config/api';
+import { apiRequest } from '../../utils/apiClient';
 
 export const IncorporationModal = ({ isOpen, onClose, contrat, onSuccess }) => {
     const { profile } = useAuth();
@@ -525,64 +526,26 @@ export const IncorporationModal = ({ isOpen, onClose, contrat, onSuccess }) => {
                 return;
             }
 
-            // 1. Insérer l'incorporation
-            const { error: errorIncorp } = await supabase
-                .from('incorporations')
-                .insert([{
+            // ✅ API backend: crée l'incorporation + met à jour le contrat en transaction
+            await apiRequest(API_ENDPOINTS.incorporations.create, {
+                method: 'POST',
+                body: JSON.stringify({
                     contrat_id: contrat.id,
                     date_effet: calculs.date_effet,
-                    date_expiration: contrat.date_expiration,
+                    date_expiration: typeof contrat.date_expiration === 'string'
+                        ? contrat.date_expiration.slice(0, 10)
+                        : new Date(contrat.date_expiration).toISOString().slice(0, 10),
                     nombre_elements: nombreElements,
-                    prime_ttc: parseFloat(formData.prime_ttc),
-                    fga: parseFloat(formData.fga) || 0,
-                    taxes: parseFloat(formData.taxes) || 0,
-                    montant_accessoire: parseFloat(formData.montant_accessoire) || 0,
+                    prime_ttc: Number(formData.prime_ttc),
+                    fga: Number(formData.fga) || 0,
+                    taxes: Number(formData.taxes) || 0,
+                    montant_accessoire: Number(formData.montant_accessoire) || 0,
                     prime_nette: calculs.prime_nette,
                     commission: calculs.commission,
                     notes: formData.notes?.trim() || null,
-                    created_by: profile.id
-                }]);
-
-            if (errorIncorp) throw errorIncorp;
-
-            // 2. Mettre à jour le contrat
-            const { data: { session } } = await supabase.auth.getSession();
-            const supabaseUrl = supabase.supabaseUrl;
-            const supabaseKey = supabase.supabaseKey;
-
-            const nouveauPrimeTTC = (parseFloat(contrat.prime_ttc) || 0) + parseFloat(formData.prime_ttc);
-            const nouveauPrimeNette = (parseFloat(contrat.prime_nette) || 0) + calculs.prime_nette;
-            const nouveauFGA = (parseFloat(contrat.fga) || 0) + (parseFloat(formData.fga) || 0);
-            const nouveauTaxes = (parseFloat(contrat.taxes) || 0) + (parseFloat(formData.taxes) || 0);
-            const nouveauAccessoire = (parseFloat(contrat.montant_accessoire) || 0) + (parseFloat(formData.montant_accessoire) || 0);
-            const nouveauMontantIncorp = (parseFloat(contrat.montant_incorporations) || 0) + parseFloat(formData.prime_ttc);
-            const nouveauNombreIncorp = (parseInt(contrat.nombre_incorporations) || 0) + 1;
-            const nouvelleCommission = (parseFloat(contrat.commission) || 0) + calculs.commission;
-
-            const response = await fetch(
-                `${supabaseUrl}/rest/v1/contrats?id=eq.${contrat.id}`,
-                {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${session.access_token}`,
-                        'apikey': supabaseKey,
-                        'Prefer': 'return=minimal'
-                    },
-                    body: JSON.stringify({
-                        prime_ttc: nouveauPrimeTTC,
-                        prime_nette: nouveauPrimeNette,
-                        fga: nouveauFGA,
-                        taxes: nouveauTaxes,
-                        montant_accessoire: nouveauAccessoire,
-                        montant_incorporations: nouveauMontantIncorp,
-                        nombre_incorporations: nouveauNombreIncorp,
-                        commission: nouvelleCommission
-                    })
-                }
-            );
-
-            if (!response.ok) throw new Error('Erreur mise à jour contrat');
+                    created_by: profile?.id ?? null,
+                }),
+            });
 
             toast.success('Incorporation enregistrée ! 🎉');
 

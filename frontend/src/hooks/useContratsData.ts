@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient';
 import type { Tables } from '../types/supabase';
+import { API_ENDPOINTS } from '../config/api';
+import { apiRequest } from '../utils/apiClient';
 
 // Typages de base pour sécuriser au moins les listes simples
 type ClientRow = Tables<'clients'>;
@@ -22,39 +23,23 @@ export const useContratsData = () => {
         try {
             setLoading(true);
 
-            const [contratsRes, clientsRes, compagniesRes] = await Promise.all([
-                supabase
-                    .from('contrats')
-                    .select(
-                        `
-            *,
-            clients(id, nom, prenom, type_client, telephone, email),
-            compagnies(id, nom, sigle, logo_url),
-            vehicules(*)
-          `,
-                    )
-                    .order('created_at', { ascending: false }),
-                supabase
-                    .from('clients')
-                    .select('id, nom, prenom, type_client, telephone, email')
-                    .order('nom'),
-                supabase
-                    .from('compagnies')
-                    .select('*')
-                    .eq('actif', true)
-                    .order('nom'),
+            const compagniesUrl = `${API_ENDPOINTS.compagnies.list}?active=true`;
+
+            const [contratsData, clientsData, compagniesData] = await Promise.all([
+                apiRequest<ContratWithRelations[]>(API_ENDPOINTS.contracts.list),
+                apiRequest<ClientRow[]>(API_ENDPOINTS.clients.list),
+                apiRequest<CompagnieRow[]>(compagniesUrl),
             ]);
 
-            if (contratsRes.error) throw contratsRes.error;
-            if (clientsRes.error) throw clientsRes.error;
-            if (compagniesRes.error) throw compagniesRes.error;
-
-            setContrats((contratsRes.data as ContratWithRelations[]) || []);
-            setClients((clientsRes.data as ClientRow[]) || []);
-            setCompagnies((compagniesRes.data as CompagnieRow[]) || []);
+            setContrats(Array.isArray(contratsData) ? contratsData : []);
+            setClients(Array.isArray(clientsData) ? clientsData : []);
+            setCompagnies(Array.isArray(compagniesData) ? compagniesData : []);
         } catch (error) {
             // eslint-disable-next-line no-console
             console.error('Erreur chargement contrats:', error);
+            setContrats([]);
+            setClients([]);
+            setCompagnies([]);
         } finally {
             setLoading(false);
         }
@@ -62,72 +47,6 @@ export const useContratsData = () => {
 
     useEffect(() => {
         fetchData();
-
-        // 🔥 REALTIME : Écoute les changements sur contrats
-        const contratsChannel = supabase
-            .channel('contrats-changes')
-            .on(
-                'postgres_changes',
-                { event: 'INSERT', schema: 'public', table: 'contrats' },
-                () => {
-                    // Petit délai pour laisser Supabase finir d'écrire
-                    setTimeout(() => fetchData(), 300);
-                },
-            )
-            .on(
-                'postgres_changes',
-                { event: 'UPDATE', schema: 'public', table: 'contrats' },
-                () => {
-                    setTimeout(() => fetchData(), 300);
-                },
-            )
-            .on(
-                'postgres_changes',
-                { event: 'DELETE', schema: 'public', table: 'contrats' },
-                () => {
-                    fetchData();
-                },
-            )
-            .subscribe();
-
-        // 🔥 REALTIME : Écoute les changements sur véhicules
-        const vehiculesChannel = supabase
-            .channel('vehicules-changes')
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'vehicules' },
-                () => {
-                    setTimeout(() => fetchData(), 200);
-                },
-            )
-            .subscribe();
-
-        // 🔥 REALTIME : Écoute les changements sur clients
-        const clientsChannel = supabase
-            .channel('clients-changes')
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'clients' },
-                () => {
-                    supabase
-                        .from('clients')
-                        .select('id, nom, prenom, type_client, telephone, email')
-                        .order('nom')
-                        .then(({ data }) => {
-                            if (data) {
-                                setClients(data as ClientRow[]);
-                            }
-                        });
-                },
-            )
-            .subscribe();
-
-        // Cleanup : se désabonner quand le composant unmount
-        return () => {
-            supabase.removeChannel(contratsChannel);
-            supabase.removeChannel(vehiculesChannel);
-            supabase.removeChannel(clientsChannel);
-        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 

@@ -680,6 +680,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { exportDashboardPDF, exportDashboardExcel, exportClientsExcel, exportContratsExcel } from '../utils/exportUtils';
+import { API_ENDPOINTS } from '../config/api';
+import { apiRequest } from '../utils/apiClient';
 
 export default function Parametres() {
     const { user, profile } = useAuth();
@@ -741,20 +743,20 @@ export default function Parametres() {
 
     const fetchStats = async () => {
         try {
-            const [clientsRes, compagniesRes, contratsRes, paiementsRes, mediasRes] = await Promise.all([
-                supabase.from('clients').select('id', { count: 'exact', head: true }),
-                supabase.from('compagnies').select('id', { count: 'exact', head: true }),
-                supabase.from('contrats').select('id', { count: 'exact', head: true }),
-                supabase.from('paiements').select('id', { count: 'exact', head: true }),
-                supabase.from('medias').select('id', { count: 'exact', head: true }),
+            const [clients, compagnies, contrats, paiements, medias] = await Promise.all([
+                apiRequest(API_ENDPOINTS.clients.list),
+                apiRequest(API_ENDPOINTS.compagnies.list),
+                apiRequest(API_ENDPOINTS.contracts.list),
+                apiRequest(API_ENDPOINTS.payments.list),
+                apiRequest(API_ENDPOINTS.media.list),
             ]);
 
             setStats({
-                clients: clientsRes.count || 0,
-                compagnies: compagniesRes.count || 0,
-                contrats: contratsRes.count || 0,
-                paiements: paiementsRes.count || 0,
-                medias: mediasRes.count || 0,
+                clients: Array.isArray(clients) ? clients.length : 0,
+                compagnies: Array.isArray(compagnies) ? compagnies.length : 0,
+                contrats: Array.isArray(contrats) ? contrats.length : 0,
+                paiements: Array.isArray(paiements) ? paiements.length : 0,
+                medias: Array.isArray(medias) ? medias.length : 0,
             });
         } catch (error) {
             console.error('Erreur stats:', error);
@@ -763,15 +765,18 @@ export default function Parametres() {
 
     const fetchExportData = async () => {
         try {
-            const [clientsRes, contratsRes, paiementsRes] = await Promise.all([
-                supabase.from('clients').select('*'),
-                supabase.from('contrats').select('*, clients(nom, prenom, type_client), compagnies(nom)').eq('statut', 'actif'),
-                supabase.from('paiements').select('*')
+            const [clientsAll, contratsAll, paiementsAll, compagniesAll] = await Promise.all([
+                apiRequest(API_ENDPOINTS.clients.list),
+                apiRequest(API_ENDPOINTS.contracts.list),
+                apiRequest(API_ENDPOINTS.payments.list),
+                apiRequest(API_ENDPOINTS.compagnies.list),
             ]);
 
-            const clients = clientsRes.data || [];
-            const contratsActifs = contratsRes.data || [];
-            const paiements = paiementsRes.data || [];
+            const clients = Array.isArray(clientsAll) ? clientsAll : [];
+            const contratsArr = Array.isArray(contratsAll) ? contratsAll : [];
+            const contratsActifs = contratsArr.filter((c) => c?.statut === 'actif');
+            const paiements = Array.isArray(paiementsAll) ? paiementsAll : [];
+            const compagnies = Array.isArray(compagniesAll) ? compagniesAll : [];
 
             const commissionsTotal = contratsActifs.reduce((sum, c) => sum + parseFloat(c.commission || 0), 0);
             const commissionsEncaissees = paiements
@@ -801,18 +806,20 @@ export default function Parametres() {
                 typesMap[type].count += 1;
             });
 
-            const { data: compagnies } = await supabase.from('compagnies').select('id, nom');
             const compagniesMap = {};
             contratsActifs.forEach(c => {
-                const compagnie = compagnies?.find(comp => comp.id === c.compagnie_id);
-                if (compagnie) {
-                    if (!compagniesMap[compagnie.nom]) {
-                        compagniesMap[compagnie.nom] = { commission: 0, count: 0, encaissee: 0, enAttente: 0 };
-                    }
-                    const commission = parseFloat(c.commission || 0);
-                    compagniesMap[compagnie.nom].commission += commission;
-                    compagniesMap[compagnie.nom].count += 1;
+                const name =
+                    c.compagnies?.nom ||
+                    compagnies.find((comp) => comp.id === c.compagnie_id)?.nom;
+
+                if (!name) return;
+
+                if (!compagniesMap[name]) {
+                    compagniesMap[name] = { commission: 0, count: 0, encaissee: 0, enAttente: 0 };
                 }
+                const commission = parseFloat(c.commission || 0);
+                compagniesMap[name].commission += commission;
+                compagniesMap[name].count += 1;
             });
 
             const dashboardGraphiques = {
@@ -828,7 +835,7 @@ export default function Parametres() {
                 dashboardStats,
                 dashboardGraphiques,
                 clients,
-                contrats: contratsRes.data || []
+                contrats: contratsArr
             });
 
         } catch (error) {
@@ -1159,9 +1166,9 @@ export default function Parametres() {
 
                                 {/* Badge du rôle */}
                                 <div className={`absolute -bottom-1 -right-1 px-2 py-0.5 rounded-full text-xs font-medium border-2 border-white dark:border-gray-800 ${profile?.role === 'superadmin' ? 'bg-purple-500 text-white' :
-                                        profile?.role === 'admin' ? 'bg-blue-500 text-white' :
-                                            profile?.role === 'gestionnaire' ? 'bg-green-500 text-white' :
-                                                'bg-gray-500 text-white'
+                                    profile?.role === 'admin' ? 'bg-blue-500 text-white' :
+                                        profile?.role === 'gestionnaire' ? 'bg-green-500 text-white' :
+                                            'bg-gray-500 text-white'
                                     }`}>
                                     {profile?.role === 'superadmin' ? 'SA' :
                                         profile?.role === 'admin' ? 'A' :
@@ -1291,9 +1298,9 @@ export default function Parametres() {
                                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                                     <span className="font-medium">Rôle :</span>{' '}
                                     <span className={`capitalize px-2 py-0.5 rounded-full text-xs font-medium ${profile?.role === 'superadmin' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' :
-                                            profile?.role === 'admin' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
-                                                profile?.role === 'gestionnaire' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                                                    'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                                        profile?.role === 'admin' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                                            profile?.role === 'gestionnaire' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                                                'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
                                         }`}>
                                         {profile?.role || 'utilisateur'}
                                     </span>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from '../lib/supabaseClient';
 import { useNavigate } from 'react-router-dom';
+import { API_ENDPOINTS } from '../config/api';
+import { apiRequest } from '../utils/apiClient';
 
 export default function GlobalSearch() {
     const [query, setQuery] = useState('');
@@ -8,7 +9,7 @@ export default function GlobalSearch() {
         clients: [],
         contrats: [],
         compagnies: [],
-        paiements: []
+        paiements: [] // conservé pour compat (pas affiché dans l'UI)
     });
     const [showResults, setShowResults] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -44,43 +45,60 @@ export default function GlobalSearch() {
     const performSearch = async (searchQuery) => {
         setLoading(true);
         try {
-            const searchTerm = `%${searchQuery}%`;
+            const q = String(searchQuery || '').trim().toLowerCase();
+            if (q.length < 2) {
+                setResults({ clients: [], contrats: [], compagnies: [], paiements: [] });
+                setShowResults(false);
+                return;
+            }
 
-            // Recherche parallèle dans toutes les tables
-            const [clientsRes, contratsRes, compagniesRes, paiementsRes] = await Promise.all([
-                // Clients
-                supabase
-                    .from('clients')
-                    .select('*')
-                    .or(`nom.ilike.${searchTerm},prenom.ilike.${searchTerm},email.ilike.${searchTerm},telephone.ilike.${searchTerm}`)
-                    .limit(5),
-
-                // Contrats
-                supabase
-                    .from('contrats')
-                    .select('*, clients(nom, prenom), compagnies(nom)')
-                    .or(`numero_police.ilike.${searchTerm}`)
-                    .limit(5),
-
-                // Compagnies
-                supabase
-                    .from('compagnies')
-                    .select('*')
-                    .ilike('nom', searchTerm)
-                    .limit(5),
-
-                // Paiements
-                supabase
-                    .from('paiements')
-                    .select('*, contrats(clients(nom, prenom))')
-                    .limit(5)
+            // API backend: on récupère les listes puis on filtre côté client.
+            // (À optimiser plus tard avec un endpoint /search si besoin.)
+            const [clientsAll, contratsAll, compagniesAll] = await Promise.all([
+                apiRequest(API_ENDPOINTS.clients.list),
+                apiRequest(API_ENDPOINTS.contracts.list),
+                apiRequest(API_ENDPOINTS.compagnies.list),
             ]);
 
+            const clients = (Array.isArray(clientsAll) ? clientsAll : []).filter((c) => {
+                const nom = String(c?.nom || '').toLowerCase();
+                const prenom = String(c?.prenom || '').toLowerCase();
+                const email = String(c?.email || '').toLowerCase();
+                const telephone = String(c?.telephone || '').toLowerCase();
+                return (
+                    nom.includes(q) ||
+                    prenom.includes(q) ||
+                    email.includes(q) ||
+                    telephone.includes(q)
+                );
+            }).slice(0, 5);
+
+            const contrats = (Array.isArray(contratsAll) ? contratsAll : []).filter((c) => {
+                const type = String(c?.type_contrat || '').toLowerCase();
+                const immat = String(c?.immatriculation || '').toLowerCase();
+                const clientNom = String(c?.clients?.nom || '').toLowerCase();
+                const clientPrenom = String(c?.clients?.prenom || '').toLowerCase();
+                const compagnieNom = String(c?.compagnies?.nom || '').toLowerCase();
+                return (
+                    type.includes(q) ||
+                    immat.includes(q) ||
+                    clientNom.includes(q) ||
+                    clientPrenom.includes(q) ||
+                    compagnieNom.includes(q)
+                );
+            }).slice(0, 5);
+
+            const compagnies = (Array.isArray(compagniesAll) ? compagniesAll : []).filter((c) => {
+                const nom = String(c?.nom || '').toLowerCase();
+                const sigle = String(c?.sigle || '').toLowerCase();
+                return nom.includes(q) || sigle.includes(q);
+            }).slice(0, 5);
+
             setResults({
-                clients: clientsRes.data || [],
-                contrats: contratsRes.data || [],
-                compagnies: compagniesRes.data || [],
-                paiements: paiementsRes.data || []
+                clients,
+                contrats,
+                compagnies,
+                paiements: [],
             });
 
             setShowResults(true);
@@ -110,7 +128,7 @@ export default function GlobalSearch() {
     };
 
     const getTotalResults = () => {
-        return results.clients.length + results.contrats.length + results.compagnies.length + results.paiements.length;
+        return results.clients.length + results.contrats.length + results.compagnies.length;
     };
 
     const formatCurrency = (amount) => {
@@ -174,8 +192,8 @@ export default function GlobalSearch() {
                                                 </p>
                                             </div>
                                             <span className={`px-2 py-1 rounded text-xs ${client.type_client === 'entreprise'
-                                                    ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300'
-                                                    : 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                                                ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300'
+                                                : 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
                                                 }`}>
                                                 {client.type_client}
                                             </span>
@@ -210,8 +228,8 @@ export default function GlobalSearch() {
                                                         {formatCurrency(contrat.commission)}
                                                     </p>
                                                     <span className={`px-2 py-0.5 rounded text-xs ${contrat.statut === 'actif'
-                                                            ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
-                                                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                                                        ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
+                                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                                                         }`}>
                                                         {contrat.statut}
                                                     </span>

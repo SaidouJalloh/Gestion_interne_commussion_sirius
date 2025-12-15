@@ -1492,10 +1492,13 @@
 
 
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabaseClient';
 import { isSanteContract, isAutoContract, calculateExpirationDate } from '../../utils/contratHelpers';
 import { useVehicules } from '../../hooks/useVehicules';
+import { useClientsMutations } from '../../hooks/useClientsMutations';
+import { useContractsMutations } from '../../hooks/useContractsMutations';
 import { VehiculesInput } from './VehiculesInput';
+import { API_ENDPOINTS } from '../../config/api';
+import { apiRequest } from '../../utils/apiClient';
 
 export const ContratModal = ({
     isOpen,
@@ -1512,6 +1515,9 @@ export const ContratModal = ({
     const [formLoading, setFormLoading] = useState(false);
     const [formError, setFormError] = useState('');
     const [localVehicules, setLocalVehicules] = useState([]);
+
+    const { updateClient } = useClientsMutations();
+    const { createContract, updateContract } = useContractsMutations();
 
     const { vehicules: existingVehicules } = useVehicules(selectedContrat?.id);
 
@@ -1575,56 +1581,79 @@ export const ContratModal = ({
                 if (formData.client_telephone) clientUpdate.telephone = formData.client_telephone;
                 if (formData.client_email) clientUpdate.email = formData.client_email;
 
-                const { error: clientError } = await supabase
-                    .from('clients')
-                    .update(clientUpdate)
-                    .eq('id', formData.client_id);
-
-                if (clientError) console.warn('Erreur mise à jour client:', clientError);
+                try {
+                    await updateClient(formData.client_id, clientUpdate);
+                } catch (e) {
+                    console.warn('Erreur mise à jour client (API backend):', e);
+                }
             }
 
             const { client_telephone, client_email, ...contratData } = formData;
 
+            const toNullableNumber = (value) => {
+                if (value === null || typeof value === 'undefined') return null;
+                const s = String(value).trim();
+                if (s.length === 0) return null;
+                const n = parseFloat(s);
+                return Number.isFinite(n) ? n : null;
+            };
+
+            const toNumberOrZero = (value) => {
+                const n = toNullableNumber(value);
+                return n === null ? 0 : n;
+            };
+
+            const primeTtc = toNullableNumber(formData.prime_ttc);
+            const primeNette = toNullableNumber(formData.prime_nette);
+            const tauxCommission = toNullableNumber(formData.taux_commission);
+            const commission = toNullableNumber(formData.commission);
+
+            if (primeNette === null || tauxCommission === null || commission === null) {
+                setFormError('Prime nette, taux de commission et commission sont obligatoires');
+                setFormLoading(false);
+                return;
+            }
+
             const dataToSubmit = {
                 ...contratData,
                 is_flotte: formData.is_flotte || false,
-                prime_ttc: parseFloat(formData.prime_ttc),
-                prime_nette: parseFloat(formData.prime_nette),
-                montant_accessoire: parseFloat(formData.montant_accessoire || 0),
-                fga: parseFloat(formData.fga || 0),
-                taxes: parseFloat(formData.taxes || 0),
-                taux_commission: parseFloat(formData.taux_commission),
-                commission: parseFloat(formData.commission),
-                evacuation_sanitaire: formData.evacuation_sanitaire ? parseFloat(formData.evacuation_sanitaire) : null,
-                prime_regulation: formData.prime_regulation ? parseFloat(formData.prime_regulation) : null,
+                prime_ttc: primeTtc,
+                prime_nette: primeNette,
+                montant_accessoire: toNumberOrZero(formData.montant_accessoire),
+                fga: toNumberOrZero(formData.fga),
+                taxes: toNumberOrZero(formData.taxes),
+                taux_commission: tauxCommission,
+                commission: commission,
+                evacuation_sanitaire: toNullableNumber(formData.evacuation_sanitaire),
+                prime_regulation: toNullableNumber(formData.prime_regulation),
             };
 
             if (selectedContrat) {
-                const { error } = await supabase
-                    .from('contrats')
-                    .update(dataToSubmit)
-                    .eq('id', selectedContrat.id);
-                if (error) throw error;
+                await updateContract(selectedContrat.id, dataToSubmit);
             } else {
-                const { data: newContrat, error } = await supabase
-                    .from('contrats')
-                    .insert([dataToSubmit])
-                    .select()
-                    .single();
-
-                if (error) throw error;
+                const newContrat = await createContract(dataToSubmit);
 
                 if (formData.is_flotte && localVehicules.length > 0) {
-                    const vehiculesToInsert = localVehicules.map(v => ({
-                        contrat_id: newContrat.id,
-                        immatriculation: v.immatriculation
-                    }));
+                    const vehiculesToInsert = localVehicules
+                        .map(v => String(v?.immatriculation || '').trim())
+                        .filter(Boolean)
+                        .map((immatriculation) => ({ contrat_id: newContrat.id, immatriculation }));
 
-                    const { error: vehiculesError } = await supabase
-                        .from('vehicules')
-                        .insert(vehiculesToInsert);
+                    if (vehiculesToInsert.length > 0) {
+                        const results = await Promise.allSettled(
+                            vehiculesToInsert.map((v) =>
+                                apiRequest(API_ENDPOINTS.vehicules.create, {
+                                    method: 'POST',
+                                    body: JSON.stringify(v),
+                                }),
+                            ),
+                        );
 
-                    if (vehiculesError) console.warn('Erreur ajout véhicules:', vehiculesError);
+                        const rejected = results.filter((r) => r.status === 'rejected');
+                        if (rejected.length > 0) {
+                            console.warn('Erreur ajout véhicules (API backend):', rejected);
+                        }
+                    }
                 }
             }
 

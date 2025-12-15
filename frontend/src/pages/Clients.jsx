@@ -2,18 +2,19 @@
 
 // client optimise
 import { useState, useCallback, useMemo, useRef } from 'react';
-import { supabase } from '../lib/supabaseClient';
 // import { useAuth } from '../context/AuthContext';
 import { useProfileContext } from '../context/ProfileContext';
 import toast from 'react-hot-toast';
 import { useDebounce } from '../hooks/useDebounce';
 import { useKeyboard } from '../hooks/useKeyboard';
 import { useClientsData } from '../hooks/useClientsData';
+import { useClientsMutations } from '../hooks/useClientsMutations';
 import { CardSkeleton } from '../components/LoadingStates';
 
 export default function Clients() {
     // ⚡ Utilise le hook personnalisé
     const { clients, loading, refetch } = useClientsData();
+    const { createClient, updateClient, deleteClient } = useClientsMutations();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [filterType, setFilterType] = useState('all');
@@ -140,40 +141,14 @@ export default function Clients() {
                 notes: formData.notes?.trim() || null,
             };
 
-            // ✅ Vérifier si l'email existe déjà (sauf pour le client actuel)
-            if (cleanData.email) {
-                let query = supabase
-                    .from('clients')
-                    .select('id')
-                    .eq('email', cleanData.email);
-
-                if (selectedClient) {
-                    query = query.neq('id', selectedClient.id);
-                }
-
-                const { data: existingClient } = await query.maybeSingle();
-
-                if (existingClient) {
-                    setFormError('Cet email est déjà utilisé par un autre client');
-                    setFormLoading(false);
-                    return;
-                }
-            }
-
             if (selectedClient) {
-                const { error } = await supabase
-                    .from('clients')
-                    .update(cleanData)  // ← Utilise cleanData au lieu de formData
-                    .eq('id', selectedClient.id);
-
-                if (error) throw error;
+                await updateClient(selectedClient.id, cleanData);
                 toast.success('Client mis à jour ! 🎉');
             } else {
-                const { error } = await supabase
-                    .from('clients')
-                    .insert([cleanData]);  // ← Utilise cleanData
-
-                if (error) throw error;
+                await createClient({
+                    ...cleanData,
+                    created_by: profile?.id ?? null,
+                });
                 toast.success('Client créé ! 🎉');
             }
 
@@ -182,23 +157,28 @@ export default function Clients() {
         } catch (err) {
             console.error('Erreur:', err);
 
-            // ✅ Message d'erreur plus clair
-            if (err.code === '23505') {
+            const message = err?.message || 'Une erreur est survenue';
+            if (
+                typeof message === 'string' &&
+                (message.toLowerCase().includes('email') &&
+                    (message.toLowerCase().includes('déjà') ||
+                        message.toLowerCase().includes('deja') ||
+                        message.toLowerCase().includes('conflit') ||
+                        message.toLowerCase().includes('unicité') ||
+                        message.toLowerCase().includes('unicite')))
+            ) {
                 setFormError('Cet email est déjà utilisé');
             } else {
-                setFormError(err.message || 'Une erreur est survenue');
+                setFormError(message);
             }
         } finally {
             setFormLoading(false);
         }
-    }, [formData, selectedClient, refetch, closeModal]);
+    }, [formData, selectedClient, refetch, closeModal, createClient, updateClient, profile?.id]);
 
     const handleDelete = useCallback(async (clientId) => {
         try {
-            const promise = supabase
-                .from('clients')
-                .delete()
-                .eq('id', clientId);
+            const promise = deleteClient(clientId);
 
             await toast.promise(promise, {
                 loading: 'Suppression...',
@@ -211,7 +191,7 @@ export default function Clients() {
         } catch (error) {
             console.error('Erreur:', error);
         }
-    }, [refetch]);
+    }, [deleteClient, refetch]);
 
     // Raccourcis clavier
     useKeyboard('n', (e) => {

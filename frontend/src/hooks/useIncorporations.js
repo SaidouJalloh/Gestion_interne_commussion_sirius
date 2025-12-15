@@ -53,14 +53,15 @@
 
 
 
-import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { useState, useEffect, useCallback } from 'react';
+import { API_ENDPOINTS } from '../config/api';
+import { apiRequest } from '../utils/apiClient';
 
 export const useIncorporations = (contratId) => {
     const [incorporations, setIncorporations] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchIncorporations = async () => {
+    const fetchIncorporations = useCallback(async () => {
         if (!contratId) {
             setIncorporations([]);
             setLoading(false);
@@ -69,39 +70,29 @@ export const useIncorporations = (contratId) => {
 
         try {
             setLoading(true);
-            const { data, error } = await supabase
-                .from('incorporations')
-                .select(`
-                    *,
-                    created_by_profile:profiles!incorporations_created_by_fkey(nom, prenom)
-                `)
-                .eq('contrat_id', contratId)
-                .order('created_at', { ascending: false });
+            const params = new URLSearchParams();
+            params.set('contratId', contratId);
+            const url = `${API_ENDPOINTS.incorporations.list}?${params.toString()}`;
 
-            if (error) throw error;
-            setIncorporations(data || []);
+            const data = await apiRequest(url);
+            const rows = Array.isArray(data) ? data : [];
+            // Compat: l'ancien code attendait `created_by_profile`
+            setIncorporations(
+                rows.map((row) => ({
+                    ...row,
+                    created_by_profile: row.created_by_profile ?? row.profiles ?? null,
+                })),
+            );
         } catch (error) {
             console.error('Erreur chargement incorporations:', error);
         } finally {
             setLoading(false);
         }
-    };
+    }, [contratId]);
 
     useEffect(() => {
         fetchIncorporations();
-
-        const channel = supabase
-            .channel(`incorporations-${contratId}`)
-            .on('postgres_changes',
-                { event: 'INSERT', schema: 'public', table: 'incorporations', filter: `contrat_id=eq.${contratId}` },
-                () => setTimeout(() => fetchIncorporations(), 300)
-            )
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [contratId]);
+    }, [fetchIncorporations]);
 
     return { incorporations, loading, refetch: fetchIncorporations };
 };

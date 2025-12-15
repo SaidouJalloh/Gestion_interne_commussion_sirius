@@ -1,43 +1,38 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
+import { API_ENDPOINTS } from '../config/api';
+import { apiRequest } from '../utils/apiClient';
 
 export const useVehicules = (contratId) => {
     const [vehicules, setVehicules] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    const fetchVehicules = async () => {
+    const fetchVehicules = useCallback(async () => {
         if (!contratId) return;
 
         try {
             setLoading(true);
-            const { data, error } = await supabase
-                .from('vehicules')
-                .select('*')
-                .eq('contrat_id', contratId)
-                .eq('actif', true)
-                .order('created_at', { ascending: true });
+            const params = new URLSearchParams();
+            params.set('contratId', contratId);
+            params.set('active', 'true');
+            const url = `${API_ENDPOINTS.vehicules.list}?${params.toString()}`;
 
-            if (error) throw error;
-            setVehicules(data || []);
+            const data = await apiRequest(url);
+            setVehicules(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Erreur fetch véhicules:', error);
             toast.error('Erreur lors du chargement des véhicules');
         } finally {
             setLoading(false);
         }
-    };
+    }, [contratId]);
 
     const addVehicule = async (vehiculeData) => {
         try {
-            const { data, error } = await supabase
-                .from('vehicules')
-                .insert([{ ...vehiculeData, contrat_id: contratId }])
-                .select()
-                .single();
-
-            if (error) throw error;
-
+            const data = await apiRequest(API_ENDPOINTS.vehicules.create, {
+                method: 'POST',
+                body: JSON.stringify({ ...vehiculeData, contrat_id: contratId }),
+            });
             setVehicules(prev => [...prev, data]);
             toast.success('Véhicule ajouté ! 🚗');
             return { success: true, data };
@@ -50,15 +45,10 @@ export const useVehicules = (contratId) => {
 
     const updateVehicule = async (id, vehiculeData) => {
         try {
-            const { data, error } = await supabase
-                .from('vehicules')
-                .update(vehiculeData)
-                .eq('id', id)
-                .select()
-                .single();
-
-            if (error) throw error;
-
+            const data = await apiRequest(API_ENDPOINTS.vehicules.update(id), {
+                method: 'PUT',
+                body: JSON.stringify(vehiculeData),
+            });
             setVehicules(prev => prev.map(v => v.id === id ? data : v));
             toast.success('Véhicule modifié ! ✏️');
             return { success: true, data };
@@ -71,13 +61,7 @@ export const useVehicules = (contratId) => {
 
     const deleteVehicule = async (id) => {
         try {
-            const { error } = await supabase
-                .from('vehicules')
-                .update({ actif: false })
-                .eq('id', id);
-
-            if (error) throw error;
-
+            await apiRequest(API_ENDPOINTS.vehicules.delete(id), { method: 'DELETE' });
             setVehicules(prev => prev.filter(v => v.id !== id));
             toast.success('Véhicule supprimé ! 🗑️');
             return { success: true };
@@ -90,7 +74,7 @@ export const useVehicules = (contratId) => {
 
     useEffect(() => {
         fetchVehicules();
-    }, [contratId]);
+    }, [fetchVehicules]);
 
     return {
         vehicules,
