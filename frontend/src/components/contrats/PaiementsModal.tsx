@@ -366,3 +366,6 @@ export const PaiementsModal = ({ contrat, onClose }: PaiementsModalProps) => {
   );
 };
 
+
+
+

@@ -101,6 +101,11 @@ export const API_ENDPOINTS = {
         delete: (id: string) => `${API_BASE_URL}/api/notifications/${id}`,
     },
 
+    // Recherche globale
+    search: {
+        get: `${API_BASE_URL}/api/search`,
+    },
+
     // Autres endpoints à ajouter selon les besoins
     // paiements: { ... },
     // vehicules: { ... },

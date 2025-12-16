@@ -27,6 +27,10 @@ type PaiementLike = Record<string, unknown> & {
 type NotificationLike = Record<string, unknown> & {
   id: string;
   statut?: string | null;
+  priorite?: string | null;
+  type?: string | null;
+  titre?: string | null;
+  message?: string | null;
   created_at: string;
 };
 

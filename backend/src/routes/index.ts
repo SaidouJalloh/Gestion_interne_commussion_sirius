@@ -9,6 +9,7 @@ import mediaRouter from '../modules/media/media.route';
 import vehiculeRouter from '../modules/vehicule/vehicule.route';
 import incorporationRouter from '../modules/incorporation/incorporation.route';
 import notificationRouter from '../modules/notification/notification.route';
+import searchRouter from '../modules/search/search.route';
 
 const router = Router();
 
@@ -22,6 +23,7 @@ router.use('/media', mediaRouter);
 router.use('/vehicules', vehiculeRouter);
 router.use('/incorporations', incorporationRouter);
 router.use('/notifications', notificationRouter);
+router.use('/search', searchRouter);
 
 export default router;
 
