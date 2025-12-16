@@ -8,7 +8,7 @@ import { useContratsData } from '../hooks/useContratsData';
 import { useContractsMutations } from '../hooks/useContractsMutations';
 import { ContratsFilters } from '../components/contrats/ContratsFilters';
 import { ContratsTable } from '../components/contrats/ContratsTable';
-import { ContratModal } from '../components/contrats/ContratModal';
+import { ContratModal, type ContratFormData } from '../components/contrats/ContratModal';
 import { PaiementsModal } from '../components/contrats/PaiementsModal';
 import { DeleteConfirmModal } from '../components/contrats/DeleteConfirmModal';
 import { FlotteModal } from '../components/contrats/FlotteModal';
@@ -25,28 +25,7 @@ type TauxSante = {
     commission_regulation: number;
 };
 
-type FormDataState = {
-    client_id: string;
-    compagnie_id: string;
-    type_contrat: string;
-    immatriculation: string;
-    prime_ttc: string;
-    prime_nette: string;
-    montant_accessoire: string;
-    fga: string;
-    taxes: string;
-    taux_commission: string | number;
-    commission: string;
-    date_effet: string;
-    date_expiration: string;
-    fractionnement: string;
-    statut: string;
-    notes: string;
-    client_telephone: string;
-    client_email: string;
-    evacuation_sanitaire: string;
-    prime_regulation: string;
-};
+type FormDataState = ContratFormData;
 
 export default function Contrats() {
     const { profile } = useProfileContext();
@@ -62,7 +41,7 @@ export default function Contrats() {
     const [flotteModal, setFlotteModal] = useState<ContratLike | null>(null);
     const [incorporationModal, setIncorporationModal] = useState<ContratLike | null>(null);
 
-    const searchRef = useRef<HTMLInputElement | null>(null);
+    const searchRef = useRef<HTMLInputElement>(null!);
 
     const debouncedSearch = useDebounce(searchTerm, 300);
 
@@ -166,36 +145,37 @@ export default function Contrats() {
         }
     }, [formData.type_contrat, formData.compagnie_id, compagnies]);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
-        if (formData.type_contrat && !isAutoContract(formData.type_contrat)) {
-            if (parseFloat(formData.fga) !== 0) {
+        const typeContrat = String(formData.type_contrat ?? '');
+        if (typeContrat && !isAutoContract(typeContrat)) {
+            if (parseFloat(String(formData.fga ?? 0)) !== 0) {
                 setFormData((prev) => ({
                     ...prev,
                     fga: '0',
                 }));
             }
         }
-    }, [formData.type_contrat]);
+    }, [formData.type_contrat, formData.fga]);
 
     useEffect(() => {
-        const primeTtc = parseFloat(formData.prime_ttc) || 0;
-        const accessoire = parseFloat(formData.montant_accessoire) || 0;
-        const taxes = parseFloat(formData.taxes) || 0;
+        const typeContrat = String(formData.type_contrat ?? '');
+        const primeTtc = parseFloat(String(formData.prime_ttc ?? 0)) || 0;
+        const accessoire = parseFloat(String(formData.montant_accessoire ?? 0)) || 0;
+        const taxes = parseFloat(String(formData.taxes ?? 0)) || 0;
 
         let primeNette = 0;
 
-        if (isAutoContract(formData.type_contrat)) {
-            const fga = parseFloat(formData.fga) || 0;
+        if (isAutoContract(typeContrat)) {
+            const fga = parseFloat(String(formData.fga ?? 0)) || 0;
             primeNette = primeTtc - accessoire - fga - taxes;
-        } else if (isSanteContract(formData.type_contrat)) {
-            const evacuationSanitaire = parseFloat(formData.evacuation_sanitaire) || 0;
+        } else if (isSanteContract(typeContrat)) {
+            const evacuationSanitaire = parseFloat(String(formData.evacuation_sanitaire ?? 0)) || 0;
             primeNette = primeTtc - accessoire - taxes - evacuationSanitaire;
         } else {
             primeNette = primeTtc - accessoire - taxes;
         }
 
-        if (primeNette >= 0 && primeNette !== parseFloat(formData.prime_nette)) {
+        if (primeNette >= 0 && primeNette !== parseFloat(String(formData.prime_nette ?? 0))) {
             setFormData((prev) => ({
                 ...prev,
                 prime_nette: primeNette.toFixed(2),
@@ -216,19 +196,19 @@ export default function Contrats() {
         formData.prime_nette,
     ]);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (!formData.prime_nette || !formData.taux_commission) {
             return;
         }
 
-        const primeNette = parseFloat(formData.prime_nette) || 0;
-        const montantAccessoire = parseFloat(formData.montant_accessoire) || 0;
+        const typeContrat = formData.type_contrat ?? '';
+        const primeNette = parseFloat(String(formData.prime_nette ?? 0)) || 0;
+        const montantAccessoire = parseFloat(String(formData.montant_accessoire ?? 0)) || 0;
         let commission = 0;
 
-        if (isSanteContract(formData.type_contrat) && tauxSante) {
-            const evacuationSanitaire = parseFloat(formData.evacuation_sanitaire) || 0;
-            const primeRegulation = parseFloat(formData.prime_regulation) || 0;
+        if (isSanteContract(typeContrat) && tauxSante) {
+            const evacuationSanitaire = parseFloat(String(formData.evacuation_sanitaire ?? 0)) || 0;
+            const primeRegulation = parseFloat(String(formData.prime_regulation ?? 0)) || 0;
 
             if (primeRegulation > 0) {
                 commission =
@@ -242,7 +222,7 @@ export default function Contrats() {
                 commission = primeNette * tauxSante.commission_base;
             }
         } else {
-            const tauxCommission = parseFloat(String(formData.taux_commission)) || 0;
+            const tauxCommission = parseFloat(String(formData.taux_commission ?? 0)) || 0;
             commission = primeNette * tauxCommission + montantAccessoire;
         }
 
@@ -253,6 +233,7 @@ export default function Contrats() {
         formData.type_contrat,
         formData.evacuation_sanitaire,
         formData.prime_regulation,
+        formData.prime_nette,
         tauxSante,
     ]);
 
@@ -516,4 +497,5 @@ export default function Contrats() {
         </div>
     );
 }
+
 
