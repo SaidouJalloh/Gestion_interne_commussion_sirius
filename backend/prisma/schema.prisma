@@ -1,895 +1,660 @@
 generator client {
-    provider        = "prisma-client-js"
-    previewFeatures = ["multiSchema"]
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
-    schemas  = ["auth", "public"]
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+  schemas   = ["auth", "public"]
 }
-
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-// model audit_log_entries {
-//     instance_id String?   @db.Uuid
-//     id          String    @id @db.Uuid
-//     payload     Json?     @db.Json
-//     created_at  DateTime? @db.Timestamptz(6)
-//     ip_address  String    @default("") @db.VarChar(64)
-
-//     @@index([instance_id], map: "audit_logs_instance_id_idx")
-//     @@schema("auth")
-// }
-
-// /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-// /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-// model flow_state {
-//     id                     String                @id @db.Uuid
-//     user_id                String?               @db.Uuid
-//     auth_code              String
-//     code_challenge_method  code_challenge_method
-//     code_challenge         String
-//     provider_type          String
-//     provider_access_token  String?
-//     provider_refresh_token String?
-//     created_at             DateTime?             @db.Timestamptz(6)
-//     updated_at             DateTime?             @db.Timestamptz(6)
-//     authentication_method  String
-//     auth_code_issued_at    DateTime?             @db.Timestamptz(6)
-//     saml_relay_states      saml_relay_states[]
-
-//     @@index([created_at(sort: Desc)])
-//     @@index([auth_code], map: "idx_auth_code")
-//     @@index([user_id, authentication_method], map: "idx_user_id_auth_method")
-//     @@schema("auth")
-// }
-
-// /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-// /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-// model identities {
-//     provider_id     String
-//     user_id         String    @db.Uuid
-//     identity_data   Json
-//     provider        String
-//     last_sign_in_at DateTime? @db.Timestamptz(6)
-//     created_at      DateTime? @db.Timestamptz(6)
-//     updated_at      DateTime? @db.Timestamptz(6)
-//     email           String?   @default(dbgenerated("lower((identity_data ->> 'email'::text))"))
-//     id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-//     users           users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-//     @@unique([provider_id, provider], map: "identities_provider_id_provider_unique")
-//     @@index([email])
-//     @@index([user_id])
-//     @@schema("auth")
-// }
-
-// /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-// /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-// model instances {
-//     id              String    @id @db.Uuid
-//     uuid            String?   @db.Uuid
-//     raw_base_config String?
-//     created_at      DateTime? @db.Timestamptz(6)
-//     updated_at      DateTime? @db.Timestamptz(6)
-
-//     @@schema("auth")
-// }
-
-// /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-// /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-// model mfa_amr_claims {
-//     session_id            String   @db.Uuid
-//     created_at            DateTime @db.Timestamptz(6)
-//     updated_at            DateTime @db.Timestamptz(6)
-//     authentication_method String
-//     id                    String   @id(map: "amr_id_pk") @db.Uuid
-//     sessions              sessions @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-//     @@unique([session_id, authentication_method], map: "mfa_amr_claims_session_id_authentication_method_pkey")
-//     @@schema("auth")
-// }
-
-// /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-// /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-// model mfa_challenges {
-//     id                     String      @id @db.Uuid
-//     factor_id              String      @db.Uuid
-//     created_at             DateTime    @db.Timestamptz(6)
-//     verified_at            DateTime?   @db.Timestamptz(6)
-//     ip_address             String      @db.Inet
-//     otp_code               String?
-//     web_authn_session_data Json?
-//     mfa_factors            mfa_factors @relation(fields: [factor_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "mfa_challenges_auth_factor_id_fkey")
-
-//     @@index([created_at(sort: Desc)], map: "mfa_challenge_created_at_idx")
-//     @@schema("auth")
-// }
-
-// /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-// /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-// model mfa_factors {
-//     id                           String           @id @db.Uuid
-//     user_id                      String           @db.Uuid
-//     friendly_name                String?
-//     factor_type                  factor_type
-//     status                       factor_status
-//     created_at                   DateTime         @db.Timestamptz(6)
-//     updated_at                   DateTime         @db.Timestamptz(6)
-//     secret                       String?
-//     phone                        String?
-//     last_challenged_at           DateTime?        @unique @db.Timestamptz(6)
-//     web_authn_credential         Json?
-//     web_authn_aaguid             String?          @db.Uuid
-//     last_webauthn_challenge_data Json?
-//     mfa_challenges               mfa_challenges[]
-//     users                        users            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-//     @@unique([user_id, phone], map: "unique_phone_factor_per_user")
-//     @@index([user_id, created_at], map: "factor_id_created_at_idx")
-//     @@index([user_id])
-//     @@schema("auth")
-// }
-
-// /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-// model oauth_authorizations {
-//     id                    String                     @id @db.Uuid
-//     authorization_id      String                     @unique
-//     client_id             String                     @db.Uuid
-//     user_id               String?                    @db.Uuid
-//     redirect_uri          String
-//     scope                 String
-//     state                 String?
-//     resource              String?
-//     code_challenge        String?
-//     code_challenge_method code_challenge_method?
-//     response_type         oauth_response_type        @default(code)
-//     status                oauth_authorization_status @default(pending)
-//     authorization_code    String?                    @unique
-//     created_at            DateTime                   @default(now()) @db.Timestamptz(6)
-//     expires_at            DateTime                   @default(dbgenerated("(now() + '00:03:00'::interval)")) @db.Timestamptz(6)
-//     approved_at           DateTime?                  @db.Timestamptz(6)
-//     nonce                 String?
-//     oauth_clients         oauth_clients              @relation(fields: [client_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-//     users                 users?                     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-//     @@schema("auth")
-// }
-
-// /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-// model oauth_clients {
-//     id                   String                  @id @db.Uuid
-//     client_secret_hash   String?
-//     registration_type    oauth_registration_type
-//     redirect_uris        String
-//     grant_types          String
-//     client_name          String?
-//     client_uri           String?
-//     logo_uri             String?
-//     created_at           DateTime                @default(now()) @db.Timestamptz(6)
-//     updated_at           DateTime                @default(now()) @db.Timestamptz(6)
-//     deleted_at           DateTime?               @db.Timestamptz(6)
-//     client_type          oauth_client_type       @default(confidential)
-//     oauth_authorizations oauth_authorizations[]
-//     oauth_consents       oauth_consents[]
-//     sessions             sessions[]
-
-//     @@index([deleted_at])
-//     @@schema("auth")
-// }
-
-// /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-// model oauth_consents {
-//     id            String        @id @db.Uuid
-//     user_id       String        @db.Uuid
-//     client_id     String        @db.Uuid
-//     scopes        String
-//     granted_at    DateTime      @default(now()) @db.Timestamptz(6)
-//     revoked_at    DateTime?     @db.Timestamptz(6)
-//     oauth_clients oauth_clients @relation(fields: [client_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-//     users         users         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-//     @@unique([user_id, client_id], map: "oauth_consents_user_client_unique")
-//     @@index([user_id, granted_at(sort: Desc)], map: "oauth_consents_user_order_idx")
-//     @@schema("auth")
-// }
-
-// /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-// /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-// model one_time_tokens {
-//     id         String              @id @db.Uuid
-//     user_id    String              @db.Uuid
-//     token_type one_time_token_type
-//     token_hash String
-//     relates_to String
-//     created_at DateTime            @default(now()) @db.Timestamp(6)
-//     updated_at DateTime            @default(now()) @db.Timestamp(6)
-//     users      users               @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-//     @@unique([user_id, token_type])
-//     @@index([relates_to], map: "one_time_tokens_relates_to_hash_idx", type: Hash)
-//     @@index([token_hash], map: "one_time_tokens_token_hash_hash_idx", type: Hash)
-//     @@schema("auth")
-// }
-
-// /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-// /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-// model refresh_tokens {
-//     instance_id String?   @db.Uuid
-//     id          BigInt    @id @default(autoincrement())
-//     token       String?   @unique(map: "refresh_tokens_token_unique") @db.VarChar(255)
-//     user_id     String?   @db.VarChar(255)
-//     revoked     Boolean?
-//     created_at  DateTime? @db.Timestamptz(6)
-//     updated_at  DateTime? @db.Timestamptz(6)
-//     parent      String?   @db.VarChar(255)
-//     session_id  String?   @db.Uuid
-//     sessions    sessions? @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-//     @@index([instance_id])
-//     @@index([instance_id, user_id])
-//     @@index([parent])
-//     @@index([session_id, revoked])
-//     @@index([updated_at(sort: Desc)])
-//     @@schema("auth")
-// }
-
-// /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-// /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-// /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-// model saml_providers {
-//     id                String        @id @db.Uuid
-//     sso_provider_id   String        @db.Uuid
-//     entity_id         String        @unique
-//     metadata_xml      String
-//     metadata_url      String?
-//     attribute_mapping Json?
-//     created_at        DateTime?     @db.Timestamptz(6)
-//     updated_at        DateTime?     @db.Timestamptz(6)
-//     name_id_format    String?
-//     sso_providers     sso_providers @relation(fields: [sso_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-//     @@index([sso_provider_id])
-//     @@schema("auth")
-// }
-
-// /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-// /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-// /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-// model saml_relay_states {
-//     id              String        @id @db.Uuid
-//     sso_provider_id String        @db.Uuid
-//     request_id      String
-//     for_email       String?
-//     redirect_to     String?
-//     created_at      DateTime?     @db.Timestamptz(6)
-//     updated_at      DateTime?     @db.Timestamptz(6)
-//     flow_state_id   String?       @db.Uuid
-//     flow_state      flow_state?   @relation(fields: [flow_state_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-//     sso_providers   sso_providers @relation(fields: [sso_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-//     @@index([created_at(sort: Desc)])
-//     @@index([for_email])
-//     @@index([sso_provider_id])
-//     @@schema("auth")
-// }
-
-// /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-// /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-// model schema_migrations {
-//     version String @id @db.VarChar(255)
-
-//     @@schema("auth")
-// }
-
-// /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-// /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-// /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-// model sessions {
-//     id                     String           @id @db.Uuid
-//     user_id                String           @db.Uuid
-//     created_at             DateTime?        @db.Timestamptz(6)
-//     updated_at             DateTime?        @db.Timestamptz(6)
-//     factor_id              String?          @db.Uuid
-//     aal                    aal_level?
-//     not_after              DateTime?        @db.Timestamptz(6)
-//     refreshed_at           DateTime?        @db.Timestamp(6)
-//     user_agent             String?
-//     ip                     String?          @db.Inet
-//     tag                    String?
-//     oauth_client_id        String?          @db.Uuid
-//     refresh_token_hmac_key String?
-//     refresh_token_counter  BigInt?
-//     scopes                 String?
-//     mfa_amr_claims         mfa_amr_claims[]
-//     refresh_tokens         refresh_tokens[]
-//     oauth_clients          oauth_clients?   @relation(fields: [oauth_client_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-//     users                  users            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-//     @@index([not_after(sort: Desc)])
-//     @@index([oauth_client_id])
-//     @@index([user_id])
-//     @@index([user_id, created_at], map: "user_id_created_at_idx")
-//     @@schema("auth")
-// }
-
-// /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-// /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-// /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-// /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
-// model sso_domains {
-//     id              String        @id @db.Uuid
-//     sso_provider_id String        @db.Uuid
-//     domain          String
-//     created_at      DateTime?     @db.Timestamptz(6)
-//     updated_at      DateTime?     @db.Timestamptz(6)
-//     sso_providers   sso_providers @relation(fields: [sso_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-//     @@index([sso_provider_id])
-//     @@schema("auth")
-// }
-
-// /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-// /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-// /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-// /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
-// model sso_providers {
-//     id                String              @id @db.Uuid
-//     resource_id       String?
-//     created_at        DateTime?           @db.Timestamptz(6)
-//     updated_at        DateTime?           @db.Timestamptz(6)
-//     disabled          Boolean?
-//     saml_providers    saml_providers[]
-//     saml_relay_states saml_relay_states[]
-//     sso_domains       sso_domains[]
-
-//     @@index([resource_id], map: "sso_providers_resource_id_pattern_idx")
-//     @@schema("auth")
-// }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model users {
-    instance_id                 String?                @db.Uuid
-    id                          String                 @id @db.Uuid
-    aud                         String?                @db.VarChar(255)
-    role                        String?                @db.VarChar(255)
-    email                       String?                @db.VarChar(255)
-    encrypted_password          String?                @db.VarChar(255)
-    email_confirmed_at          DateTime?              @db.Timestamptz(6)
-    invited_at                  DateTime?              @db.Timestamptz(6)
-    confirmation_token          String?                @db.VarChar(255)
-    confirmation_sent_at        DateTime?              @db.Timestamptz(6)
-    recovery_token              String?                @db.VarChar(255)
-    recovery_sent_at            DateTime?              @db.Timestamptz(6)
-    email_change_token_new      String?                @db.VarChar(255)
-    email_change                String?                @db.VarChar(255)
-    email_change_sent_at        DateTime?              @db.Timestamptz(6)
-    last_sign_in_at             DateTime?              @db.Timestamptz(6)
-    raw_app_meta_data           Json?
-    raw_user_meta_data          Json?
-    is_super_admin              Boolean?
-    created_at                  DateTime?              @db.Timestamptz(6)
-    updated_at                  DateTime?              @db.Timestamptz(6)
-    phone                       String?                @unique
-    phone_confirmed_at          DateTime?              @db.Timestamptz(6)
-    phone_change                String?                @default("")
-    phone_change_token          String?                @default("") @db.VarChar(255)
-    phone_change_sent_at        DateTime?              @db.Timestamptz(6)
-    confirmed_at                DateTime?              @default(dbgenerated("LEAST(email_confirmed_at, phone_confirmed_at)")) @db.Timestamptz(6)
-    email_change_token_current  String?                @default("") @db.VarChar(255)
-    email_change_confirm_status Int?                   @default(0) @db.SmallInt
-    banned_until                DateTime?              @db.Timestamptz(6)
-    reauthentication_token      String?                @default("") @db.VarChar(255)
-    reauthentication_sent_at    DateTime?              @db.Timestamptz(6)
-    is_sso_user                 Boolean                @default(false)
-    deleted_at                  DateTime?              @db.Timestamptz(6)
-    is_anonymous                Boolean                @default(false)
-    // identities                  identities[]
-    // mfa_factors                 mfa_factors[]
-    // oauth_authorizations        oauth_authorizations[]
-    // oauth_consents              oauth_consents[]
-    // one_time_tokens             one_time_tokens[]
-    // sessions                    sessions[]
-    clients                     clients[]
-    compagnies                  compagnies[]
-    partages                    partages[]
+  instance_id                 String?                @db.Uuid
+  id                          String                 @id @db.Uuid
+  aud                         String?                @db.VarChar(255)
+  role                        String?                @db.VarChar(255)
+  email                       String?                @db.VarChar(255)
+  encrypted_password          String?                @db.VarChar(255)
+  email_confirmed_at          DateTime?              @db.Timestamptz(6)
+  invited_at                  DateTime?              @db.Timestamptz(6)
+  confirmation_token          String?                @db.VarChar(255)
+  confirmation_sent_at        DateTime?              @db.Timestamptz(6)
+  recovery_token              String?                @db.VarChar(255)
+  recovery_sent_at            DateTime?              @db.Timestamptz(6)
+  email_change_token_new      String?                @db.VarChar(255)
+  email_change                String?                @db.VarChar(255)
+  email_change_sent_at        DateTime?              @db.Timestamptz(6)
+  last_sign_in_at             DateTime?              @db.Timestamptz(6)
+  raw_app_meta_data           Json?
+  raw_user_meta_data          Json?
+  is_super_admin              Boolean?
+  created_at                  DateTime?              @db.Timestamptz(6)
+  updated_at                  DateTime?              @db.Timestamptz(6)
+  phone                       String?                @unique
+  phone_confirmed_at          DateTime?              @db.Timestamptz(6)
+  phone_change                String?                @default("")
+  phone_change_token          String?                @default("") @db.VarChar(255)
+  phone_change_sent_at        DateTime?              @db.Timestamptz(6)
+  confirmed_at                DateTime?              @db.Timestamptz(6)
+  email_change_token_current  String?                @default("") @db.VarChar(255)
+  email_change_confirm_status Int?                   @default(0) @db.SmallInt
+  banned_until                DateTime?              @db.Timestamptz(6)
+  reauthentication_token      String?                @default("") @db.VarChar(255)
+  reauthentication_sent_at    DateTime?              @db.Timestamptz(6)
+  is_sso_user                 Boolean                @default(false)
+  deleted_at                  DateTime?              @db.Timestamptz(6)
+  is_anonymous                Boolean                @default(false)
+  // identities                  identities[]
+  // mfa_factors                 mfa_factors[]
+  // oauth_authorizations        oauth_authorizations[]
+  // oauth_consents              oauth_consents[]
+  // one_time_tokens             one_time_tokens[]
+  // sessions                    sessions[]
+  clients                     clients[]
+  compagnies                  compagnies[]
+  partages                    partages[]
+  organization_members        organization_members[]
 
-    @@index([instance_id])
-    @@index([is_anonymous])
-    @@schema("auth")
+  @@index([instance_id])
+  @@index([is_anonymous])
+  @@schema("auth")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model clients {
-    id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-    nom         String
-    prenom      String
-    email       String?     @unique
-    telephone   String?
-    type_client String
-    adresse     String?
-    ville       String?
-    code_postal String?
-    notes       String?
-    created_by  String?     @db.Uuid
-    created_at  DateTime?   @default(now()) @db.Timestamptz(6)
-    updated_at  DateTime?   @default(now()) @db.Timestamptz(6)
-    users       users?      @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-    contrats    contrats[]
-    dossiers    dossiers[]
-    medias      medias[]
-    sinistres   sinistres[]
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id String?        @db.Uuid
+  nom             String
+  prenom          String
+  email           String?
+  telephone       String?
+  type_client     String
+  adresse         String?
+  ville           String?
+  code_postal     String?
+  notes           String?
+  created_by      String?        @db.Uuid
+  created_at      DateTime?      @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?      @default(now()) @db.Timestamptz(6)
+  users           users?         @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organizations   organizations? @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  contrats        contrats[]
+  dossiers        dossiers[]
+  medias          medias[]
+  sinistres       sinistres[]
 
-    @@index([created_at(sort: Desc)], map: "idx_clients_created_at")
-    @@index([email], map: "idx_clients_email")
-    @@index([nom], map: "idx_clients_nom")
-    @@index([prenom], map: "idx_clients_prenom")
-    @@index([telephone], map: "idx_clients_telephone")
-    @@index([type_client], map: "idx_clients_type")
-    @@schema("public")
+  @@unique([email, organization_id], map: "idx_clients_email_org_unique")
+  @@index([created_at(sort: Desc)], map: "idx_clients_created_at")
+  @@index([email], map: "idx_clients_email")
+  @@index([nom], map: "idx_clients_nom")
+  @@index([prenom], map: "idx_clients_prenom")
+  @@index([telephone], map: "idx_clients_telephone")
+  @@index([type_client], map: "idx_clients_type")
+  @@index([organization_id], map: "idx_clients_organization_id")
+  @@schema("public")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model compagnies {
-    id                String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-    nom               String      @unique
-    sigle             String      @unique
-    logo_url          String?
-    description       String?
-    taux_commissions  Json        @default("{}")
-    actif             Boolean?    @default(true)
-    created_by        String?     @db.Uuid
-    created_at        DateTime?   @default(now()) @db.Timestamptz(6)
-    updated_at        DateTime?   @default(now()) @db.Timestamptz(6)
-    lien_souscription String?
-    users             users?      @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-    contrats          contrats[]
-    sinistres         sinistres[]
+  id                String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id   String?        @db.Uuid
+  nom               String
+  sigle             String
+  logo_url          String?
+  description       String?
+  taux_commissions  Json           @default("{}")
+  actif             Boolean?       @default(true)
+  created_by        String?        @db.Uuid
+  created_at        DateTime?      @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?      @default(now()) @db.Timestamptz(6)
+  lien_souscription String?
+  users             users?         @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organizations     organizations? @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  contrats          contrats[]
+  sinistres         sinistres[]
 
-    @@index([actif], map: "idx_compagnies_actif")
-    @@index([nom], map: "idx_compagnies_nom")
-    @@index([sigle], map: "idx_compagnies_sigle")
-    @@schema("public")
+  @@unique([nom, organization_id], map: "idx_compagnies_nom_org_unique")
+  @@unique([sigle, organization_id], map: "idx_compagnies_sigle_org_unique")
+  @@index([actif], map: "idx_compagnies_actif")
+  @@index([nom], map: "idx_compagnies_nom")
+  @@index([sigle], map: "idx_compagnies_sigle")
+  @@index([organization_id], map: "idx_compagnies_organization_id")
+  @@schema("public")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model contrats {
-    id                     String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-    client_id              String           @db.Uuid
-    compagnie_id           String           @db.Uuid
-    type_contrat           String           @db.VarChar(100)
-    prime_nette            Decimal          @db.Decimal(12, 2)
-    montant_accessoire     Decimal?         @default(0) @db.Decimal(12, 2)
-    taux_commission        Decimal          @db.Decimal(5, 4)
-    commission             Decimal          @db.Decimal(12, 2)
-    date_effet             DateTime         @db.Date
-    date_expiration        DateTime         @db.Date
-    statut                 String?          @default("actif") @db.VarChar(20)
-    fractionnement         String?          @default("annuel") @db.VarChar(20)
-    notes                  String?
-    created_at             DateTime?        @default(now()) @db.Timestamptz(6)
-    updated_at             DateTime?        @default(now()) @db.Timestamptz(6)
-    evacuation_sanitaire   Decimal?         @db.Decimal
-    prime_regulation       Decimal?         @db.Decimal
-    immatriculation        String?
-    prime_ttc              Decimal?         @default(0) @db.Decimal
-    fga                    Decimal?         @default(0) @db.Decimal
-    taxes                  Decimal?         @default(0) @db.Decimal
-    is_flotte              Boolean?         @default(false)
-    prime_ttc_initial      Decimal?         @db.Decimal(12, 2)
-    montant_incorporations Decimal?         @default(0) @db.Decimal(12, 2)
-    nombre_incorporations  Int?             @default(0)
-    clients                clients          @relation(fields: [client_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-    compagnies             compagnies       @relation(fields: [compagnie_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-    dossiers               dossiers[]
-    incorporations         incorporations[]
-    medias                 medias[]
-    notifications          notifications[]
-    paiements              paiements[]
-    sinistres              sinistres[]
-    vehicules              vehicules[]
+  id                     String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id        String?          @db.Uuid
+  client_id              String           @db.Uuid
+  compagnie_id           String           @db.Uuid
+  type_contrat           String           @db.VarChar(100)
+  prime_nette            Decimal          @db.Decimal(12, 2)
+  montant_accessoire     Decimal?         @default(0) @db.Decimal(12, 2)
+  taux_commission        Decimal          @db.Decimal(5, 4)
+  commission             Decimal          @db.Decimal(12, 2)
+  date_effet             DateTime         @db.Date
+  date_expiration        DateTime         @db.Date
+  statut                 String?          @default("actif") @db.VarChar(20)
+  fractionnement         String?          @default("annuel") @db.VarChar(20)
+  notes                  String?
+  created_at             DateTime?        @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime?        @default(now()) @db.Timestamptz(6)
+  evacuation_sanitaire   Decimal?         @db.Decimal
+  prime_regulation       Decimal?         @db.Decimal
+  immatriculation        String?
+  prime_ttc              Decimal?         @default(0) @db.Decimal
+  fga                    Decimal?         @default(0) @db.Decimal
+  taxes                  Decimal?         @default(0) @db.Decimal
+  is_flotte              Boolean?         @default(false)
+  prime_ttc_initial      Decimal?         @db.Decimal(12, 2)
+  montant_incorporations Decimal?         @default(0) @db.Decimal(12, 2)
+  nombre_incorporations  Int?             @default(0)
+  clients                clients          @relation(fields: [client_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  compagnies             compagnies       @relation(fields: [compagnie_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  organizations          organizations?   @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  dossiers               dossiers[]
+  incorporations         incorporations[]
+  medias                 medias[]
+  notifications          notifications[]
+  paiements              paiements[]
+  sinistres              sinistres[]
+  vehicules              vehicules[]
 
-    @@index([client_id, created_at(sort: Desc)], map: "idx_contrats_client_created")
-    @@index([client_id], map: "idx_contrats_client_id")
-    @@index([client_id, statut], map: "idx_contrats_client_statut")
-    @@index([compagnie_id], map: "idx_contrats_compagnie_id")
-    @@index([compagnie_id, type_contrat], map: "idx_contrats_compagnie_type")
-    @@index([created_at(sort: Desc)], map: "idx_contrats_created_at")
-    @@index([date_effet(sort: Desc)], map: "idx_contrats_date_effet")
-    @@index([date_expiration], map: "idx_contrats_date_expiration")
-    @@index([fractionnement], map: "idx_contrats_fractionnement")
-    @@index([statut], map: "idx_contrats_statut")
-    @@index([statut, date_expiration], map: "idx_contrats_statut_date")
-    @@index([statut, date_effet(sort: Desc)], map: "idx_contrats_statut_date_effet")
-    @@index([type_contrat], map: "idx_contrats_type_contrat")
-    @@index([type_contrat, statut], map: "idx_contrats_type_statut")
-    @@index([updated_at(sort: Desc)], map: "idx_contrats_updated_at")
-    @@schema("public")
+  @@index([client_id, created_at(sort: Desc)], map: "idx_contrats_client_created")
+  @@index([client_id], map: "idx_contrats_client_id")
+  @@index([client_id, statut], map: "idx_contrats_client_statut")
+  @@index([compagnie_id], map: "idx_contrats_compagnie_id")
+  @@index([compagnie_id, type_contrat], map: "idx_contrats_compagnie_type")
+  @@index([created_at(sort: Desc)], map: "idx_contrats_created_at")
+  @@index([date_effet(sort: Desc)], map: "idx_contrats_date_effet")
+  @@index([date_expiration], map: "idx_contrats_date_expiration")
+  @@index([fractionnement], map: "idx_contrats_fractionnement")
+  @@index([statut], map: "idx_contrats_statut")
+  @@index([statut, date_expiration], map: "idx_contrats_statut_date")
+  @@index([statut, date_effet(sort: Desc)], map: "idx_contrats_statut_date_effet")
+  @@index([type_contrat], map: "idx_contrats_type_contrat")
+  @@index([type_contrat, statut], map: "idx_contrats_type_statut")
+  @@index([updated_at(sort: Desc)], map: "idx_contrats_updated_at")
+  @@index([organization_id], map: "idx_contrats_organization_id")
+  @@schema("public")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model dossiers {
-    id             String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-    nom            String     @db.VarChar(255)
-    parent_id      String?    @db.Uuid
-    contrat_id     String?    @db.Uuid
-    client_id      String?    @db.Uuid
-    couleur        String?    @default("gray") @db.VarChar(20)
-    created_at     DateTime?  @default(now()) @db.Timestamptz(6)
-    updated_at     DateTime?  @default(now()) @db.Timestamptz(6)
-    clients        clients?   @relation(fields: [client_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-    contrats       contrats?  @relation(fields: [contrat_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-    dossiers       dossiers?  @relation("dossiersTodossiers", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-    other_dossiers dossiers[] @relation("dossiersTodossiers")
-    medias         medias[]
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id String?        @db.Uuid
+  nom             String         @db.VarChar(255)
+  parent_id       String?        @db.Uuid
+  contrat_id      String?        @db.Uuid
+  client_id       String?        @db.Uuid
+  couleur         String?        @default("gray") @db.VarChar(20)
+  created_at      DateTime?      @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?      @default(now()) @db.Timestamptz(6)
+  clients         clients?       @relation(fields: [client_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  contrats        contrats?      @relation(fields: [contrat_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  organizations   organizations? @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  dossiers        dossiers?      @relation("dossiersTodossiers", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  other_dossiers  dossiers[]     @relation("dossiersTodossiers")
+  medias          medias[]
 
-    @@index([client_id], map: "idx_dossiers_client")
-    @@index([contrat_id], map: "idx_dossiers_contrat")
-    @@index([parent_id], map: "idx_dossiers_parent")
-    @@schema("public")
+  @@index([client_id], map: "idx_dossiers_client")
+  @@index([contrat_id], map: "idx_dossiers_contrat")
+  @@index([parent_id], map: "idx_dossiers_parent")
+  @@index([organization_id], map: "idx_dossiers_organization_id")
+  @@schema("public")
 }
 
 model incorporations {
-    id                 String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-    contrat_id         String?   @db.Uuid
-    date_effet         DateTime  @db.Date
-    nombre_elements    Int
-    prime_ttc          Decimal   @db.Decimal(12, 2)
-    fga                Decimal   @db.Decimal(12, 2)
-    taxes              Decimal   @db.Decimal(12, 2)
-    prime_nette        Decimal   @db.Decimal(12, 2)
-    commission         Decimal   @db.Decimal(12, 2)
-    notes              String?
-    created_by         String?   @db.Uuid
-    created_at         DateTime? @default(now()) @db.Timestamptz(6)
-    montant_accessoire Decimal?  @default(0) @db.Decimal(12, 2)
-    date_expiration    DateTime? @db.Date
-    contrats           contrats? @relation(fields: [contrat_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-    profiles           profiles? @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                 String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id    String?        @db.Uuid
+  contrat_id         String?        @db.Uuid
+  date_effet         DateTime       @db.Date
+  nombre_elements    Int
+  prime_ttc          Decimal        @db.Decimal(12, 2)
+  fga                Decimal        @db.Decimal(12, 2)
+  taxes              Decimal        @db.Decimal(12, 2)
+  prime_nette        Decimal        @db.Decimal(12, 2)
+  commission         Decimal        @db.Decimal(12, 2)
+  notes              String?
+  created_by         String?        @db.Uuid
+  created_at         DateTime?      @default(now()) @db.Timestamptz(6)
+  montant_accessoire Decimal?       @default(0) @db.Decimal(12, 2)
+  date_expiration    DateTime?      @db.Date
+  contrats           contrats?      @relation(fields: [contrat_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  profiles           profiles?      @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organizations      organizations? @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-    @@index([contrat_id], map: "idx_incorporations_contrat")
-    @@index([date_effet], map: "idx_incorporations_date")
-    @@schema("public")
+  @@index([contrat_id], map: "idx_incorporations_contrat")
+  @@index([date_effet], map: "idx_incorporations_date")
+  @@index([organization_id], map: "idx_incorporations_organization_id")
+  @@schema("public")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model medias {
-    id               String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-    nom              String     @db.VarChar(255)
-    type_fichier     String?    @db.VarChar(100)
-    taille           BigInt?
-    url              String
-    dossier_id       String?    @db.Uuid
-    contrat_id       String?    @db.Uuid
-    client_id        String?    @db.Uuid
-    supprime         Boolean?   @default(false)
-    date_suppression DateTime?  @db.Timestamptz(6)
-    notes            String?
-    created_by       String?    @db.Uuid
-    created_at       DateTime?  @default(now()) @db.Timestamptz(6)
-    updated_at       DateTime?  @default(now()) @db.Timestamptz(6)
-    clients          clients?   @relation(fields: [client_id], references: [id], onUpdate: NoAction)
-    contrats         contrats?  @relation(fields: [contrat_id], references: [id], onUpdate: NoAction)
-    dossiers         dossiers?  @relation(fields: [dossier_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-    partages         partages[]
+  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id  String?        @db.Uuid
+  nom              String         @db.VarChar(255)
+  type_fichier     String?        @db.VarChar(100)
+  taille           BigInt?
+  url              String
+  dossier_id       String?        @db.Uuid
+  contrat_id       String?        @db.Uuid
+  client_id        String?        @db.Uuid
+  supprime         Boolean?       @default(false)
+  date_suppression DateTime?      @db.Timestamptz(6)
+  notes            String?
+  created_by       String?        @db.Uuid
+  created_at       DateTime?      @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?      @default(now()) @db.Timestamptz(6)
+  clients          clients?       @relation(fields: [client_id], references: [id], onUpdate: NoAction)
+  contrats         contrats?      @relation(fields: [contrat_id], references: [id], onUpdate: NoAction)
+  dossiers         dossiers?      @relation(fields: [dossier_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  organizations    organizations? @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  partages         partages[]
 
-    @@index([client_id], map: "idx_medias_client")
-    @@index([contrat_id], map: "idx_medias_contrat")
-    @@index([dossier_id], map: "idx_medias_dossier")
-    @@index([supprime], map: "idx_medias_supprime")
-    @@schema("public")
+  @@index([client_id], map: "idx_medias_client")
+  @@index([contrat_id], map: "idx_medias_contrat")
+  @@index([dossier_id], map: "idx_medias_dossier")
+  @@index([supprime], map: "idx_medias_supprime")
+  @@index([organization_id], map: "idx_medias_organization_id")
+  @@schema("public")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model notifications {
-    id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-    type       String
-    titre      String
-    message    String
-    contrat_id String?   @db.Uuid
-    statut     String?   @default("non_lu")
-    priorite   String?   @default("normale")
-    created_at DateTime? @default(now()) @db.Timestamptz(6)
-    contrats   contrats? @relation(fields: [contrat_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id String?        @db.Uuid
+  type            String
+  titre           String
+  message         String
+  contrat_id      String?        @db.Uuid
+  statut          String?        @default("non_lu")
+  priorite        String?        @default("normale")
+  created_at      DateTime?      @default(now()) @db.Timestamptz(6)
+  contrats        contrats?      @relation(fields: [contrat_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  organizations   organizations? @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-    @@index([created_at(sort: Desc)], map: "idx_notifications_created")
-    @@index([created_at(sort: Desc)], map: "idx_notifications_created_at")
-    @@index([statut], map: "idx_notifications_statut")
-    @@index([type], map: "idx_notifications_type")
-    @@schema("public")
+  @@index([created_at(sort: Desc)], map: "idx_notifications_created")
+  @@index([created_at(sort: Desc)], map: "idx_notifications_created_at")
+  @@index([statut], map: "idx_notifications_statut")
+  @@index([type], map: "idx_notifications_type")
+  @@index([organization_id], map: "idx_notifications_organization_id")
+  @@schema("public")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model paiements {
-    id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-    contrat_id    String    @db.Uuid
-    type_paiement String    @db.VarChar(50)
-    montant       Decimal   @db.Decimal(12, 2)
-    date_paiement DateTime  @db.Date
-    mode_paiement String    @db.VarChar(50)
-    notes         String?
-    created_at    DateTime? @default(now()) @db.Timestamptz(6)
-    updated_at    DateTime? @default(now()) @db.Timestamptz(6)
-    contrats      contrats  @relation(fields: [contrat_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id String?        @db.Uuid
+  contrat_id      String         @db.Uuid
+  type_paiement   String         @db.VarChar(50)
+  montant         Decimal        @db.Decimal(12, 2)
+  date_paiement   DateTime       @db.Date
+  mode_paiement   String         @db.VarChar(50)
+  notes           String?
+  created_at      DateTime?      @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?      @default(now()) @db.Timestamptz(6)
+  contrats        contrats       @relation(fields: [contrat_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  organizations   organizations? @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-    @@index([contrat_id], map: "idx_paiements_contrat")
-    @@index([contrat_id], map: "idx_paiements_contrat_id")
-    @@index([date_paiement(sort: Desc)], map: "idx_paiements_date")
-    @@index([type_paiement], map: "idx_paiements_type")
-    @@schema("public")
+  @@index([contrat_id], map: "idx_paiements_contrat")
+  @@index([contrat_id], map: "idx_paiements_contrat_id")
+  @@index([date_paiement(sort: Desc)], map: "idx_paiements_date")
+  @@index([type_paiement], map: "idx_paiements_type")
+  @@index([organization_id], map: "idx_paiements_organization_id")
+  @@schema("public")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model partages {
-    id            String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-    media_id      String?   @db.Uuid
-    email_partage String    @db.VarChar(255)
-    permission    String    @default("view") @db.VarChar(50)
-    created_by    String?   @db.Uuid
-    created_at    DateTime? @default(now()) @db.Timestamptz(6)
-    expires_at    DateTime? @db.Timestamptz(6)
-    users         users?    @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-    medias        medias?   @relation(fields: [media_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id String?        @db.Uuid
+  media_id        String?        @db.Uuid
+  email_partage   String         @db.VarChar(255)
+  permission      String         @default("view") @db.VarChar(50)
+  created_by      String?        @db.Uuid
+  created_at      DateTime?      @default(now()) @db.Timestamptz(6)
+  expires_at      DateTime?      @db.Timestamptz(6)
+  users           users?         @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  medias          medias?        @relation(fields: [media_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  organizations   organizations? @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-    @@index([email_partage], map: "idx_partages_email")
-    @@index([media_id], map: "idx_partages_media_id")
-    @@schema("public")
+  @@index([email_partage], map: "idx_partages_email")
+  @@index([media_id], map: "idx_partages_media_id")
+  @@index([organization_id], map: "idx_partages_organization_id")
+  @@schema("public")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model profiles {
-    id                                            String                 @id @db.Uuid
-    email                                         String?
-    nom                                           String?
-    prenom                                        String?
-    role                                          String                 @default("user")
-    avatar_url                                    String?
-    telephone                                     String?
-    actif                                         Boolean?               @default(true)
-    created_at                                    DateTime?              @default(now()) @db.Timestamptz(6)
-    updated_at                                    DateTime?              @default(now()) @db.Timestamptz(6)
-    incorporations                                incorporations[]
-    sinistres_sinistres_created_byToprofiles      sinistres[]            @relation("sinistres_created_byToprofiles")
-    sinistres_sinistres_gestionnaire_idToprofiles sinistres[]            @relation("sinistres_gestionnaire_idToprofiles")
-    sinistres_documents                           sinistres_documents[]
-    sinistres_historique                          sinistres_historique[]
+  id                                            String                 @id @db.Uuid
+  email                                         String?
+  nom                                           String?
+  prenom                                        String?
+  role                                          String                 @default("user")
+  avatar_url                                    String?
+  telephone                                     String?
+  actif                                         Boolean?               @default(true)
+  created_at                                    DateTime?              @default(now()) @db.Timestamptz(6)
+  updated_at                                    DateTime?              @default(now()) @db.Timestamptz(6)
+  incorporations                                incorporations[]
+  sinistres_sinistres_created_byToprofiles      sinistres[]            @relation("sinistres_created_byToprofiles")
+  sinistres_sinistres_gestionnaire_idToprofiles sinistres[]            @relation("sinistres_gestionnaire_idToprofiles")
+  sinistres_documents                           sinistres_documents[]
+  sinistres_historique                          sinistres_historique[]
 
-    @@schema("public")
+  @@schema("public")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model profiles_backup_final {
-    id         String?   @db.Uuid
-    email      String?
-    nom        String?
-    prenom     String?
-    role       String?
-    avatar_url String?
-    telephone  String?
-    actif      Boolean?
-    created_at DateTime? @db.Timestamptz(6)
-    updated_at DateTime? @db.Timestamptz(6)
+  id         String?   @db.Uuid
+  email      String?
+  nom        String?
+  prenom     String?
+  role       String?
+  avatar_url String?
+  telephone  String?
+  actif      Boolean?
+  created_at DateTime? @db.Timestamptz(6)
+  updated_at DateTime? @db.Timestamptz(6)
 
-    @@ignore
-    @@schema("public")
+  @@ignore
+  @@schema("public")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model sinistres {
-    id                                           String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-    numero_sinistre                              String                 @unique
-    client_id                                    String                 @db.Uuid
-    contrat_id                                   String                 @db.Uuid
-    type_sinistre                                String
-    date_sinistre                                DateTime               @db.Date
-    heure_sinistre                               DateTime?              @db.Time(6)
-    lieu_sinistre                                String
-    description                                  String
-    circonstances                                String?
-    dommages_corporels                           Boolean?               @default(false)
-    nombre_blesses                               Int?                   @default(0)
-    dommages_materiels                           Boolean?               @default(false)
-    montant_estime                               Decimal?               @db.Decimal
-    vehicule_id                                  String?                @db.Uuid
-    vehicule_roulant                             Boolean?
-    tiers_impliques                              Json?                  @default("[]")
-    statut                                       String?                @default("recu")
-    priorite                                     String?                @default("normale")
-    gestionnaire_id                              String?                @db.Uuid
-    compagnie_id                                 String?                @db.Uuid
-    montant_indemnise                            Decimal?               @db.Decimal
-    date_paiement_indemnite                      DateTime?              @db.Date
-    date_reception                               DateTime?              @default(now()) @db.Timestamptz(6)
-    date_envoi_compagnie                         DateTime?              @db.Timestamptz(6)
-    date_expertise                               DateTime?              @db.Timestamptz(6)
-    date_traitement                              DateTime?              @db.Timestamptz(6)
-    date_cloture                                 DateTime?              @db.Timestamptz(6)
-    notes_internes                               String?
-    motif_rejet                                  String?
-    created_by                                   String?                @db.Uuid
-    created_at                                   DateTime?              @default(now()) @db.Timestamptz(6)
-    updated_at                                   DateTime?              @default(now()) @db.Timestamptz(6)
-    clients                                      clients                @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-    compagnies                                   compagnies?            @relation(fields: [compagnie_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-    contrats                                     contrats               @relation(fields: [contrat_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-    profiles_sinistres_created_byToprofiles      profiles?              @relation("sinistres_created_byToprofiles", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-    profiles_sinistres_gestionnaire_idToprofiles profiles?              @relation("sinistres_gestionnaire_idToprofiles", fields: [gestionnaire_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-    vehicules                                    vehicules?             @relation(fields: [vehicule_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-    sinistres_documents                          sinistres_documents[]
-    sinistres_historique                         sinistres_historique[]
-    sinistres_messages                           sinistres_messages[]
+  id                                           String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id                              String?                @db.Uuid
+  numero_sinistre                              String
+  client_id                                    String                 @db.Uuid
+  contrat_id                                   String                 @db.Uuid
+  type_sinistre                                String
+  date_sinistre                                DateTime               @db.Date
+  heure_sinistre                               DateTime?              @db.Time(6)
+  lieu_sinistre                                String
+  description                                  String
+  circonstances                                String?
+  dommages_corporels                           Boolean?               @default(false)
+  nombre_blesses                               Int?                   @default(0)
+  dommages_materiels                           Boolean?               @default(false)
+  montant_estime                               Decimal?               @db.Decimal
+  vehicule_id                                  String?                @db.Uuid
+  vehicule_roulant                             Boolean?
+  tiers_impliques                              Json?                  @default("[]")
+  statut                                       String?                @default("recu")
+  priorite                                     String?                @default("normale")
+  gestionnaire_id                              String?                @db.Uuid
+  compagnie_id                                 String?                @db.Uuid
+  montant_indemnise                            Decimal?               @db.Decimal
+  date_paiement_indemnite                      DateTime?              @db.Date
+  date_reception                               DateTime?              @default(now()) @db.Timestamptz(6)
+  date_envoi_compagnie                         DateTime?              @db.Timestamptz(6)
+  date_expertise                               DateTime?              @db.Timestamptz(6)
+  date_traitement                              DateTime?              @db.Timestamptz(6)
+  date_cloture                                 DateTime?              @db.Timestamptz(6)
+  notes_internes                               String?
+  motif_rejet                                  String?
+  created_by                                   String?                @db.Uuid
+  created_at                                   DateTime?              @default(now()) @db.Timestamptz(6)
+  updated_at                                   DateTime?              @default(now()) @db.Timestamptz(6)
+  clients                                      clients                @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  compagnies                                   compagnies?            @relation(fields: [compagnie_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  contrats                                     contrats               @relation(fields: [contrat_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  profiles_sinistres_created_byToprofiles      profiles?              @relation("sinistres_created_byToprofiles", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  profiles_sinistres_gestionnaire_idToprofiles profiles?              @relation("sinistres_gestionnaire_idToprofiles", fields: [gestionnaire_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vehicules                                    vehicules?             @relation(fields: [vehicule_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organizations                                organizations?         @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sinistres_documents                          sinistres_documents[]
+  sinistres_historique                         sinistres_historique[]
+  sinistres_messages                           sinistres_messages[]
 
-    @@index([client_id], map: "idx_sinistres_client_id")
-    @@index([compagnie_id], map: "idx_sinistres_compagnie_id")
-    @@index([contrat_id], map: "idx_sinistres_contrat_id")
-    @@index([date_sinistre(sort: Desc)], map: "idx_sinistres_date_sinistre")
-    @@index([numero_sinistre], map: "idx_sinistres_numero")
-    @@index([statut], map: "idx_sinistres_statut")
-    @@schema("public")
+  @@unique([numero_sinistre, organization_id], map: "idx_sinistres_numero_org_unique")
+  @@index([client_id], map: "idx_sinistres_client_id")
+  @@index([compagnie_id], map: "idx_sinistres_compagnie_id")
+  @@index([contrat_id], map: "idx_sinistres_contrat_id")
+  @@index([date_sinistre(sort: Desc)], map: "idx_sinistres_date_sinistre")
+  @@index([numero_sinistre], map: "idx_sinistres_numero")
+  @@index([statut], map: "idx_sinistres_statut")
+  @@index([organization_id], map: "idx_sinistres_organization_id")
+  @@schema("public")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model sinistres_documents {
-    id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-    sinistre_id     String    @db.Uuid
-    nom_fichier     String
-    type_document   String
-    url             String
-    taille          BigInt?
-    mime_type       String?
-    soumis_par      String
-    soumis_par_id   String?   @db.Uuid
-    valide          Boolean?  @default(false)
-    valide_par      String?   @db.Uuid
-    date_validation DateTime? @db.Timestamptz(6)
-    created_at      DateTime? @default(now()) @db.Timestamptz(6)
-    sinistres       sinistres @relation(fields: [sinistre_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-    profiles        profiles? @relation(fields: [valide_par], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sinistre_id     String    @db.Uuid
+  nom_fichier     String
+  type_document   String
+  url             String
+  taille          BigInt?
+  mime_type       String?
+  soumis_par      String
+  soumis_par_id   String?   @db.Uuid
+  valide          Boolean?  @default(false)
+  valide_par      String?   @db.Uuid
+  date_validation DateTime? @db.Timestamptz(6)
+  created_at      DateTime? @default(now()) @db.Timestamptz(6)
+  sinistres       sinistres @relation(fields: [sinistre_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  profiles        profiles? @relation(fields: [valide_par], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-    @@index([sinistre_id], map: "idx_sinistres_documents_sinistre_id")
-    @@schema("public")
+  @@index([sinistre_id], map: "idx_sinistres_documents_sinistre_id")
+  @@schema("public")
 }
 
 model sinistres_historique {
-    id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-    sinistre_id     String    @db.Uuid
-    ancien_statut   String?
-    nouveau_statut  String
-    commentaire     String?
-    modifie_par     String?   @db.Uuid
-    modifie_par_nom String?
-    visible_client  Boolean?  @default(true)
-    created_at      DateTime? @default(now()) @db.Timestamptz(6)
-    profiles        profiles? @relation(fields: [modifie_par], references: [id], onDelete: NoAction, onUpdate: NoAction)
-    sinistres       sinistres @relation(fields: [sinistre_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sinistre_id     String    @db.Uuid
+  ancien_statut   String?
+  nouveau_statut  String
+  commentaire     String?
+  modifie_par     String?   @db.Uuid
+  modifie_par_nom String?
+  visible_client  Boolean?  @default(true)
+  created_at      DateTime? @default(now()) @db.Timestamptz(6)
+  profiles        profiles? @relation(fields: [modifie_par], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sinistres       sinistres @relation(fields: [sinistre_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-    @@index([sinistre_id], map: "idx_sinistres_historique_sinistre_id")
-    @@schema("public")
+  @@index([sinistre_id], map: "idx_sinistres_historique_sinistre_id")
+  @@schema("public")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model sinistres_messages {
-    id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-    sinistre_id    String    @db.Uuid
-    expediteur     String
-    expediteur_id  String?   @db.Uuid
-    expediteur_nom String?
-    message        String
-    lu             Boolean?  @default(false)
-    date_lecture   DateTime? @db.Timestamptz(6)
-    fichiers       Json?     @default("[]")
-    created_at     DateTime? @default(now()) @db.Timestamptz(6)
-    sinistres      sinistres @relation(fields: [sinistre_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sinistre_id    String    @db.Uuid
+  expediteur     String
+  expediteur_id  String?   @db.Uuid
+  expediteur_nom String?
+  message        String
+  lu             Boolean?  @default(false)
+  date_lecture   DateTime? @db.Timestamptz(6)
+  fichiers       Json?     @default("[]")
+  created_at     DateTime? @default(now()) @db.Timestamptz(6)
+  sinistres      sinistres @relation(fields: [sinistre_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-    @@index([sinistre_id], map: "idx_sinistres_messages_sinistre_id")
-    @@schema("public")
+  @@index([sinistre_id], map: "idx_sinistres_messages_sinistre_id")
+  @@schema("public")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model vehicules {
-    id                    String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-    contrat_id            String      @db.Uuid
-    immatriculation       String
-    marque                String?
-    modele                String?
-    annee                 Int?
-    valeur_venale         Decimal?    @db.Decimal
-    puissance_fiscale     Int?
-    numero_chassis        String?
-    date_mise_circulation DateTime?   @db.Date
-    usage                 String?
-    notes                 String?
-    actif                 Boolean?    @default(true)
-    created_at            DateTime?   @default(now()) @db.Timestamptz(6)
-    updated_at            DateTime?   @default(now()) @db.Timestamptz(6)
-    sinistres             sinistres[]
-    contrats              contrats    @relation(fields: [contrat_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id                    String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id       String?        @db.Uuid
+  contrat_id            String         @db.Uuid
+  immatriculation       String
+  marque                String?
+  modele                String?
+  annee                 Int?
+  valeur_venale         Decimal?       @db.Decimal
+  puissance_fiscale     Int?
+  numero_chassis        String?
+  date_mise_circulation DateTime?      @db.Date
+  usage                 String?
+  notes                 String?
+  actif                 Boolean?       @default(true)
+  created_at            DateTime?      @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime?      @default(now()) @db.Timestamptz(6)
+  sinistres             sinistres[]
+  contrats              contrats       @relation(fields: [contrat_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  organizations         organizations? @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-    @@index([contrat_id], map: "idx_vehicules_contrat_id")
-    @@index([immatriculation], map: "idx_vehicules_immatriculation")
-    @@index([marque, modele], map: "idx_vehicules_marque_modele")
-    @@schema("public")
+  @@index([contrat_id], map: "idx_vehicules_contrat_id")
+  @@index([immatriculation], map: "idx_vehicules_immatriculation")
+  @@index([marque, modele], map: "idx_vehicules_marque_modele")
+  @@index([organization_id], map: "idx_vehicules_organization_id")
+  @@schema("public")
+}
+
+model organizations {
+  id                   String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                 String
+  slug                 String                 @unique
+  logo_url             String?
+  settings             Json                   @default("{}")
+  created_by           String?                @db.Uuid
+  created_at           DateTime?              @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime?              @default(now()) @db.Timestamptz(6)
+  clients              clients[]
+  compagnies           compagnies[]
+  contrats             contrats[]
+  dossiers             dossiers[]
+  incorporations       incorporations[]
+  medias               medias[]
+  notifications        notifications[]
+  paiements            paiements[]
+  partages             partages[]
+  sinistres            sinistres[]
+  vehicules            vehicules[]
+  organization_members organization_members[]
+
+  @@index([slug], map: "idx_organizations_slug")
+  @@index([created_by], map: "idx_organizations_created_by")
+  @@schema("public")
+}
+
+enum OrganizationMemberRole {
+  owner
+  admin
+  member
+  viewer
+
+  @@schema("public")
+}
+
+enum OrganizationMemberStatus {
+  pending
+  active
+  inactive
+
+  @@schema("public")
+}
+
+model organization_members {
+  id              String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id String                   @db.Uuid
+  user_id         String                   @db.Uuid
+  role            OrganizationMemberRole   @default(member)
+  invited_by      String?                  @db.Uuid
+  invited_at      DateTime?                @default(now()) @db.Timestamptz(6)
+  joined_at       DateTime?                @db.Timestamptz(6)
+  status          OrganizationMemberStatus @default(pending)
+  created_at      DateTime?                @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?                @default(now()) @db.Timestamptz(6)
+  organizations   organizations            @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users           users                    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([organization_id, user_id], map: "idx_org_members_org_user_unique")
+  @@index([organization_id], map: "idx_org_members_organization_id")
+  @@index([user_id], map: "idx_org_members_user_id")
+  @@index([status], map: "idx_org_members_status")
+  @@schema("public")
 }
 
 enum aal_level {
-    aal1
-    aal2
-    aal3
+  aal1
+  aal2
+  aal3
 
-    @@schema("auth")
+  @@schema("auth")
 }
 
 enum code_challenge_method {
-    s256
-    plain
+  s256
+  plain
 
-    @@schema("auth")
+  @@schema("auth")
 }
 
 enum factor_status {
-    unverified
-    verified
+  unverified
+  verified
 
-    @@schema("auth")
+  @@schema("auth")
 }
 
 enum factor_type {
-    totp
-    webauthn
-    phone
+  totp
+  webauthn
+  phone
 
-    @@schema("auth")
+  @@schema("auth")
 }
 
 enum oauth_authorization_status {
-    pending
-    approved
-    denied
-    expired
+  pending
+  approved
+  denied
+  expired
 
-    @@schema("auth")
+  @@schema("auth")
 }
 
 enum oauth_client_type {
-    public
-    confidential
+  public
+  confidential
 
-    @@schema("auth")
+  @@schema("auth")
 }
 
 enum oauth_registration_type {
-    dynamic
-    manual
+  dynamic
+  manual
 
-    @@schema("auth")
+  @@schema("auth")
 }
 
 enum oauth_response_type {
-    code
+  code
 
-    @@schema("auth")
+  @@schema("auth")
 }
 
 enum one_time_token_type {
-    confirmation_token
-    reauthentication_token
-    recovery_token
-    email_change_token_new
-    email_change_token_current
-    phone_change_token
+  confirmation_token
+  reauthentication_token
+  recovery_token
+  email_change_token_new
+  email_change_token_current
+  phone_change_token
 
-    @@schema("auth")
+  @@schema("auth")
 }
