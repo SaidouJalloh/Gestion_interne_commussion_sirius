@@ -8,8 +8,10 @@ import type {
 const toDate = (value: string) => new Date(value);
 
 export class VehiculeService {
-  async getAll(filters: VehiculesListQuery) {
-    const where: Record<string, any> = {};
+  async getAll(filters: VehiculesListQuery, organizationId: string) {
+    const where: Record<string, any> = {
+      organization_id: organizationId,
+    };
     if (filters.contratId) where.contrat_id = filters.contratId;
     if (typeof filters.active === 'boolean') where.actif = filters.active;
 
@@ -19,11 +21,16 @@ export class VehiculeService {
     });
   }
 
-  async getById(id: string) {
-    return prisma.vehicules.findUnique({ where: { id } });
+  async getById(id: string, organizationId: string) {
+    return prisma.vehicules.findFirst({
+      where: {
+        id,
+        organization_id: organizationId,
+      },
+    });
   }
 
-  async create(payload: CreateVehiculeInput) {
+  async create(payload: CreateVehiculeInput, organizationId: string) {
     return prisma.vehicules.create({
       data: {
         contrat_id: payload.contrat_id,
@@ -45,12 +52,18 @@ export class VehiculeService {
             : toDate(payload.date_mise_circulation),
         usage: payload.usage ?? null,
         notes: payload.notes ?? null,
+        organization_id: organizationId,
       },
     });
   }
 
-  async update(id: string, payload: UpdateVehiculeInput) {
-    const existing = await prisma.vehicules.findUnique({ where: { id } });
+  async update(id: string, payload: UpdateVehiculeInput, organizationId: string) {
+    const existing = await prisma.vehicules.findFirst({
+      where: {
+        id,
+        organization_id: organizationId,
+      },
+    });
     if (!existing) return null;
 
     const data: Record<string, unknown> = {};
@@ -79,8 +92,13 @@ export class VehiculeService {
     });
   }
 
-  async softDelete(id: string) {
-    const existing = await prisma.vehicules.findUnique({ where: { id } });
+  async softDelete(id: string, organizationId: string) {
+    const existing = await prisma.vehicules.findFirst({
+      where: {
+        id,
+        organization_id: organizationId,
+      },
+    });
     if (!existing) return false;
 
     await prisma.vehicules.update({

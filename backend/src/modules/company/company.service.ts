@@ -6,10 +6,14 @@ import type {
 
 export class CompanyService {
 
-  async getAll(filters?: { active?: boolean; hasSubscriptionLink?: boolean }) {
-    // On reproduit l’ordre actuel: ORDER BY nom ASC
+  async getAll(
+    organizationId: string,
+    filters?: { active?: boolean; hasSubscriptionLink?: boolean },
+  ) {
+    // On reproduit l'ordre actuel: ORDER BY nom ASC
     const compagnies = await prisma.compagnies.findMany({
       where: {
+        organization_id: organizationId,
         ...(typeof filters?.active === 'boolean' ? { actif: filters.active } : {}),
         ...(filters?.hasSubscriptionLink ? { lien_souscription: { not: null } } : {}),
       },
@@ -18,17 +22,56 @@ export class CompanyService {
     return compagnies;
   }
 
-  async getById(id: string) {
-    const compagnie = await prisma.compagnies.findUnique({
-      where: { id },
+  async getById(id: string, organizationId: string) {
+    const compagnie = await prisma.compagnies.findFirst({
+      where: {
+        id,
+        organization_id: organizationId,
+      },
     });
     return compagnie;
   }
 
-  async create(payload: CreateCompanyInput) {
+  async create(payload: CreateCompanyInput, organizationId: string) {
+    const nom = payload.nom.trim();
+    const sigle = payload.sigle.trim().toUpperCase();
+
+    // Vérifier l'unicité du nom dans l'organisation
+    const existingNom = await prisma.compagnies.findFirst({
+      where: {
+        organization_id: organizationId,
+        nom,
+      },
+    });
+
+    if (existingNom) {
+      const error = new Error(
+        `Une compagnie avec le nom "${nom}" existe déjà dans cette organisation`,
+      ) as Error & { status?: number };
+      error.status = 409;
+      throw error;
+    }
+
+    // Vérifier l'unicité du sigle dans l'organisation
+    const existingSigle = await prisma.compagnies.findFirst({
+      where: {
+        organization_id: organizationId,
+        sigle,
+      },
+    });
+
+    if (existingSigle) {
+      const error = new Error(
+        `Une compagnie avec le sigle "${sigle}" existe déjà dans cette organisation`,
+      ) as Error & { status?: number };
+      error.status = 409;
+      throw error;
+    }
+
     const data = {
-      nom: payload.nom.trim(),
-      sigle: payload.sigle.trim().toUpperCase(),
+      organization_id: organizationId,
+      nom,
+      sigle,
       description: payload.description?.trim() || undefined,
       logo_url: payload.logo_url ?? undefined,
       lien_souscription:
@@ -40,9 +83,12 @@ export class CompanyService {
     return compagnie;
   }
 
-  async update(id: string, payload: UpdateCompanyInput) {
-    const existing = await prisma.compagnies.findUnique({
-      where: { id },
+  async update(id: string, payload: UpdateCompanyInput, organizationId: string) {
+    const existing = await prisma.compagnies.findFirst({
+      where: {
+        id,
+        organization_id: organizationId,
+      },
     });
 
     if (!existing) {
@@ -88,9 +134,12 @@ export class CompanyService {
     return updated;
   }
 
-  async delete(id: string) {
-    const existing = await prisma.compagnies.findUnique({
-      where: { id },
+  async delete(id: string, organizationId: string) {
+    const existing = await prisma.compagnies.findFirst({
+      where: {
+        id,
+        organization_id: organizationId,
+      },
     });
 
     if (!existing) {

@@ -54,21 +54,24 @@ export const createClientSchema: Schema<CreateClientInput> = {
     parse(data: unknown): CreateClientInput {
         const body = ensureObject(data);
 
-        const nom = toOptionalTrimmedString(body.nom);
-        const prenom = toOptionalTrimmedString(body.prenom);
-        const type_client = toOptionalTrimmedString(body.type_client);
+        // Ignorer organization_id du body (sécurité - vient toujours du middleware tenant)
+        const { organization_id, ...cleanBody } = body;
+
+        const nom = toOptionalTrimmedString(cleanBody.nom);
+        const prenom = toOptionalTrimmedString(cleanBody.prenom);
+        const type_client = toOptionalTrimmedString(cleanBody.type_client);
 
         if (!nom) throw new Error('Le champ "nom" est obligatoire');
         if (!prenom) throw new Error('Le champ "prenom" est obligatoire');
         if (!type_client) throw new Error('Le champ "type_client" est obligatoire');
 
-        const email = toNullableTrimmedString(body.email);
-        const telephone = toNullableTrimmedString(body.telephone);
-        const adresse = toNullableTrimmedString(body.adresse);
-        const ville = toNullableTrimmedString(body.ville);
-        const code_postal = toNullableTrimmedString(body.code_postal);
-        const notes = toNullableTrimmedString(body.notes);
-        const created_by = toNullableTrimmedString(body.created_by);
+        const email = toNullableTrimmedString(cleanBody.email);
+        const telephone = toNullableTrimmedString(cleanBody.telephone);
+        const adresse = toNullableTrimmedString(cleanBody.adresse);
+        const ville = toNullableTrimmedString(cleanBody.ville);
+        const code_postal = toNullableTrimmedString(cleanBody.code_postal);
+        const notes = toNullableTrimmedString(cleanBody.notes);
+        const created_by = toNullableTrimmedString(cleanBody.created_by);
 
         return {
             nom,
@@ -153,6 +156,8 @@ export const clientIdParamSchema: Schema<ClientIdParams> = {
         return { id: id.trim() };
     },
 };
+
+
 
 
 

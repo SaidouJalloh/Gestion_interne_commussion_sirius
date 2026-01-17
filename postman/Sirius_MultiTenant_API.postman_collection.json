@@ -1,0 +1,1204 @@
+{
+    "info": {
+        "_postman_id": "sirius-multitenant-api",
+        "name": "Sirius Multi-Tenant API",
+        "description": "Collection de tests pour l'API multi-tenant Sirius Assurance",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "1. Authentification",
+            "item": [
+                {
+                    "name": "Login - Super Admin",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    // Supabase retourne access_token directement",
+                                    "    if (jsonData.access_token) {",
+                                    "        pm.environment.set(\"access_token\", jsonData.access_token);",
+                                    "    }",
+                                    "    // Ou dans session.access_token",
+                                    "    if (jsonData.session && jsonData.session.access_token) {",
+                                    "        pm.environment.set(\"access_token\", jsonData.session.access_token);",
+                                    "    }",
+                                    "    // User ID",
+                                    "    if (jsonData.user && jsonData.user.id) {",
+                                    "        pm.environment.set(\"user_id\", jsonData.user.id);",
+                                    "    }",
+                                    "    if (jsonData.session && jsonData.session.user && jsonData.session.user.id) {",
+                                    "        pm.environment.set(\"user_id\", jsonData.session.user.id);",
+                                    "    }",
+                                    "}",
+                                    "",
+                                    "pm.test(\"Status code is 200\", function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test(\"Response has access_token\", function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    const hasToken = jsonData.access_token || (jsonData.session && jsonData.session.access_token);",
+                                    "    pm.expect(hasToken).to.be.truthy;",
+                                    "});",
+                                    "",
+                                    "pm.test(\"Token saved to environment\", function () {",
+                                    "    const token = pm.environment.get(\"access_token\");",
+                                    "    pm.expect(token).to.not.be.empty;",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "apikey",
+                                "value": "{{supabase_anon_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"superadmin@gmail.com\",\n    \"password\": \"Imamsaid@95\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/v1/token?grant_type=password",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "v1",
+                                "token"
+                            ],
+                            "query": [
+                                {
+                                    "key": "grant_type",
+                                    "value": "password"
+                                }
+                            ]
+                        },
+                        "description": "Connexion avec le compte super admin pour obtenir le token d'authentification.\n\n⚠️ IMPORTANT:\n1. Sélectionner l'environnement 'Sirius Multi-Tenant - Local' dans le dropdown en haut à droite\n2. Configurer les variables base_url et supabase_anon_key dans l'environnement\n\n📝 Identifiants :\n- Email: superadmin@gmail.com\n- Password: Imamsaid@95"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Login - Admin",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    if (jsonData.access_token) {",
+                                    "        pm.environment.set(\"access_token_admin\", jsonData.access_token);",
+                                    "        pm.environment.set(\"user_id_admin\", jsonData.user.id);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "apikey",
+                                "value": "{{supabase_anon_key}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"admin@gmail.com\",\n    \"password\": \"Admin123!\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/v1/token?grant_type=password",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "v1",
+                                "token"
+                            ],
+                            "query": [
+                                {
+                                    "key": "grant_type",
+                                    "value": "password"
+                                }
+                            ]
+                        },
+                        "description": "Connexion avec le compte admin"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "2. Organisations",
+            "item": [
+                {
+                    "name": "Créer une organisation",
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "exec": [
+                                    "// Vérifier que le token existe",
+                                    "const token = pm.environment.get(\"access_token\");",
+                                    "if (!token) {",
+                                    "    console.error(\"❌ ERREUR: access_token non trouvé dans l'environnement\");",
+                                    "    console.error(\"⚠️ Vous devez d'abord exécuter la requête 'Login - Super Admin'\");",
+                                    "    throw new Error(\"Token d'authentification manquant. Exécutez d'abord 'Login - Super Admin'.\");",
+                                    "}",
+                                    "console.log(\"✅ Token trouvé, requête prête à être envoyée\");"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        },
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    if (jsonData.success && jsonData.data) {",
+                                    "        pm.environment.set(\"org_a_id\", jsonData.data.id);",
+                                    "        pm.environment.set(\"org_a_slug\", jsonData.data.slug);",
+                                    "    }",
+                                    "}",
+                                    "",
+                                    "pm.test(\"Status code is 201\", function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "});",
+                                    "",
+                                    "pm.test(\"Response has success true\", function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.success).to.be.true;",
+                                    "});",
+                                    "",
+                                    "pm.test(\"Organization created with correct name\", function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.data.name).to.eql(\"Organisation A\");",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Organisation A\",\n    \"slug\": \"org-a-{{$timestamp}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{api_url}}/organizations",
+                            "host": [
+                                "{{api_url}}"
+                            ],
+                            "path": [
+                                "organizations"
+                            ]
+                        },
+                        "description": "Créer une nouvelle organisation.\n\n⚠️ IMPORTANT:\n1. Vous devez d'abord exécuter 'Login - Super Admin' pour obtenir le token\n2. Le token sera automatiquement inclus dans le header Authorization\n3. Cette route ne nécessite pas d'organisation active (c'est la création de la première organisation)"
+                    }
+                },
+                "response": []
+            },
+            {
+                "name": "Créer une deuxième organisation",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "if (pm.response.code === 201) {",
+                                "    const jsonData = pm.response.json();",
+                                "    if (jsonData.success && jsonData.data) {",
+                                "        pm.environment.set(\"org_b_id\", jsonData.data.id);",
+                                "    }",
+                                "}"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "POST",
+                    "header": [
+                        {
+                            "key": "Authorization",
+                            "value": "Bearer {{access_token}}"
+                        },
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\n    \"name\": \"Organisation B\",\n    \"slug\": \"org-b-{{$timestamp}}\"\n}"
+                    },
+                    "url": {
+                        "raw": "{{api_url}}/organizations",
+                        "host": [
+                            "{{api_url}}"
+                        ],
+                        "path": [
+                            "organizations"
+                        ]
+                    }
+                },
+                "response": []
+            },
+            {
+                "name": "Lister mes organisations",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 200\", function () {",
+                                "    pm.response.to.have.status(200);",
+                                "});",
+                                "",
+                                "pm.test(\"Response is an array\", function () {",
+                                "    const jsonData = pm.response.json();",
+                                "    pm.expect(jsonData.success).to.be.true;",
+                                "    pm.expect(jsonData.data).to.be.an('array');",
+                                "});",
+                                "",
+                                "pm.test(\"User is owner of created organizations\", function () {",
+                                "    const jsonData = pm.response.json();",
+                                "    const orgs = jsonData.data;",
+                                "    const orgA = orgs.find(o => o.id === pm.environment.get('org_a_id'));",
+                                "    if (orgA) {",
+                                "        pm.expect(orgA.role).to.eql('owner');",
+                                "    }",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "GET",
+                    "header": [
+                        {
+                            "key": "Authorization",
+                            "value": "Bearer {{access_token}}"
+                        }
+                    ],
+                    "url": {
+                        "raw": "{{api_url}}/organizations",
+                        "host": [
+                            "{{api_url}}"
+                        ],
+                        "path": [
+                            "organizations"
+                        ]
+                    }
+                },
+                "response": []
+            },
+            {
+                "name": "Obtenir les détails d'une organisation",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 200\", function () {",
+                                "    pm.response.to.have.status(200);",
+                                "});",
+                                "",
+                                "pm.test(\"Organization ID matches\", function () {",
+                                "    const jsonData = pm.response.json();",
+                                "    pm.expect(jsonData.data.id).to.eql(pm.environment.get('org_a_id'));",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "GET",
+                    "header": [
+                        {
+                            "key": "Authorization",
+                            "value": "Bearer {{access_token}}"
+                        }
+                    ],
+                    "url": {
+                        "raw": "{{api_url}}/organizations/{{org_a_id}}",
+                        "host": [
+                            "{{api_url}}"
+                        ],
+                        "path": [
+                            "organizations",
+                            "{{org_a_id}}"
+                        ]
+                    }
+                },
+                "response": []
+            },
+            {
+                "name": "Modifier une organisation (Owner)",
+                "request": {
+                    "method": "PUT",
+                    "header": [
+                        {
+                            "key": "Authorization",
+                            "value": "Bearer {{access_token}}"
+                        },
+                        {
+                            "key": "X-Organization-Id",
+                            "value": "{{org_a_id}}"
+                        },
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\n    \"name\": \"Organisation A Modifiée\"\n}"
+                    },
+                    "url": {
+                        "raw": "{{api_url}}/organizations/{{org_a_id}}",
+                        "host": [
+                            "{{api_url}}"
+                        ],
+                        "path": [
+                            "organizations",
+                            "{{org_a_id}}"
+                        ]
+                    }
+                },
+                "response": []
+            },
+            {
+                "name": "Tenter de modifier avec un Member (doit échouer)",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 403\", function () {",
+                                "    pm.response.to.have.status(403);",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "PUT",
+                    "header": [
+                        {
+                            "key": "Authorization",
+                            "value": "Bearer {{access_token_member}}"
+                        },
+                        {
+                            "key": "X-Organization-Id",
+                            "value": "{{org_a_id}}"
+                        },
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\n    \"name\": \"Hacked Name\"\n}"
+                    },
+                    "url": {
+                        "raw": "{{api_url}}/organizations/{{org_a_id}}",
+                        "host": [
+                            "{{api_url}}"
+                        ],
+                        "path": [
+                            "organizations",
+                            "{{org_a_id}}"
+                        ]
+                    }
+                },
+                "response": []
+            }
+        ]
+    },
+    {
+        "name": "3. Membres d'organisation",
+        "item": [
+            {
+                "name": "Inviter un membre",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "if (pm.response.code === 201) {",
+                                "    const jsonData = pm.response.json();",
+                                "    if (jsonData.success && jsonData.data) {",
+                                "        pm.environment.set(\"member_id\", jsonData.data.user_id);",
+                                "        pm.environment.set(\"membership_id\", jsonData.data.id);",
+                                "    }",
+                                "}",
+                                "",
+                                "pm.test(\"Status code is 201\", function () {",
+                                "    pm.response.to.have.status(201);",
+                                "});",
+                                "",
+                                "pm.test(\"Member has pending status\", function () {",
+                                "    const jsonData = pm.response.json();",
+                                "    pm.expect(jsonData.data.status).to.eql('pending');",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "POST",
+                    "header": [
+                        {
+                            "key": "Authorization",
+                            "value": "Bearer {{access_token}}"
+                        },
+                        {
+                            "key": "X-Organization-Id",
+                            "value": "{{org_a_id}}"
+                        },
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\n    \"user_id\": \"{{user_id_admin}}\",\n    \"role\": \"member\"\n}"
+                    },
+                    "url": {
+                        "raw": "{{api_url}}/organizations/{{org_a_id}}/members",
+                        "host": [
+                            "{{api_url}}"
+                        ],
+                        "path": [
+                            "organizations",
+                            "{{org_a_id}}",
+                            "members"
+                        ]
+                    }
+                },
+                "response": []
+            },
+            {
+                "name": "Lister les membres",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 200\", function () {",
+                                "    pm.response.to.have.status(200);",
+                                "});",
+                                "",
+                                "pm.test(\"Response contains members\", function () {",
+                                "    const jsonData = pm.response.json();",
+                                "    pm.expect(jsonData.success).to.be.true;",
+                                "    pm.expect(jsonData.data).to.be.an('array');",
+                                "    pm.expect(jsonData.data.length).to.be.at.least(1);",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "GET",
+                    "header": [
+                        {
+                            "key": "Authorization",
+                            "value": "Bearer {{access_token}}"
+                        },
+                        {
+                            "key": "X-Organization-Id",
+                            "value": "{{org_a_id}}"
+                        }
+                    ],
+                    "url": {
+                        "raw": "{{api_url}}/organizations/{{org_a_id}}/members",
+                        "host": [
+                            "{{api_url}}"
+                        ],
+                        "path": [
+                            "organizations",
+                            "{{org_a_id}}",
+                            "members"
+                        ]
+                    }
+                },
+                "response": []
+            },
+            {
+                "name": "Modifier le rôle d'un membre",
+                "request": {
+                    "method": "PUT",
+                    "header": [
+                        {
+                            "key": "Authorization",
+                            "value": "Bearer {{access_token}}"
+                        },
+                        {
+                            "key": "X-Organization-Id",
+                            "value": "{{org_a_id}}"
+                        },
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\n    \"role\": \"admin\"\n}"
+                    },
+                    "url": {
+                        "raw": "{{api_url}}/organizations/{{org_a_id}}/members/{{membership_id}}/role",
+                        "host": [
+                            "{{api_url}}"
+                        ],
+                        "path": [
+                            "organizations",
+                            "{{org_a_id}}",
+                            "members",
+                            "{{membership_id}}",
+                            "role"
+                        ]
+                    }
+                },
+                "response": []
+            },
+            {
+                "name": "Retirer un membre",
+                "request": {
+                    "method": "DELETE",
+                    "header": [
+                        {
+                            "key": "Authorization",
+                            "value": "Bearer {{access_token}}"
+                        },
+                        {
+                            "key": "X-Organization-Id",
+                            "value": "{{org_a_id}}"
+                        }
+                    ],
+                    "url": {
+                        "raw": "{{api_url}}/organizations/{{org_a_id}}/members/{{membership_id}}",
+                        "host": [
+                            "{{api_url}}"
+                        ],
+                        "path": [
+                            "organizations",
+                            "{{org_a_id}}",
+                            "members",
+                            "{{membership_id}}"
+                        ]
+                    }
+                },
+                "response": []
+            }
+        ]
+    },
+    {
+        "name": "4. Isolation des données",
+        "item": [
+            {
+                "name": "Créer un client dans Org A",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "if (pm.response.code === 201) {",
+                                "    const jsonData = pm.response.json();",
+                                "    if (jsonData.success && jsonData.data) {",
+                                "        pm.environment.set(\"client_a_id\", jsonData.data.id);",
+                                "    }",
+                                "}",
+                                "",
+                                "pm.test(\"Status code is 201\", function () {",
+                                "    pm.response.to.have.status(201);",
+                                "});",
+                                "",
+                                "pm.test(\"Client belongs to Org A\", function () {",
+                                "    const jsonData = pm.response.json();",
+                                "    pm.expect(jsonData.data.organization_id).to.eql(pm.environment.get('org_a_id'));",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "POST",
+                    "header": [
+                        {
+                            "key": "Authorization",
+                            "value": "Bearer {{access_token}}"
+                        },
+                        {
+                            "key": "X-Organization-Id",
+                            "value": "{{org_a_id}}"
+                        },
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\n    \"nom\": \"Dupont\",\n    \"prenom\": \"Jean\",\n    \"email\": \"jean.dupont@example.com\",\n    \"type_client\": \"particulier\"\n}"
+                    },
+                    "url": {
+                        "raw": "{{api_url}}/clients",
+                        "host": [
+                            "{{api_url}}"
+                        ],
+                        "path": [
+                            "clients"
+                        ]
+                    }
+                },
+                "response": []
+            },
+            {
+                "name": "Lister les clients de Org A",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 200\", function () {",
+                                "    pm.response.to.have.status(200);",
+                                "});",
+                                "",
+                                "pm.test(\"All clients belong to Org A\", function () {",
+                                "    const jsonData = pm.response.json();",
+                                "    const clients = jsonData.data || jsonData;",
+                                "    const orgAId = pm.environment.get('org_a_id');",
+                                "    ",
+                                "    if (Array.isArray(clients)) {",
+                                "        clients.forEach(client => {",
+                                "            pm.expect(client.organization_id).to.eql(orgAId);",
+                                "        });",
+                                "    }",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "GET",
+                    "header": [
+                        {
+                            "key": "Authorization",
+                            "value": "Bearer {{access_token}}"
+                        },
+                        {
+                            "key": "X-Organization-Id",
+                            "value": "{{org_a_id}}"
+                        }
+                    ],
+                    "url": {
+                        "raw": "{{api_url}}/clients",
+                        "host": [
+                            "{{api_url}}"
+                        ],
+                        "path": [
+                            "clients"
+                        ]
+                    }
+                },
+                "response": []
+            },
+            {
+                "name": "Tenter d'accéder aux clients de Org B (doit échouer)",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 403 or empty list\", function () {",
+                                "    const status = pm.response.code;",
+                                "    pm.expect([403, 200]).to.include(status);",
+                                "    ",
+                                "    if (status === 200) {",
+                                "        const jsonData = pm.response.json();",
+                                "        const clients = jsonData.data || jsonData;",
+                                "        if (Array.isArray(clients)) {",
+                                "            pm.expect(clients.length).to.eql(0);",
+                                "        }",
+                                "    }",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "GET",
+                    "header": [
+                        {
+                            "key": "Authorization",
+                            "value": "Bearer {{access_token}}"
+                        },
+                        {
+                            "key": "X-Organization-Id",
+                            "value": "{{org_b_id}}"
+                        }
+                    ],
+                    "url": {
+                        "raw": "{{api_url}}/clients",
+                        "host": [
+                            "{{api_url}}"
+                        ],
+                        "path": [
+                            "clients"
+                        ]
+                    }
+                },
+                "response": []
+            },
+            {
+                "name": "Tenter de créer un client avec organization_id différent (doit être ignoré)",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 201\", function () {",
+                                "    pm.response.to.have.status(201);",
+                                "});",
+                                "",
+                                "pm.test(\"organization_id from header is used, not from body\", function () {",
+                                "    const jsonData = pm.response.json();",
+                                "    const orgAId = pm.environment.get('org_a_id');",
+                                "    pm.expect(jsonData.data.organization_id).to.eql(orgAId);",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "POST",
+                    "header": [
+                        {
+                            "key": "Authorization",
+                            "value": "Bearer {{access_token}}"
+                        },
+                        {
+                            "key": "X-Organization-Id",
+                            "value": "{{org_a_id}}"
+                        },
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\n    \"nom\": \"Test\",\n    \"prenom\": \"Hack\",\n    \"email\": \"hack@example.com\",\n    \"type_client\": \"particulier\",\n    \"organization_id\": \"{{org_b_id}}\"\n}"
+                    },
+                    "url": {
+                        "raw": "{{api_url}}/clients",
+                        "host": [
+                            "{{api_url}}"
+                        ],
+                        "path": [
+                            "clients"
+                        ]
+                    }
+                },
+                "response": []
+            }
+        ]
+    },
+    {
+        "name": "5. Tests de contraintes d'unicité",
+        "item": [
+            {
+                "name": "Créer une compagnie avec nom unique",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "if (pm.response.code === 201) {",
+                                "    const jsonData = pm.response.json();",
+                                "    if (jsonData.success && jsonData.data) {",
+                                "        pm.environment.set(\"compagnie_a_id\", jsonData.data.id);",
+                                "    }",
+                                "}",
+                                "",
+                                "pm.test(\"Status code is 201\", function () {",
+                                "    pm.response.to.have.status(201);",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "POST",
+                    "header": [
+                        {
+                            "key": "Authorization",
+                            "value": "Bearer {{access_token}}"
+                        },
+                        {
+                            "key": "X-Organization-Id",
+                            "value": "{{org_a_id}}"
+                        },
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\n    \"nom\": \"Compagnie Test Unique\",\n    \"sigle\": \"CTU\"\n}"
+                    },
+                    "url": {
+                        "raw": "{{api_url}}/compagnies",
+                        "host": [
+                            "{{api_url}}"
+                        ],
+                        "path": [
+                            "compagnies"
+                        ]
+                    }
+                },
+                "response": []
+            },
+            {
+                "name": "Créer la même compagnie dans Org B (doit réussir)",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 201\", function () {",
+                                "    pm.response.to.have.status(201);",
+                                "});",
+                                "",
+                                "pm.test(\"Same name allowed in different organization\", function () {",
+                                "    const jsonData = pm.response.json();",
+                                "    pm.expect(jsonData.data.nom).to.eql(\"Compagnie Test Unique\");",
+                                "    pm.expect(jsonData.data.organization_id).to.eql(pm.environment.get('org_b_id'));",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "POST",
+                    "header": [
+                        {
+                            "key": "Authorization",
+                            "value": "Bearer {{access_token}}"
+                        },
+                        {
+                            "key": "X-Organization-Id",
+                            "value": "{{org_b_id}}"
+                        },
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\n    \"nom\": \"Compagnie Test Unique\",\n    \"sigle\": \"CTU\"\n}"
+                    },
+                    "url": {
+                        "raw": "{{api_url}}/compagnies",
+                        "host": [
+                            "{{api_url}}"
+                        ],
+                        "path": [
+                            "compagnies"
+                        ]
+                    }
+                },
+                "response": []
+            },
+            {
+                "name": "Tenter de créer la même compagnie dans Org A (doit échouer)",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 409 or 400\", function () {",
+                                "    pm.response.to.have.status.oneOf([409, 400]);",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "POST",
+                    "header": [
+                        {
+                            "key": "Authorization",
+                            "value": "Bearer {{access_token}}"
+                        },
+                        {
+                            "key": "X-Organization-Id",
+                            "value": "{{org_a_id}}"
+                        },
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\n    \"nom\": \"Compagnie Test Unique\",\n    \"sigle\": \"CTU2\"\n}"
+                    },
+                    "url": {
+                        "raw": "{{api_url}}/compagnies",
+                        "host": [
+                            "{{api_url}}"
+                        ],
+                        "path": [
+                            "compagnies"
+                        ]
+                    }
+                },
+                "response": []
+            }
+        ]
+    },
+    {
+        "name": "6. Tests de middleware tenant",
+        "item": [
+            {
+                "name": "Requête sans token (doit échouer)",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 401\", function () {",
+                                "    pm.response.to.have.status(401);",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                        "raw": "{{api_url}}/clients",
+                        "host": [
+                            "{{api_url}}"
+                        ],
+                        "path": [
+                            "clients"
+                        ]
+                    }
+                },
+                "response": []
+            },
+            {
+                "name": "Requête avec token mais sans organisation (doit utiliser défaut)",
+                "request": {
+                    "method": "GET",
+                    "header": [
+                        {
+                            "key": "Authorization",
+                            "value": "Bearer {{access_token}}"
+                        }
+                    ],
+                    "url": {
+                        "raw": "{{api_url}}/clients",
+                        "host": [
+                            "{{api_url}}"
+                        ],
+                        "path": [
+                            "clients"
+                        ]
+                    }
+                },
+                "response": []
+            },
+            {
+                "name": "Requête avec organisation invalide (doit échouer)",
+                "event": [
+                    {
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "pm.test(\"Status code is 403\", function () {",
+                                "    pm.response.to.have.status(403);",
+                                "});"
+                            ],
+                            "type": "text/javascript"
+                        }
+                    }
+                ],
+                "request": {
+                    "method": "GET",
+                    "header": [
+                        {
+                            "key": "Authorization",
+                            "value": "Bearer {{access_token}}"
+                        },
+                        {
+                            "key": "X-Organization-Id",
+                            "value": "00000000-0000-0000-0000-000000000000"
+                        }
+                    ],
+                    "url": {
+                        "raw": "{{api_url}}/clients",
+                        "host": [
+                            "{{api_url}}"
+                        ],
+                        "path": [
+                            "clients"
+                        ]
+                    }
+                },
+                "response": []
+            }
+        ]
+    },
+    {
+        "name": "7. Tests de migration",
+        "item": [
+            {
+                "name": "Vérifier que Legacy Organization existe",
+                "request": {
+                    "method": "GET",
+                    "header": [
+                        {
+                            "key": "Authorization",
+                            "value": "Bearer {{access_token}}"
+                        }
+                    ],
+                    "url": {
+                        "raw": "{{api_url}}/organizations?slug=legacy-organization",
+                        "host": [
+                            "{{api_url}}"
+                        ],
+                        "path": [
+                            "organizations"
+                        ],
+                        "query": [
+                            {
+                                "key": "slug",
+                                "value": "legacy-organization"
+                            }
+                        ]
+                    }
+                },
+                "response": []
+            },
+            {
+                "name": "Vérifier que tous les utilisateurs sont membres",
+                "request": {
+                    "method": "GET",
+                    "header": [
+                        {
+                            "key": "Authorization",
+                            "value": "Bearer {{access_token}}"
+                        }
+                    ],
+                    "url": {
+                        "raw": "{{api_url}}/organizations",
+                        "host": [
+                            "{{api_url}}"
+                        ],
+                        "path": [
+                            "organizations"
+                        ]
+                    }
+                },
+                "response": []
+            }
+        ]
+    }
+],
+"event": [
+    {
+        "listen": "prerequest",
+        "script": {
+            "type": "text/javascript",
+            "exec": [
+                ""
+            ]
+        }
+    },
+    {
+        "listen": "test",
+        "script": {
+            "type": "text/javascript",
+            "exec": [
+                ""
+            ]
+        }
+    }
+],
+"variable": [
+    {
+        "key": "base_url",
+        "value": "https://your-project.supabase.co",
+        "type": "string"
+    },
+    {
+        "key": "api_url",
+        "value": "http://localhost:4000/api",
+        "type": "string"
+    },
+    {
+        "key": "supabase_anon_key",
+        "value": "VOTRE_CLE_ANON_SUPABASE",
+        "type": "string"
+    }
+]
+}

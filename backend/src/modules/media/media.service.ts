@@ -8,8 +8,10 @@ const toBigInt = (value: string | number) => {
 };
 
 export class MediaService {
-  async getAll(query: MediaListQuery) {
-    const where: Record<string, any> = {};
+  async getAll(query: MediaListQuery, organizationId: string) {
+    const where: Record<string, any> = {
+      organization_id: organizationId,
+    };
 
     if (typeof query.trashed === 'boolean') where.supprime = query.trashed;
     if (typeof query.folderId !== 'undefined') where.dossier_id = query.folderId;
@@ -25,9 +27,12 @@ export class MediaService {
     });
   }
 
-  async getById(id: string) {
-    return prisma.medias.findUnique({
-      where: { id },
+  async getById(id: string, organizationId: string) {
+    return prisma.medias.findFirst({
+      where: {
+        id,
+        organization_id: organizationId,
+      },
       include: {
         clients: { select: { nom: true, prenom: true } },
         contrats: { select: { type_contrat: true } },
@@ -35,7 +40,7 @@ export class MediaService {
     });
   }
 
-  async create(payload: CreateMediaInput) {
+  async create(payload: CreateMediaInput, organizationId: string) {
     return prisma.medias.create({
       data: {
         nom: payload.nom.trim(),
@@ -50,6 +55,7 @@ export class MediaService {
         client_id: payload.client_id ?? null,
         notes: payload.notes ?? null,
         created_by: payload.created_by ?? null,
+        organization_id: organizationId,
       },
       include: {
         clients: { select: { nom: true, prenom: true } },
@@ -58,8 +64,13 @@ export class MediaService {
     });
   }
 
-  async update(id: string, payload: UpdateMediaInput) {
-    const existing = await prisma.medias.findUnique({ where: { id } });
+  async update(id: string, payload: UpdateMediaInput, organizationId: string) {
+    const existing = await prisma.medias.findFirst({
+      where: {
+        id,
+        organization_id: organizationId,
+      },
+    });
     if (!existing) return null;
 
     const data: Record<string, unknown> = {};
@@ -87,8 +98,13 @@ export class MediaService {
     });
   }
 
-  async trash(id: string) {
-    const existing = await prisma.medias.findUnique({ where: { id } });
+  async trash(id: string, organizationId: string) {
+    const existing = await prisma.medias.findFirst({
+      where: {
+        id,
+        organization_id: organizationId,
+      },
+    });
     if (!existing) return null;
 
     return prisma.medias.update({
@@ -104,8 +120,13 @@ export class MediaService {
     });
   }
 
-  async restore(id: string) {
-    const existing = await prisma.medias.findUnique({ where: { id } });
+  async restore(id: string, organizationId: string) {
+    const existing = await prisma.medias.findFirst({
+      where: {
+        id,
+        organization_id: organizationId,
+      },
+    });
     if (!existing) return null;
 
     return prisma.medias.update({
@@ -121,13 +142,20 @@ export class MediaService {
     });
   }
 
-  async delete(id: string) {
-    const existing = await prisma.medias.findUnique({ where: { id } });
+  async delete(id: string, organizationId: string) {
+    const existing = await prisma.medias.findFirst({
+      where: {
+        id,
+        organization_id: organizationId,
+      },
+    });
     if (!existing) return false;
     await prisma.medias.delete({ where: { id } });
     return true;
   }
 }
+
+
 
 
 

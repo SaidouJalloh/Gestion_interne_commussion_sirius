@@ -13,8 +13,10 @@ const dec = (value: unknown) => {
 };
 
 export class IncorporationService {
-  async getAll(filters: IncorporationsListQuery) {
-    const where: Record<string, any> = {};
+  async getAll(filters: IncorporationsListQuery, organizationId: string) {
+    const where: Record<string, any> = {
+      organization_id: organizationId,
+    };
     if (filters.contratId) where.contrat_id = filters.contratId;
 
     return prisma.incorporations.findMany({
@@ -28,9 +30,12 @@ export class IncorporationService {
     });
   }
 
-  async getById(id: string) {
-    return prisma.incorporations.findUnique({
-      where: { id },
+  async getById(id: string, organizationId: string) {
+    return prisma.incorporations.findFirst({
+      where: {
+        id,
+        organization_id: organizationId,
+      },
       include: {
         profiles: {
           select: { id: true, nom: true, prenom: true, email: true },
@@ -39,9 +44,14 @@ export class IncorporationService {
     });
   }
 
-  async create(payload: CreateIncorporationInput) {
+  async create(payload: CreateIncorporationInput, organizationId: string) {
     return prisma.$transaction(async (tx) => {
-      const contrat = await tx.contrats.findUnique({ where: { id: payload.contrat_id } });
+      const contrat = await tx.contrats.findFirst({
+        where: {
+          id: payload.contrat_id,
+          organization_id: organizationId,
+        },
+      });
       if (!contrat) {
         throw Object.assign(new Error('Contrat non trouvé'), { status: 404 });
       }
@@ -66,6 +76,7 @@ export class IncorporationService {
           commission: toDecimal(payload.commission),
           notes: payload.notes ?? null,
           created_by: payload.created_by ?? null,
+          organization_id: organizationId,
         },
         include: {
           profiles: {

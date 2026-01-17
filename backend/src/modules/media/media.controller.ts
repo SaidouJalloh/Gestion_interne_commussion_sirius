@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { apiResponse } from '../../utils/apiResponse';
+import { apiResponse } from '../../admin/utils/apiResponse';
 import { MediaService } from './media.service';
 import type {
   CreateMediaInput,
@@ -14,7 +14,14 @@ export class MediaController {
   async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const query = req.query as unknown as MediaListQuery;
-      const medias = await service.getAll(query);
+      const organizationId = req.tenant?.organizationId;
+      if (!organizationId) {
+        res.status(403).json(
+          apiResponse.error('Organisation requise', 'FORBIDDEN'),
+        );
+        return;
+      }
+      const medias = await service.getAll(query, organizationId);
       res.json(apiResponse.success(medias));
     } catch (e) {
       next(e);
@@ -24,7 +31,14 @@ export class MediaController {
   async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params as unknown as MediaIdParams;
-      const media = await service.getById(id);
+      const organizationId = req.tenant?.organizationId;
+      if (!organizationId) {
+        res.status(403).json(
+          apiResponse.error('Organisation requise', 'FORBIDDEN'),
+        );
+        return;
+      }
+      const media = await service.getById(id, organizationId);
       if (!media) {
         res.status(404).json(apiResponse.error('Fichier non trouvé', 'NOT_FOUND'));
         return;
@@ -38,7 +52,14 @@ export class MediaController {
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const payload = req.body as CreateMediaInput;
-      const created = await service.create(payload);
+      const organizationId = req.tenant?.organizationId;
+      if (!organizationId) {
+        res.status(403).json(
+          apiResponse.error('Organisation requise', 'FORBIDDEN'),
+        );
+        return;
+      }
+      const created = await service.create(payload, organizationId);
       res.status(201).json(apiResponse.success(created));
     } catch (e) {
       next(e);
@@ -49,7 +70,14 @@ export class MediaController {
     try {
       const { id } = req.params as unknown as MediaIdParams;
       const payload = req.body as UpdateMediaInput;
-      const updated = await service.update(id, payload);
+      const organizationId = req.tenant?.organizationId;
+      if (!organizationId) {
+        res.status(403).json(
+          apiResponse.error('Organisation requise', 'FORBIDDEN'),
+        );
+        return;
+      }
+      const updated = await service.update(id, payload, organizationId);
       if (!updated) {
         res.status(404).json(apiResponse.error('Fichier non trouvé', 'NOT_FOUND'));
         return;
@@ -63,7 +91,14 @@ export class MediaController {
   async trash(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params as unknown as MediaIdParams;
-      const updated = await service.trash(id);
+      const organizationId = req.tenant?.organizationId;
+      if (!organizationId) {
+        res.status(403).json(
+          apiResponse.error('Organisation requise', 'FORBIDDEN'),
+        );
+        return;
+      }
+      const updated = await service.trash(id, organizationId);
       if (!updated) {
         res.status(404).json(apiResponse.error('Fichier non trouvé', 'NOT_FOUND'));
         return;
@@ -77,7 +112,14 @@ export class MediaController {
   async restore(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params as unknown as MediaIdParams;
-      const updated = await service.restore(id);
+      const organizationId = req.tenant?.organizationId;
+      if (!organizationId) {
+        res.status(403).json(
+          apiResponse.error('Organisation requise', 'FORBIDDEN'),
+        );
+        return;
+      }
+      const updated = await service.restore(id, organizationId);
       if (!updated) {
         res.status(404).json(apiResponse.error('Fichier non trouvé', 'NOT_FOUND'));
         return;
@@ -91,7 +133,14 @@ export class MediaController {
   async remove(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params as unknown as MediaIdParams;
-      const deleted = await service.delete(id);
+      const organizationId = req.tenant?.organizationId;
+      if (!organizationId) {
+        res.status(403).json(
+          apiResponse.error('Organisation requise', 'FORBIDDEN'),
+        );
+        return;
+      }
+      const deleted = await service.delete(id, organizationId);
       if (!deleted) {
         res.status(404).json(apiResponse.error('Fichier non trouvé', 'NOT_FOUND'));
         return;
@@ -104,6 +153,8 @@ export class MediaController {
 }
 
 export const mediaController = new MediaController();
+
+
 
 
 

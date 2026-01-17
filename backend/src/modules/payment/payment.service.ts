@@ -5,8 +5,10 @@ const toDecimalString = (value: number | string) => (typeof value === 'number' ?
 const toDate = (value: string) => new Date(value);
 
 export class PaymentService {
-  async getAll(filters: PaymentsListQuery) {
-    const where: Record<string, any> = {};
+  async getAll(filters: PaymentsListQuery, organizationId: string) {
+    const where: Record<string, any> = {
+      organization_id: organizationId,
+    };
 
     if (filters.type) where.type_paiement = filters.type;
     if (filters.contractId) where.contrat_id = filters.contractId;
@@ -31,9 +33,12 @@ export class PaymentService {
     });
   }
 
-  async getById(id: string) {
-    return prisma.paiements.findUnique({
-      where: { id },
+  async getById(id: string, organizationId: string) {
+    return prisma.paiements.findFirst({
+      where: {
+        id,
+        organization_id: organizationId,
+      },
       include: {
         contrats: {
           include: {
@@ -45,7 +50,7 @@ export class PaymentService {
     });
   }
 
-  async create(payload: CreatePaymentInput) {
+  async create(payload: CreatePaymentInput, organizationId: string) {
     return prisma.paiements.create({
       data: {
         contrat_id: payload.contrat_id,
@@ -54,6 +59,7 @@ export class PaymentService {
         date_paiement: toDate(payload.date_paiement),
         mode_paiement: payload.mode_paiement,
         notes: payload.notes ?? null,
+        organization_id: organizationId,
       },
       include: {
         contrats: {
@@ -66,8 +72,13 @@ export class PaymentService {
     });
   }
 
-  async update(id: string, payload: UpdatePaymentInput) {
-    const existing = await prisma.paiements.findUnique({ where: { id } });
+  async update(id: string, payload: UpdatePaymentInput, organizationId: string) {
+    const existing = await prisma.paiements.findFirst({
+      where: {
+        id,
+        organization_id: organizationId,
+      },
+    });
     if (!existing) return null;
 
     const data: Record<string, unknown> = {};
@@ -92,13 +103,20 @@ export class PaymentService {
     });
   }
 
-  async delete(id: string) {
-    const existing = await prisma.paiements.findUnique({ where: { id } });
+  async delete(id: string, organizationId: string) {
+    const existing = await prisma.paiements.findFirst({
+      where: {
+        id,
+        organization_id: organizationId,
+      },
+    });
     if (!existing) return false;
     await prisma.paiements.delete({ where: { id } });
     return true;
   }
 }
+
+
 
 
 

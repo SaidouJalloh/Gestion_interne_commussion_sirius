@@ -1,8 +1,9 @@
 import { prisma } from '../../core/prisma';
 
 export class ContractService {
-  async getAll() {
+  async getAll(organizationId: string) {
     const contrats = await prisma.contrats.findMany({
+      where: { organization_id: organizationId },
       include: {
         clients: true,
         compagnies: true,
@@ -14,9 +15,12 @@ export class ContractService {
     return contrats;
   }
 
-  async getById(id: string) {
-    return prisma.contrats.findUnique({
-      where: { id },
+  async getById(id: string, organizationId: string) {
+    return prisma.contrats.findFirst({
+      where: {
+        id,
+        organization_id: organizationId,
+      },
       include: {
         clients: true,
         compagnies: true,
@@ -25,9 +29,12 @@ export class ContractService {
     });
   }
 
-  async create(payload: any) {
+  async create(payload: any, organizationId: string) {
     return prisma.contrats.create({
-      data: payload,
+      data: {
+        ...payload,
+        organization_id: organizationId,
+      },
       include: {
         clients: true,
         compagnies: true,
@@ -36,8 +43,13 @@ export class ContractService {
     });
   }
 
-  async update(id: string, payload: any) {
-    const existing = await prisma.contrats.findUnique({ where: { id } });
+  async update(id: string, payload: any, organizationId: string) {
+    const existing = await prisma.contrats.findFirst({
+      where: {
+        id,
+        organization_id: organizationId,
+      },
+    });
     if (!existing) return null;
 
     return prisma.contrats.update({
@@ -51,8 +63,13 @@ export class ContractService {
     });
   }
 
-  async delete(id: string) {
-    const existing = await prisma.contrats.findUnique({ where: { id } });
+  async delete(id: string, organizationId: string) {
+    const existing = await prisma.contrats.findFirst({
+      where: {
+        id,
+        organization_id: organizationId,
+      },
+    });
     if (!existing) return false;
     await prisma.contrats.delete({ where: { id } });
     return true;

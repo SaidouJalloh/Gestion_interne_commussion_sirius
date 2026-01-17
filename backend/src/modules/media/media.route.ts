@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { validate } from '../../middlewares/validate';
+import { tenantMiddleware } from '../../middlewares/tenant.middleware';
 import { mediaController } from './media.controller';
 import {
   createMediaSchema,
@@ -9,6 +10,9 @@ import {
 } from './media.validation';
 
 const router = Router();
+
+// Toutes les routes nécessitent un tenant
+router.use(tenantMiddleware);
 
 // GET /api/media?folderId=...&trashed=true|false
 router.get(
@@ -61,6 +65,8 @@ router.delete(
 );
 
 export default router;
+
+
 
 
 

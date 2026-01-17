@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { apiResponse } from '../../utils/apiResponse';
+import { apiResponse } from '../../admin/utils/apiResponse';
 import { ClientService } from './client.service';
 import type {
     ClientIdParams,
@@ -10,9 +10,16 @@ import type {
 const service = new ClientService();
 
 export class ClientController {
-    async getAll(_req: Request, res: Response, next: NextFunction): Promise<void> {
+    async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const clients = await service.getAll();
+            const organizationId = req.tenant?.organizationId;
+            if (!organizationId) {
+                res.status(403).json(
+                    apiResponse.error('Organisation requise', 'FORBIDDEN'),
+                );
+                return;
+            }
+            const clients = await service.getAll(organizationId);
             res.json(apiResponse.success(clients));
         } catch (e) {
             next(e);
@@ -22,7 +29,14 @@ export class ClientController {
     async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { id } = req.params as unknown as ClientIdParams;
-            const client = await service.getById(id);
+            const organizationId = req.tenant?.organizationId;
+            if (!organizationId) {
+                res.status(403).json(
+                    apiResponse.error('Organisation requise', 'FORBIDDEN'),
+                );
+                return;
+            }
+            const client = await service.getById(id, organizationId);
             if (!client) {
                 res.status(404).json(apiResponse.error('Client non trouvé', 'NOT_FOUND'));
                 return;
@@ -36,7 +50,19 @@ export class ClientController {
     async create(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const payload = req.body as CreateClientInput;
-            const created = await service.create(payload);
+            const organizationId = req.tenant?.organizationId;
+            if (!organizationId) {
+                res.status(403).json(
+                    apiResponse.error('Organisation requise', 'FORBIDDEN'),
+                );
+                return;
+            }
+            // Ignorer explicitement organization_id du body si présent (sécurité)
+            // L'organization_id vient toujours du middleware tenant
+            const { organization_id, ...cleanPayload } = payload as CreateClientInput & {
+                organization_id?: string;
+            };
+            const created = await service.create(cleanPayload, organizationId);
             res.status(201).json(apiResponse.success(created));
         } catch (e) {
             next(e);
@@ -47,7 +73,14 @@ export class ClientController {
         try {
             const { id } = req.params as unknown as ClientIdParams;
             const payload = req.body as UpdateClientInput;
-            const updated = await service.update(id, payload);
+            const organizationId = req.tenant?.organizationId;
+            if (!organizationId) {
+                res.status(403).json(
+                    apiResponse.error('Organisation requise', 'FORBIDDEN'),
+                );
+                return;
+            }
+            const updated = await service.update(id, payload, organizationId);
             if (!updated) {
                 res.status(404).json(apiResponse.error('Client non trouvé', 'NOT_FOUND'));
                 return;
@@ -61,7 +94,14 @@ export class ClientController {
     async remove(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { id } = req.params as unknown as ClientIdParams;
-            const deleted = await service.delete(id);
+            const organizationId = req.tenant?.organizationId;
+            if (!organizationId) {
+                res.status(403).json(
+                    apiResponse.error('Organisation requise', 'FORBIDDEN'),
+                );
+                return;
+            }
+            const deleted = await service.delete(id, organizationId);
             if (!deleted) {
                 res.status(404).json(apiResponse.error('Client non trouvé', 'NOT_FOUND'));
                 return;
@@ -74,6 +114,8 @@ export class ClientController {
 }
 
 export const clientController = new ClientController();
+
+
 
 
 

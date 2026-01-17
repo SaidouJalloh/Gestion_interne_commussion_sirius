@@ -23,9 +23,10 @@ const getLastMonths = (count: number) => {
 };
 
 export class DashboardService {
-    async getDashboard() {
+    async getDashboard(organizationId: string) {
         const [clients, contratsActifs, paiements, compagnies] = await Promise.all([
             prisma.clients.findMany({
+                where: { organization_id: organizationId },
                 select: {
                     id: true,
                     nom: true,
@@ -37,7 +38,10 @@ export class DashboardService {
                 },
             }),
             prisma.contrats.findMany({
-                where: { statut: 'actif' },
+                where: { 
+                    statut: 'actif',
+                    organization_id: organizationId,
+                },
                 select: {
                     id: true,
                     client_id: true,
@@ -49,6 +53,7 @@ export class DashboardService {
                 },
             }),
             prisma.paiements.findMany({
+                where: { organization_id: organizationId },
                 select: {
                     id: true,
                     contrat_id: true,
@@ -59,6 +64,7 @@ export class DashboardService {
                 },
             }),
             prisma.compagnies.findMany({
+                where: { organization_id: organizationId },
                 select: { id: true, nom: true },
             }),
         ]);
@@ -199,6 +205,7 @@ export class DashboardService {
         // Activités récentes
         const [derniers_contrats, derniers_paiements, contrats_expirants] = await Promise.all([
             prisma.contrats.findMany({
+                where: { organization_id: organizationId },
                 orderBy: { created_at: 'desc' },
                 take: 5,
                 include: {
@@ -207,6 +214,7 @@ export class DashboardService {
                 },
             }),
             prisma.paiements.findMany({
+                where: { organization_id: organizationId },
                 orderBy: { created_at: 'desc' },
                 take: 5,
                 include: {
@@ -221,6 +229,7 @@ export class DashboardService {
             prisma.contrats.findMany({
                 where: {
                     statut: 'actif',
+                    organization_id: organizationId,
                     date_expiration: {
                         gte: new Date(new Date().toISOString().split('T')[0]),
                         lte: dateLimite,
@@ -264,6 +273,8 @@ export class DashboardService {
         };
     }
 }
+
+
 
 
 

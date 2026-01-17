@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { CompanyService } from './company.service';
-import { apiResponse } from '../../utils/apiResponse';
+import { apiResponse } from '../../admin/utils/apiResponse';
 import type {
   CreateCompanyInput,
   UpdateCompanyInput,
@@ -29,7 +29,15 @@ export class CompanyController {
           ? hasSubscriptionLinkRaw.trim().toLowerCase() === 'true'
           : undefined;
 
-      const compagnies = await service.getAll({
+      const organizationId = req.tenant?.organizationId;
+      if (!organizationId) {
+        res.status(403).json(
+          apiResponse.error('Organisation requise', 'FORBIDDEN'),
+        );
+        return;
+      }
+
+      const compagnies = await service.getAll(organizationId, {
         active: typeof active === 'boolean' ? active : undefined,
         hasSubscriptionLink: !!hasSubscriptionLink,
       });
@@ -46,7 +54,14 @@ export class CompanyController {
   ): Promise<void> {
     try {
       const { id } = req.params as unknown as CompanyIdParams;
-      const compagnie = await service.getById(id);
+      const organizationId = req.tenant?.organizationId;
+      if (!organizationId) {
+        res.status(403).json(
+          apiResponse.error('Organisation requise', 'FORBIDDEN'),
+        );
+        return;
+      }
+      const compagnie = await service.getById(id, organizationId);
 
       if (!compagnie) {
         res
@@ -68,7 +83,14 @@ export class CompanyController {
   ): Promise<void> {
     try {
       const payload = req.body as CreateCompanyInput;
-      const compagnie = await service.create(payload);
+      const organizationId = req.tenant?.organizationId;
+      if (!organizationId) {
+        res.status(403).json(
+          apiResponse.error('Organisation requise', 'FORBIDDEN'),
+        );
+        return;
+      }
+      const compagnie = await service.create(payload, organizationId);
       res.status(201).json(apiResponse.success(compagnie));
     } catch (error) {
       next(error);
@@ -83,7 +105,14 @@ export class CompanyController {
     try {
       const { id } = req.params as unknown as CompanyIdParams;
       const payload = req.body as UpdateCompanyInput;
-      const updated = await service.update(id, payload);
+      const organizationId = req.tenant?.organizationId;
+      if (!organizationId) {
+        res.status(403).json(
+          apiResponse.error('Organisation requise', 'FORBIDDEN'),
+        );
+        return;
+      }
+      const updated = await service.update(id, payload, organizationId);
 
       if (!updated) {
         res
@@ -105,7 +134,14 @@ export class CompanyController {
   ): Promise<void> {
     try {
       const { id } = req.params as unknown as CompanyIdParams;
-      const deleted = await service.delete(id);
+      const organizationId = req.tenant?.organizationId;
+      if (!organizationId) {
+        res.status(403).json(
+          apiResponse.error('Organisation requise', 'FORBIDDEN'),
+        );
+        return;
+      }
+      const deleted = await service.delete(id, organizationId);
 
       if (!deleted) {
         res

@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { ContractService } from './contract.service';
-import { apiResponse } from '../../utils/apiResponse';
+import { apiResponse } from '../../admin/utils/apiResponse';
 import type {
   ContractIdParams,
   CreateContractInput,
@@ -18,12 +18,19 @@ const toDate = (value: string) => new Date(value);
 
 export class ContractController {
   async getAll(
-    _req: Request,
+    req: Request,
     res: Response,
     next: NextFunction,
   ): Promise<void> {
     try {
-      const contrats = await service.getAll();
+      const organizationId = req.tenant?.organizationId;
+      if (!organizationId) {
+        res.status(403).json(
+          apiResponse.error('Organisation requise', 'FORBIDDEN'),
+        );
+        return;
+      }
+      const contrats = await service.getAll(organizationId);
       res.json(apiResponse.success(contrats));
     } catch (error) {
       next(error);
@@ -33,7 +40,14 @@ export class ContractController {
   async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params as unknown as ContractIdParams;
-      const contrat = await service.getById(id);
+      const organizationId = req.tenant?.organizationId;
+      if (!organizationId) {
+        res.status(403).json(
+          apiResponse.error('Organisation requise', 'FORBIDDEN'),
+        );
+        return;
+      }
+      const contrat = await service.getById(id, organizationId);
       if (!contrat) {
         res.status(404).json(apiResponse.error('Contrat non trouvé', 'NOT_FOUND'));
         return;
@@ -47,6 +61,13 @@ export class ContractController {
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const payload = req.body as CreateContractInput;
+      const organizationId = req.tenant?.organizationId;
+      if (!organizationId) {
+        res.status(403).json(
+          apiResponse.error('Organisation requise', 'FORBIDDEN'),
+        );
+        return;
+      }
 
       const data = {
         client_id: payload.client_id,
@@ -92,7 +113,7 @@ export class ContractController {
             : toDecimalString(payload.prime_ttc_initial as any),
       };
 
-      const created = await service.create(data);
+      const created = await service.create(data, organizationId);
       res.status(201).json(apiResponse.success(created));
     } catch (error) {
       next(error);
@@ -103,6 +124,13 @@ export class ContractController {
     try {
       const { id } = req.params as unknown as ContractIdParams;
       const payload = req.body as UpdateContractInput;
+      const organizationId = req.tenant?.organizationId;
+      if (!organizationId) {
+        res.status(403).json(
+          apiResponse.error('Organisation requise', 'FORBIDDEN'),
+        );
+        return;
+      }
 
       const data: Record<string, unknown> = {};
 
@@ -158,7 +186,7 @@ export class ContractController {
         data.prime_ttc_initial =
           payload.prime_ttc_initial === null ? null : toDecimalString(payload.prime_ttc_initial as any);
 
-      const updated = await service.update(id, data);
+      const updated = await service.update(id, data, organizationId);
       if (!updated) {
         res.status(404).json(apiResponse.error('Contrat non trouvé', 'NOT_FOUND'));
         return;
@@ -172,7 +200,14 @@ export class ContractController {
   async remove(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params as unknown as ContractIdParams;
-      const deleted = await service.delete(id);
+      const organizationId = req.tenant?.organizationId;
+      if (!organizationId) {
+        res.status(403).json(
+          apiResponse.error('Organisation requise', 'FORBIDDEN'),
+        );
+        return;
+      }
+      const deleted = await service.delete(id, organizationId);
       if (!deleted) {
         res.status(404).json(apiResponse.error('Contrat non trouvé', 'NOT_FOUND'));
         return;

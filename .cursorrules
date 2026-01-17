@@ -1,0 +1,59 @@
+# Project Context
+You are working on the "Sirius" project, a comprehensive insurance management system.
+- **Backend**: Node.js, Express, TypeScript, Prisma ORM, Supabase (Database & Auth).
+- **Frontend**: React 19 (Hooks tailored), TypeScript, Tailwind CSS, React Query, Supabase Client.
+- **Architecture**:
+  - Backend: Modular architecture (`src/modules`) with Controller-Service-Repository pattern.
+  - Frontend: Role-based structure (`src/admin`, `src/superadmin`) with shared components.
+
+# General Rules
+- **Language**: TypeScript is mandatory. Use strict typing (`noImplicitAny`).
+- **Style**: Functional programming preferred. Avoid classes unless necessary (e.g., specific library requirements).
+- **Comments**: Write meaningful comments for complex logic. Use JSDoc for exported functions.
+- **Naming**:
+  - Variables/Functions: `camelCase`
+  - Files/Folders: `kebab-case` (e.g., `user-profile.tsx`)
+  - Components: `PascalCase`
+  - Interfaces/Types: `PascalCase` (e.g., `interface User`)
+  - Constants: `UPPER_SNAKE_CASE`
+
+# Backend Rules (Node/Express)
+## Structure
+- Features are organized by **modules** in `src/modules/<module-name>`.
+- Each module should contain:
+  - `<module>.controller.ts`: Request handling.
+  - `<module>.service.ts`: Business logic.
+  - `<module>.routes.ts`: Route definitions.
+- **Prisma**: Use `prismaClient` singleton from `src/prismaClient.ts`.
+- **Validation**: Validate inputs at the controller level (e.g., using `zod` or manual validation).
+
+## Best Practices
+- **Async/Await**: Use `async/await` for asynchronous operations.
+- **Error Handling**: Use global error handlers. Do not leave `catch` blocks empty.
+- **Response Format**: Maintain consistent API response structures `{ success: boolean, data: any, message?: string }`.
+
+# Frontend Rules (React)
+## Structure
+- **Components**:
+  - Prefer small, reusable functional components.
+  - Locate page-specific components near the page definition if not reusable.
+- **State Management**:
+  - Use `React Query` (TanStack Query) for server state.
+  - Use `Context API` sparingly for global UI state.
+- **Styling**:
+  - Use **Tailwind CSS** for styling. Avoid custom CSS files unless for global resets or complex animations not possible with Tailwind.
+  - Stick to the defined color palette and utility classes.
+
+## Best Practices
+- **Hooks**: Use custom hooks to abstract complex logic from UI components.
+- **Performance**: Memoize expensive calculations (`useMemo`) and callbacks (`useCallback`) where appropriate.
+- **Types forms**: Use strong typing for form submissions.
+
+# Database (Supabase/Prisma)
+- **Migrations**: Always create migrations for schema changes (`npx prisma migrate dev`).
+- **Naming**: Table names are generally `camelCase` or `snake_case` mapped in Prisma schema. Follow existing conventions in `schema.prisma`.
+
+# Commands
+- Backend Dev: `yarn dev` (in `backend/`)
+- Frontend Dev: `npm start` (in `frontend/`)
+- Prisma Studio: `npx prisma studio`

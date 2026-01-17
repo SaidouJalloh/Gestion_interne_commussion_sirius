@@ -10,6 +10,7 @@ export type Profile = {
   avatar_url?: string | null;
   role?: UserRole | null;
   actif?: boolean | null;
+  is_superadmin?: boolean | null;
   created_at?: string | null;
   updated_at?: string | null;
   // Tolérance: la table peut contenir d'autres colonnes

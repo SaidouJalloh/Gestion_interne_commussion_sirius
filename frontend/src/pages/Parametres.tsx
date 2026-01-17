@@ -680,9 +680,9 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useProfileContext } from '../context/ProfileContext';
-import { exportDashboardPDF, exportDashboardExcel, exportClientsExcel, exportContratsExcel } from '../utils/exportUtils';
+import { exportDashboardPDF, exportDashboardExcel, exportClientsExcel, exportContratsExcel } from '../admin/utils/exportUtils';
 import { API_ENDPOINTS } from '../config/api';
-import { apiRequest } from '../utils/apiClient';
+import { apiRequest } from '../admin/utils/apiClient';
 
 export default function Parametres() {
     const { profile } = useProfileContext();

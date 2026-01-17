@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { validate } from '../../middlewares/validate';
+import { tenantMiddleware } from '../../middlewares/tenant.middleware';
 import { clientController } from './client.controller';
 import {
     clientIdParamSchema,
@@ -8,6 +9,9 @@ import {
 } from './client.validation';
 
 const router = Router();
+
+// Toutes les routes nécessitent un tenant
+router.use(tenantMiddleware);
 
 // GET /api/clients
 router.get('/', (req, res, next) => clientController.getAll(req, res, next));
@@ -42,6 +46,8 @@ router.delete(
 );
 
 export default router;
+
+
 
 
 

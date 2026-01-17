@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { validate } from '../../middlewares/validate';
+import { tenantMiddleware } from '../../middlewares/tenant.middleware';
 import { vehiculeController } from './vehicule.controller';
 import {
   createVehiculeSchema,
@@ -9,6 +10,9 @@ import {
 } from './vehicule.validation';
 
 const router = Router();
+
+// Toutes les routes nécessitent un tenant
+router.use(tenantMiddleware);
 
 // GET /api/vehicules?contratId=...&active=true
 router.get(

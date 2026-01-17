@@ -8,12 +8,13 @@ export type SearchResult = {
 };
 
 export class SearchService {
-  async search(q: string, limit = 5): Promise<SearchResult> {
+  async search(q: string, organizationId: string, limit = 5): Promise<SearchResult> {
     const term = q.trim();
 
     const [clients, compagnies, contrats, paiements] = await Promise.all([
       prisma.clients.findMany({
         where: {
+          organization_id: organizationId,
           OR: [
             { nom: { contains: term, mode: 'insensitive' } },
             { prenom: { contains: term, mode: 'insensitive' } },
@@ -26,6 +27,7 @@ export class SearchService {
       }),
       prisma.compagnies.findMany({
         where: {
+          organization_id: organizationId,
           OR: [
             { nom: { contains: term, mode: 'insensitive' } },
             { sigle: { contains: term, mode: 'insensitive' } },
@@ -36,6 +38,7 @@ export class SearchService {
       }),
       prisma.contrats.findMany({
         where: {
+          organization_id: organizationId,
           OR: [
             { type_contrat: { contains: term, mode: 'insensitive' } },
             { immatriculation: { contains: term, mode: 'insensitive' } },
@@ -54,6 +57,7 @@ export class SearchService {
       }),
       prisma.paiements.findMany({
         where: {
+          organization_id: organizationId,
           OR: [
             { type_paiement: { contains: term, mode: 'insensitive' } },
             { mode_paiement: { contains: term, mode: 'insensitive' } },

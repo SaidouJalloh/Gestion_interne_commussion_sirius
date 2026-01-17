@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { apiResponse } from '../../utils/apiResponse';
+import { apiResponse } from '../../admin/utils/apiResponse';
 import { FolderService } from './folder.service';
 import type {
   CreateFolderInput,
@@ -14,7 +14,14 @@ export class FolderController {
   async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const query = req.query as unknown as FoldersListQuery;
-      const folders = await service.getAll(query);
+      const organizationId = req.tenant?.organizationId;
+      if (!organizationId) {
+        res.status(403).json(
+          apiResponse.error('Organisation requise', 'FORBIDDEN'),
+        );
+        return;
+      }
+      const folders = await service.getAll(query, organizationId);
       res.json(apiResponse.success(folders));
     } catch (e) {
       next(e);
@@ -24,7 +31,14 @@ export class FolderController {
   async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params as unknown as FolderIdParams;
-      const folder = await service.getById(id);
+      const organizationId = req.tenant?.organizationId;
+      if (!organizationId) {
+        res.status(403).json(
+          apiResponse.error('Organisation requise', 'FORBIDDEN'),
+        );
+        return;
+      }
+      const folder = await service.getById(id, organizationId);
       if (!folder) {
         res.status(404).json(apiResponse.error('Dossier non trouvé', 'NOT_FOUND'));
         return;
@@ -38,7 +52,14 @@ export class FolderController {
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const payload = req.body as CreateFolderInput;
-      const created = await service.create(payload);
+      const organizationId = req.tenant?.organizationId;
+      if (!organizationId) {
+        res.status(403).json(
+          apiResponse.error('Organisation requise', 'FORBIDDEN'),
+        );
+        return;
+      }
+      const created = await service.create(payload, organizationId);
       res.status(201).json(apiResponse.success(created));
     } catch (e) {
       next(e);
@@ -49,7 +70,14 @@ export class FolderController {
     try {
       const { id } = req.params as unknown as FolderIdParams;
       const payload = req.body as UpdateFolderInput;
-      const updated = await service.update(id, payload);
+      const organizationId = req.tenant?.organizationId;
+      if (!organizationId) {
+        res.status(403).json(
+          apiResponse.error('Organisation requise', 'FORBIDDEN'),
+        );
+        return;
+      }
+      const updated = await service.update(id, payload, organizationId);
       if (!updated) {
         res.status(404).json(apiResponse.error('Dossier non trouvé', 'NOT_FOUND'));
         return;
@@ -63,7 +91,14 @@ export class FolderController {
   async remove(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params as unknown as FolderIdParams;
-      const deleted = await service.delete(id);
+      const organizationId = req.tenant?.organizationId;
+      if (!organizationId) {
+        res.status(403).json(
+          apiResponse.error('Organisation requise', 'FORBIDDEN'),
+        );
+        return;
+      }
+      const deleted = await service.delete(id, organizationId);
       if (!deleted) {
         res.status(404).json(apiResponse.error('Dossier non trouvé', 'NOT_FOUND'));
         return;
@@ -76,6 +111,8 @@ export class FolderController {
 }
 
 export const folderController = new FolderController();
+
+
 
 
 

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { validate } from '../../middlewares/validate';
+import { tenantMiddleware } from '../../middlewares/tenant.middleware';
 import { notificationController } from './notification.controller';
 import {
   notificationIdParamSchema,
@@ -8,6 +9,9 @@ import {
 } from './notification.validation';
 
 const router = Router();
+
+// Toutes les routes nécessitent un tenant
+router.use(tenantMiddleware);
 
 // GET /api/notifications?limit=50&statut=non_lu
 router.get(

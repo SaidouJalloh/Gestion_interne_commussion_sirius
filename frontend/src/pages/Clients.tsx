@@ -1,16 +1,13 @@
-
-
-// client optimise
+// General Clients Page
 import { useCallback, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
-// import { useAuth } from '../context/AuthContext';
 import { useProfileContext } from '../context/ProfileContext';
 import toast from 'react-hot-toast';
-import { useDebounce } from '../hooks/useDebounce';
-import { useKeyboard } from '../hooks/useKeyboard';
-import { useClientsData } from '../hooks/useClientsData';
-import { useClientsMutations } from '../hooks/useClientsMutations';
-import { CardSkeleton } from '../components/LoadingStates';
+import { useDebounce } from '../admin/hooks/useDebounce';
+import { useKeyboard } from '../admin/hooks/useKeyboard';
+import { useClientsData } from '../admin/hooks/useClientsData';
+import { useClientsMutations } from '../admin/hooks/useClientsMutations';
+import { CardSkeleton } from '../admin/components/LoadingStates';
 
 type ClientLike = {
     id: string;

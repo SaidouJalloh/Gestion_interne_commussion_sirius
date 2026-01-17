@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { validate } from '../../middlewares/validate';
+import { tenantMiddleware } from '../../middlewares/tenant.middleware';
 import { incorporationController } from './incorporation.controller';
 import {
   createIncorporationSchema,
@@ -8,6 +9,9 @@ import {
 } from './incorporation.validation';
 
 const router = Router();
+
+// Toutes les routes nécessitent un tenant
+router.use(tenantMiddleware);
 
 // GET /api/incorporations?contratId=...
 router.get(

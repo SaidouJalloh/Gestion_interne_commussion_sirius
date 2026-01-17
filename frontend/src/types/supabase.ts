@@ -525,6 +525,7 @@ export type Database = {
           created_at: string | null
           email: string | null
           id: string
+          is_superadmin: boolean | null
           nom: string | null
           prenom: string | null
           role: string
@@ -537,6 +538,7 @@ export type Database = {
           created_at?: string | null
           email?: string | null
           id: string
+          is_superadmin?: boolean | null
           nom?: string | null
           prenom?: string | null
           role?: string
@@ -549,6 +551,7 @@ export type Database = {
           created_at?: string | null
           email?: string | null
           id?: string
+          is_superadmin?: boolean | null
           nom?: string | null
           prenom?: string | null
           role?: string

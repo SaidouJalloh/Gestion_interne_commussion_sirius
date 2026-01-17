@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { apiResponse } from '../utils/apiResponse';
+import { apiResponse } from '../admin/utils/apiResponse';
 
 type Segment = 'body' | 'query' | 'params';
 

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { companyController } from './company.controller';
 import { validate } from '../../middlewares/validate';
+import { tenantMiddleware } from '../../middlewares/tenant.middleware';
 import {
   companyIdParamSchema,
   createCompanySchema,
@@ -8,6 +9,9 @@ import {
 } from './company.validation';
 
 const router = Router();
+
+// Toutes les routes nécessitent un tenant
+router.use(tenantMiddleware);
 
 // GET /api/compagnies
 router.get('/', (req, res, next) => companyController.getAll(req, res, next));

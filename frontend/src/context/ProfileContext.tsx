@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { createContext, useContext } from 'react';
-import { useProfile } from '../hooks/useProfile';
+import { useProfile } from './hooks/useProfile';
 import type { Database } from '../types/supabase';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
@@ -30,5 +30,3 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     </ProfileContext.Provider>
   );
 };
-
-

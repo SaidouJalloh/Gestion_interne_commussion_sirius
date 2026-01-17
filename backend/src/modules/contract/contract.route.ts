@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { contractController } from './contract.controller';
 import { validate } from '../../middlewares/validate';
+import { tenantMiddleware } from '../../middlewares/tenant.middleware';
 import {
     contractIdParamSchema,
     createContractSchema,
@@ -8,6 +9,9 @@ import {
 } from './contract.validation';
 
 const router = Router();
+
+// Toutes les routes nécessitent un tenant
+router.use(tenantMiddleware);
 
 // GET /api/contracts
 router.get('/', (req, res, next) => contractController.getAll(req, res, next));

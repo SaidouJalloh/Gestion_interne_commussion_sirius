@@ -2,20 +2,26 @@ import { prisma } from '../../core/prisma';
 import type { CreateFolderInput, FoldersListQuery, UpdateFolderInput } from './folder.validation';
 
 export class FolderService {
-  async getAll(query: FoldersListQuery) {
+  async getAll(query: FoldersListQuery, organizationId: string) {
     return prisma.dossiers.findMany({
       where: {
+        organization_id: organizationId,
         parent_id: query.parentId ?? null,
       },
       orderBy: { nom: 'asc' },
     });
   }
 
-  async getById(id: string) {
-    return prisma.dossiers.findUnique({ where: { id } });
+  async getById(id: string, organizationId: string) {
+    return prisma.dossiers.findFirst({
+      where: {
+        id,
+        organization_id: organizationId,
+      },
+    });
   }
 
-  async create(payload: CreateFolderInput) {
+  async create(payload: CreateFolderInput, organizationId: string) {
     return prisma.dossiers.create({
       data: {
         nom: payload.nom.trim(),
@@ -23,12 +29,18 @@ export class FolderService {
         parent_id: payload.parent_id ?? null,
         contrat_id: payload.contrat_id ?? null,
         client_id: payload.client_id ?? null,
+        organization_id: organizationId,
       },
     });
   }
 
-  async update(id: string, payload: UpdateFolderInput) {
-    const existing = await prisma.dossiers.findUnique({ where: { id } });
+  async update(id: string, payload: UpdateFolderInput, organizationId: string) {
+    const existing = await prisma.dossiers.findFirst({
+      where: {
+        id,
+        organization_id: organizationId,
+      },
+    });
     if (!existing) return null;
 
     return prisma.dossiers.update({
@@ -43,13 +55,20 @@ export class FolderService {
     });
   }
 
-  async delete(id: string) {
-    const existing = await prisma.dossiers.findUnique({ where: { id } });
+  async delete(id: string, organizationId: string) {
+    const existing = await prisma.dossiers.findFirst({
+      where: {
+        id,
+        organization_id: organizationId,
+      },
+    });
     if (!existing) return false;
     await prisma.dossiers.delete({ where: { id } });
     return true;
   }
 }
+
+
 
 
 

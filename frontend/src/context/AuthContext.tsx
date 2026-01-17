@@ -124,7 +124,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (error) throw error;
 
             setUser(null);
-            // Rien dans le localStorage n'est utilisé pour les rôles; le ProfileProvider écoute SIGNED_OUT et nettoiera le profil
         } catch (error) {
             console.error('Erreur déconnexion:', error);
         }

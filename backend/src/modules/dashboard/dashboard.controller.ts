@@ -1,13 +1,20 @@
 import type { Request, Response, NextFunction } from 'express';
-import { apiResponse } from '../../utils/apiResponse';
+import { apiResponse } from '../../admin/utils/apiResponse';
 import { DashboardService } from './dashboard.service';
 
 const service = new DashboardService();
 
 export class DashboardController {
-    async get(_req: Request, res: Response, next: NextFunction): Promise<void> {
+    async get(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const data = await service.getDashboard();
+            const organizationId = req.tenant?.organizationId;
+            if (!organizationId) {
+                res.status(403).json(
+                    apiResponse.error('Organisation requise', 'FORBIDDEN'),
+                );
+                return;
+            }
+            const data = await service.getDashboard(organizationId);
             res.json(apiResponse.success(data));
         } catch (e) {
             next(e);
@@ -16,6 +23,8 @@ export class DashboardController {
 }
 
 export const dashboardController = new DashboardController();
+
+
 
 
 

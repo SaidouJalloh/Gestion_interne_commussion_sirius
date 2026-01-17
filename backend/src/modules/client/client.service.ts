@@ -9,20 +9,27 @@ const conflictError = (message: string) => {
 };
 
 export class ClientService {
-    async getAll() {
+    async getAll(organizationId: string) {
         return prisma.clients.findMany({
+            where: { organization_id: organizationId },
             orderBy: { created_at: 'desc' },
         });
     }
 
-    async getById(id: string) {
-        return prisma.clients.findUnique({ where: { id } });
+    async getById(id: string, organizationId: string) {
+        return prisma.clients.findFirst({
+            where: {
+                id,
+                organization_id: organizationId,
+            },
+        });
     }
 
-    async create(payload: CreateClientInput) {
+    async create(payload: CreateClientInput, organizationId: string) {
         try {
             return await prisma.clients.create({
                 data: {
+                    organization_id: organizationId,
                     nom: payload.nom.trim(),
                     prenom: payload.prenom.trim(),
                     type_client: payload.type_client.trim(),
@@ -46,8 +53,13 @@ export class ClientService {
         }
     }
 
-    async update(id: string, payload: UpdateClientInput) {
-        const existing = await prisma.clients.findUnique({ where: { id } });
+    async update(id: string, payload: UpdateClientInput, organizationId: string) {
+        const existing = await prisma.clients.findFirst({
+            where: {
+                id,
+                organization_id: organizationId,
+            },
+        });
         if (!existing) return null;
 
         try {
@@ -84,13 +96,20 @@ export class ClientService {
         }
     }
 
-    async delete(id: string) {
-        const existing = await prisma.clients.findUnique({ where: { id } });
+    async delete(id: string, organizationId: string) {
+        const existing = await prisma.clients.findFirst({
+            where: {
+                id,
+                organization_id: organizationId,
+            },
+        });
         if (!existing) return false;
         await prisma.clients.delete({ where: { id } });
         return true;
     }
 }
+
+
 
 
 

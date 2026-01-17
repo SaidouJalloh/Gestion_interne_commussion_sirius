@@ -7,6 +7,10 @@ import { notFound } from './middlewares/notFound';
 
 const app = express();
 
+// Activer la compression Gzip pour optimiser les performances (connexions lentes)
+import compression from 'compression';
+app.use(compression());
+
 const allowedOrigins = env.frontendUrls
   .split(',')
   .map((origin) => origin.trim())
@@ -38,7 +42,7 @@ const corsOptions: CorsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Organization-Id'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
   maxAge: 600,
 };

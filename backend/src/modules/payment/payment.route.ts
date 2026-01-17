@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { validate } from '../../middlewares/validate';
+import { tenantMiddleware } from '../../middlewares/tenant.middleware';
 import { paymentController } from './payment.controller';
 import {
   createPaymentSchema,
@@ -9,6 +10,9 @@ import {
 } from './payment.validation';
 
 const router = Router();
+
+// Toutes les routes nécessitent un tenant
+router.use(tenantMiddleware);
 
 // GET /api/payments
 router.get(
@@ -47,6 +51,8 @@ router.delete(
 );
 
 export default router;
+
+
 
 
 

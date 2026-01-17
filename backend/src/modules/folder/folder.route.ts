@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { validate } from '../../middlewares/validate';
+import { tenantMiddleware } from '../../middlewares/tenant.middleware';
 import { folderController } from './folder.controller';
 import {
   createFolderSchema,
@@ -9,6 +10,9 @@ import {
 } from './folder.validation';
 
 const router = Router();
+
+// Toutes les routes nécessitent un tenant
+router.use(tenantMiddleware);
 
 // GET /api/folders?parentId=...
 router.get(
@@ -47,6 +51,8 @@ router.delete(
 );
 
 export default router;
+
+
 
 
 

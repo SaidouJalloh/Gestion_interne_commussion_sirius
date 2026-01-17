@@ -1,24 +1,51 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { AuthProvider } from './context/AuthContext';
-import { ProfileProvider } from './context/ProfileContext';
-import { ThemeProvider } from './context/ThemeContext';
-import { ProtectedRoute } from './components/ProtectedRoute';
-import { RoleProtectedRoute } from './components/RoleProtectedRoute';
-import Layout from './components/Layout';
+import { OrganizationProvider } from './context/OrganizationContext';
 
+// Providers généraux (pour login)
+import { AuthProvider as GeneralAuthProvider } from './context/AuthContext';
+import { ProfileProvider as GeneralProfileProvider } from './context/ProfileContext';
+import { ThemeProvider as GeneralThemeProvider } from './context/ThemeContext';
+
+// Providers Admin
+import { AuthProvider as AdminAuthProvider } from './admin/context/AuthContext';
+import { ProfileProvider as AdminProfileProvider } from './admin/context/ProfileContext';
+import { ThemeProvider as AdminThemeProvider } from './admin/context/ThemeContext';
+
+// Providers SuperAdmin
+import { AuthProvider as SuperAdminAuthProvider } from './superadmin/context/AuthContext';
+import { ProfileProvider as SuperAdminProfileProvider } from './superadmin/context/ProfileContext';
+import { ThemeProvider as SuperAdminThemeProvider } from './superadmin/context/ThemeContext';
+
+// Components
+import { ProtectedRoute as AdminProtectedRoute } from './admin/components/ProtectedRoute';
+import { RoleProtectedRoute as AdminRoleProtectedRoute } from './admin/components/RoleProtectedRoute';
+import { ProtectedRoute as SuperAdminProtectedRoute } from './superadmin/components/ProtectedRoute';
+import { RoleProtectedRoute as SuperAdminRoleProtectedRoute } from './superadmin/components/RoleProtectedRoute';
+import AdminLayout from './admin/components/AdminLayout';
+import SuperAdminLayout from './superadmin/components/SuperAdminLayout';
+import DefaultLayout from './components/DefaultLayout';
+
+// Pages
 const Login = lazy(() => import('./pages/Login'));
-const Register = lazy(() => import('./pages/Register'));
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Clients = lazy(() => import('./pages/Clients'));
-const Compagnies = lazy(() => import('./pages/Compagnies'));
-const Contrats = lazy(() => import('./pages/Contrats'));
-const Souscription = lazy(() => import('./pages/Souscription'));
-const Medias = lazy(() => import('./pages/Medias'));
-const Paiements = lazy(() => import('./pages/Paiements'));
-const Parametres = lazy(() => import('./pages/Parametres'));
-const GestionUtilisateurs = lazy(() => import('./pages/GestionUtilisateurs'));
+const GeneralClients = lazy(() => import('./pages/Clients'));
+const GeneralParametres = lazy(() => import('./pages/Parametres'));
+const Register = lazy(() => import('./admin/pages/Register'));
+const Dashboard = lazy(() => import('./admin/pages/Dashboard'));
+
+// Admin Pages
+const AdminClients = lazy(() => import('./admin/pages/Clients'));
+const Compagnies = lazy(() => import('./admin/pages/Compagnies'));
+const Contrats = lazy(() => import('./admin/pages/Contrats'));
+const Souscription = lazy(() => import('./admin/pages/Souscription'));
+const Medias = lazy(() => import('./admin/pages/Medias'));
+const Paiements = lazy(() => import('./admin/pages/Paiements'));
+const AdminParametres = lazy(() => import('./admin/pages/Parametres'));
+const GestionUtilisateurs = lazy(() => import('./admin/pages/GestionUtilisateurs'));
+
+const Organizations = lazy(() => import('./pages/Organizations'));
+const OrganizationsManagement = lazy(() => import('./superadmin/pages/OrganizationsManagement'));
 
 const LoadingFallback: React.FC = () => (
     <div className="flex items-center justify-center h-screen bg-gradient-to-br from-primary-50 to-blue-50">
@@ -55,175 +82,384 @@ const LoadingFallback: React.FC = () => (
 function App() {
     return (
         <BrowserRouter>
-            <ThemeProvider>
-                <AuthProvider>
-                    <ProfileProvider>
-                        <Toaster
-                            position="top-right"
-                            toastOptions={{
-                                duration: 4000,
-                                style: {
-                                    background: '#363636',
-                                    color: '#fff',
-                                },
-                                success: {
-                                    duration: 3000,
-                                    iconTheme: {
-                                        primary: '#10b981',
-                                        secondary: '#fff',
-                                    },
-                                },
-                                error: {
-                                    duration: 4000,
-                                    iconTheme: {
-                                        primary: '#ef4444',
-                                        secondary: '#fff',
-                                    },
-                                },
-                            }}
-                        />
+            <Toaster
+                position="top-right"
+                toastOptions={{
+                    duration: 4000,
+                    style: {
+                        background: '#363636',
+                        color: '#fff',
+                    },
+                    success: {
+                        duration: 3000,
+                        iconTheme: {
+                            primary: '#10b981',
+                            secondary: '#fff',
+                        },
+                    },
+                    error: {
+                        duration: 4000,
+                        iconTheme: {
+                            primary: '#ef4444',
+                            secondary: '#fff',
+                        },
+                    },
+                }}
+            />
 
-                        <Suspense fallback={<LoadingFallback />}>
-                            <Routes>
-                                <Route path="/login" element={<Login />} />
+            <Suspense fallback={<LoadingFallback />}>
+                <Routes>
+                    {/* Route publique - Login */}
+                    <Route
+                        path="/login"
+                        element={
+                            <GeneralThemeProvider>
+                                <GeneralAuthProvider>
+                                    <GeneralProfileProvider>
+                                        <OrganizationProvider>
+                                            <Login />
+                                        </OrganizationProvider>
+                                    </GeneralProfileProvider>
+                                </GeneralAuthProvider>
+                            </GeneralThemeProvider>
+                        }
+                    />
 
-                                <Route
-                                    path="/dashboard"
-                                    element={
-                                        <ProtectedRoute>
-                                            <RoleProtectedRoute allowedRoles={['admin', 'superadmin']} redirectTo="/clients">
-                                                <Layout>
-                                                    <Dashboard />
-                                                </Layout>
-                                            </RoleProtectedRoute>
-                                        </ProtectedRoute>
-                                    }
-                                />
+                    {/* Routes Générales (Autres utilisateurs) */}
+                    <Route
+                        path="/clients"
+                        element={
+                            <GeneralThemeProvider>
+                                <GeneralAuthProvider>
+                                    <GeneralProfileProvider>
+                                        <OrganizationProvider>
+                                            <DefaultLayout>
+                                                <GeneralClients />
+                                            </DefaultLayout>
+                                        </OrganizationProvider>
+                                    </GeneralProfileProvider>
+                                </GeneralAuthProvider>
+                            </GeneralThemeProvider>
+                        }
+                    />
+                    <Route
+                        path="/parametres"
+                        element={
+                            <GeneralThemeProvider>
+                                <GeneralAuthProvider>
+                                    <GeneralProfileProvider>
+                                        <OrganizationProvider>
+                                            <DefaultLayout>
+                                                <GeneralParametres />
+                                            </DefaultLayout>
+                                        </OrganizationProvider>
+                                    </GeneralProfileProvider>
+                                </GeneralAuthProvider>
+                            </GeneralThemeProvider>
+                        }
+                    />
 
-                                <Route
-                                    path="/register"
-                                    element={
-                                        <ProtectedRoute>
-                                            <Layout>
-                                                <Register />
-                                            </Layout>
-                                        </ProtectedRoute>
-                                    }
-                                />
+                    {/* Routes SuperAdmin */}
+                    <Route
+                        path="/superadmin/organizations"
+                        element={
+                            <SuperAdminThemeProvider>
+                                <SuperAdminAuthProvider>
+                                    <SuperAdminProfileProvider>
+                                        <OrganizationProvider>
+                                            <SuperAdminProtectedRoute>
+                                                <SuperAdminRoleProtectedRoute allowedRoles={['superadmin']} redirectTo="/login">
+                                                    <SuperAdminLayout>
+                                                        <OrganizationsManagement />
+                                                    </SuperAdminLayout>
+                                                </SuperAdminRoleProtectedRoute>
+                                            </SuperAdminProtectedRoute>
+                                        </OrganizationProvider>
+                                    </SuperAdminProfileProvider>
+                                </SuperAdminAuthProvider>
+                            </SuperAdminThemeProvider>
+                        }
+                    />
+                    <Route
+                        path="/superadmin/utilisateurs"
+                        element={
+                            <SuperAdminThemeProvider>
+                                <SuperAdminAuthProvider>
+                                    <SuperAdminProfileProvider>
+                                        <OrganizationProvider>
+                                            <SuperAdminProtectedRoute>
+                                                <SuperAdminRoleProtectedRoute allowedRoles={['superadmin']} redirectTo="/login">
+                                                    <SuperAdminLayout>
+                                                        <GestionUtilisateurs />
+                                                    </SuperAdminLayout>
+                                                </SuperAdminRoleProtectedRoute>
+                                            </SuperAdminProtectedRoute>
+                                        </OrganizationProvider>
+                                    </SuperAdminProfileProvider>
+                                </SuperAdminAuthProvider>
+                            </SuperAdminThemeProvider>
+                        }
+                    />
+                    <Route
+                        path="/superadmin/parametres"
+                        element={
+                            <SuperAdminThemeProvider>
+                                <SuperAdminAuthProvider>
+                                    <SuperAdminProfileProvider>
+                                        <OrganizationProvider>
+                                            <SuperAdminProtectedRoute>
+                                                <SuperAdminRoleProtectedRoute allowedRoles={['superadmin']} redirectTo="/login">
+                                                    <SuperAdminLayout>
+                                                        <AdminParametres />
+                                                    </SuperAdminLayout>
+                                                </SuperAdminRoleProtectedRoute>
+                                            </SuperAdminProtectedRoute>
+                                        </OrganizationProvider>
+                                    </SuperAdminProfileProvider>
+                                </SuperAdminAuthProvider>
+                            </SuperAdminThemeProvider>
+                        }
+                    />
+                    {/* Redirections SuperAdmin */}
+                    <Route path="/organizations/manage" element={<Navigate to="/superadmin/organizations" replace />} />
+                    <Route path="/utilisateurs" element={<Navigate to="/superadmin/utilisateurs" replace />} />
 
-                                <Route
-                                    path="/clients"
-                                    element={
-                                        <ProtectedRoute>
-                                            <RoleProtectedRoute allowedRoles={['gestionnaire', 'admin', 'superadmin']}>
-                                                <Layout>
-                                                    <Clients />
-                                                </Layout>
-                                            </RoleProtectedRoute>
-                                        </ProtectedRoute>
-                                    }
-                                />
+                    {/* Routes Admin */}
+                    <Route
+                        path="/org/dashboard"
+                        element={
+                            <AdminThemeProvider>
+                                <AdminAuthProvider>
+                                    <AdminProfileProvider>
+                                        <OrganizationProvider>
+                                            <AdminProtectedRoute>
+                                                <AdminRoleProtectedRoute allowedRoles={['admin', 'superadmin']} redirectTo="/org/clients">
+                                                    <AdminLayout>
+                                                        <Dashboard />
+                                                    </AdminLayout>
+                                                </AdminRoleProtectedRoute>
+                                            </AdminProtectedRoute>
+                                        </OrganizationProvider>
+                                    </AdminProfileProvider>
+                                </AdminAuthProvider>
+                            </AdminThemeProvider>
+                        }
+                    />
+                    <Route
+                        path="/org/register"
+                        element={
+                            <AdminThemeProvider>
+                                <AdminAuthProvider>
+                                    <AdminProfileProvider>
+                                        <OrganizationProvider>
+                                            <AdminProtectedRoute>
+                                                <AdminRoleProtectedRoute allowedRoles={['superadmin']} redirectTo="/org/clients">
+                                                    <AdminLayout>
+                                                        <Register />
+                                                    </AdminLayout>
+                                                </AdminRoleProtectedRoute>
+                                            </AdminProtectedRoute>
+                                        </OrganizationProvider>
+                                    </AdminProfileProvider>
+                                </AdminAuthProvider>
+                            </AdminThemeProvider>
+                        }
+                    />
+                    <Route
+                        path="/org/clients"
+                        element={
+                            <AdminThemeProvider>
+                                <AdminAuthProvider>
+                                    <AdminProfileProvider>
+                                        <OrganizationProvider>
+                                            <AdminProtectedRoute>
+                                                <AdminRoleProtectedRoute allowedRoles={['gestionnaire', 'admin', 'superadmin']}>
+                                                    <AdminLayout>
+                                                        <AdminClients />
+                                                    </AdminLayout>
+                                                </AdminRoleProtectedRoute>
+                                            </AdminProtectedRoute>
+                                        </OrganizationProvider>
+                                    </AdminProfileProvider>
+                                </AdminAuthProvider>
+                            </AdminThemeProvider>
+                        }
+                    />
+                    <Route
+                        path="/org/compagnies"
+                        element={
+                            <AdminThemeProvider>
+                                <AdminAuthProvider>
+                                    <AdminProfileProvider>
+                                        <OrganizationProvider>
+                                            <AdminProtectedRoute>
+                                                <AdminRoleProtectedRoute allowedRoles={['admin', 'superadmin']} redirectTo="/org/clients">
+                                                    <AdminLayout>
+                                                        <Compagnies />
+                                                    </AdminLayout>
+                                                </AdminRoleProtectedRoute>
+                                            </AdminProtectedRoute>
+                                        </OrganizationProvider>
+                                    </AdminProfileProvider>
+                                </AdminAuthProvider>
+                            </AdminThemeProvider>
+                        }
+                    />
+                    <Route
+                        path="/org/contrats"
+                        element={
+                            <AdminThemeProvider>
+                                <AdminAuthProvider>
+                                    <AdminProfileProvider>
+                                        <OrganizationProvider>
+                                            <AdminProtectedRoute>
+                                                <AdminRoleProtectedRoute allowedRoles={['gestionnaire', 'admin', 'superadmin']}>
+                                                    <AdminLayout>
+                                                        <Contrats />
+                                                    </AdminLayout>
+                                                </AdminRoleProtectedRoute>
+                                            </AdminProtectedRoute>
+                                        </OrganizationProvider>
+                                    </AdminProfileProvider>
+                                </AdminAuthProvider>
+                            </AdminThemeProvider>
+                        }
+                    />
+                    <Route
+                        path="/org/souscription"
+                        element={
+                            <AdminThemeProvider>
+                                <AdminAuthProvider>
+                                    <AdminProfileProvider>
+                                        <OrganizationProvider>
+                                            <AdminProtectedRoute>
+                                                <AdminRoleProtectedRoute allowedRoles={['gestionnaire', 'admin', 'superadmin']}>
+                                                    <AdminLayout>
+                                                        <Souscription />
+                                                    </AdminLayout>
+                                                </AdminRoleProtectedRoute>
+                                            </AdminProtectedRoute>
+                                        </OrganizationProvider>
+                                    </AdminProfileProvider>
+                                </AdminAuthProvider>
+                            </AdminThemeProvider>
+                        }
+                    />
+                    <Route
+                        path="/org/medias"
+                        element={
+                            <AdminThemeProvider>
+                                <AdminAuthProvider>
+                                    <AdminProfileProvider>
+                                        <OrganizationProvider>
+                                            <AdminProtectedRoute>
+                                                <AdminRoleProtectedRoute allowedRoles={['gestionnaire', 'admin', 'superadmin']}>
+                                                    <AdminLayout>
+                                                        <Medias />
+                                                    </AdminLayout>
+                                                </AdminRoleProtectedRoute>
+                                            </AdminProtectedRoute>
+                                        </OrganizationProvider>
+                                    </AdminProfileProvider>
+                                </AdminAuthProvider>
+                            </AdminThemeProvider>
+                        }
+                    />
+                    <Route
+                        path="/org/paiements"
+                        element={
+                            <AdminThemeProvider>
+                                <AdminAuthProvider>
+                                    <AdminProfileProvider>
+                                        <OrganizationProvider>
+                                            <AdminProtectedRoute>
+                                                <AdminRoleProtectedRoute allowedRoles={['gestionnaire', 'admin', 'superadmin']}>
+                                                    <AdminLayout>
+                                                        <Paiements />
+                                                    </AdminLayout>
+                                                </AdminRoleProtectedRoute>
+                                            </AdminProtectedRoute>
+                                        </OrganizationProvider>
+                                    </AdminProfileProvider>
+                                </AdminAuthProvider>
+                            </AdminThemeProvider>
+                        }
+                    />
+                    <Route
+                        path="/org/organizations"
+                        element={
+                            <AdminThemeProvider>
+                                <AdminAuthProvider>
+                                    <AdminProfileProvider>
+                                        <OrganizationProvider>
+                                            <AdminProtectedRoute>
+                                                <AdminLayout>
+                                                    <Organizations />
+                                                </AdminLayout>
+                                            </AdminProtectedRoute>
+                                        </OrganizationProvider>
+                                    </AdminProfileProvider>
+                                </AdminAuthProvider>
+                            </AdminThemeProvider>
+                        }
+                    />
+                    <Route
+                        path="/org/parametres"
+                        element={
+                            <AdminThemeProvider>
+                                <AdminAuthProvider>
+                                    <AdminProfileProvider>
+                                        <OrganizationProvider>
+                                            <AdminProtectedRoute>
+                                                <AdminLayout>
+                                                    <AdminParametres />
+                                                </AdminLayout>
+                                            </AdminProtectedRoute>
+                                        </OrganizationProvider>
+                                    </AdminProfileProvider>
+                                </AdminAuthProvider>
+                            </AdminThemeProvider>
+                        }
+                    />
+                    <Route
+                        path="/org/utilisateurs"
+                        element={
+                            <AdminThemeProvider>
+                                <AdminAuthProvider>
+                                    <AdminProfileProvider>
+                                        <OrganizationProvider>
+                                            <AdminProtectedRoute>
+                                                <AdminRoleProtectedRoute allowedRoles={['admin', 'superadmin']}>
+                                                    <AdminLayout>
+                                                        <GestionUtilisateurs />
+                                                    </AdminLayout>
+                                                </AdminRoleProtectedRoute>
+                                            </AdminProtectedRoute>
+                                        </OrganizationProvider>
+                                    </AdminProfileProvider>
+                                </AdminAuthProvider>
+                            </AdminThemeProvider>
+                        }
+                    />
+                    {/* Redirections Admin */}
+                    <Route path="/dashboard" element={<Navigate to="/org/dashboard" replace />} />
+                    <Route path="/register" element={<Navigate to="/org/register" replace />} />
+                    <Route path="/admin/clients" element={<Navigate to="/org/clients" replace />} />
+                    <Route path="/compagnies" element={<Navigate to="/org/compagnies" replace />} />
+                    <Route path="/contrats" element={<Navigate to="/org/contrats" replace />} />
+                    <Route path="/souscription" element={<Navigate to="/org/souscription" replace />} />
+                    <Route path="/medias" element={<Navigate to="/org/medias" replace />} />
+                    <Route path="/paiements" element={<Navigate to="/org/paiements" replace />} />
+                    <Route path="/organizations" element={<Navigate to="/org/organizations" replace />} />
+                    <Route path="/admin/parametres" element={<Navigate to="/org/parametres" replace />} />
 
-                                <Route
-                                    path="/compagnies"
-                                    element={
-                                        <ProtectedRoute>
-                                            <RoleProtectedRoute allowedRoles={['admin', 'superadmin']} redirectTo="/clients">
-                                                <Layout>
-                                                    <Compagnies />
-                                                </Layout>
-                                            </RoleProtectedRoute>
-                                        </ProtectedRoute>
-                                    }
-                                />
-
-                                <Route
-                                    path="/contrats"
-                                    element={
-                                        <ProtectedRoute>
-                                            <RoleProtectedRoute allowedRoles={['gestionnaire', 'admin', 'superadmin']}>
-                                                <Layout>
-                                                    <Contrats />
-                                                </Layout>
-                                            </RoleProtectedRoute>
-                                        </ProtectedRoute>
-                                    }
-                                />
-
-                                <Route
-                                    path="/souscription"
-                                    element={
-                                        <ProtectedRoute>
-                                            <RoleProtectedRoute allowedRoles={['gestionnaire', 'admin', 'superadmin']}>
-                                                <Layout>
-                                                    <Souscription />
-                                                </Layout>
-                                            </RoleProtectedRoute>
-                                        </ProtectedRoute>
-                                    }
-                                />
-
-                                <Route
-                                    path="/medias"
-                                    element={
-                                        <ProtectedRoute>
-                                            <RoleProtectedRoute allowedRoles={['gestionnaire', 'admin', 'superadmin']}>
-                                                <Layout>
-                                                    <Medias />
-                                                </Layout>
-                                            </RoleProtectedRoute>
-                                        </ProtectedRoute>
-                                    }
-                                />
-
-                                <Route
-                                    path="/paiements"
-                                    element={
-                                        <ProtectedRoute>
-                                            <RoleProtectedRoute allowedRoles={['gestionnaire', 'admin', 'superadmin']}>
-                                                <Layout>
-                                                    <Paiements />
-                                                </Layout>
-                                            </RoleProtectedRoute>
-                                        </ProtectedRoute>
-                                    }
-                                />
-
-                                <Route
-                                    path="/utilisateurs"
-                                    element={
-                                        <ProtectedRoute>
-                                            <RoleProtectedRoute allowedRoles={['superadmin']} redirectTo="/clients">
-                                                <Layout>
-                                                    <GestionUtilisateurs />
-                                                </Layout>
-                                            </RoleProtectedRoute>
-                                        </ProtectedRoute>
-                                    }
-                                />
-
-                                <Route
-                                    path="/parametres"
-                                    element={
-                                        <ProtectedRoute>
-                                            <Layout>
-                                                <Parametres />
-                                            </Layout>
-                                        </ProtectedRoute>
-                                    }
-                                />
-
-                                <Route path="/" element={<Navigate to="/login" replace />} />
-                                <Route path="*" element={<Navigate to="/login" replace />} />
-                            </Routes>
-                        </Suspense>
-                    </ProfileProvider>
-                </AuthProvider>
-            </ThemeProvider>
+                    {/* Route par défaut */}
+                    <Route path="/" element={<Navigate to="/login" replace />} />
+                    <Route path="*" element={<Navigate to="/login" replace />} />
+                </Routes>
+            </Suspense>
         </BrowserRouter>
     );
 }
 
 export default App;
-
-

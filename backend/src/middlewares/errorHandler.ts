@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
-import { apiResponse } from '../utils/apiResponse';
+import { apiResponse } from '../admin/utils/apiResponse';
 import { logger } from '../core/logger';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
