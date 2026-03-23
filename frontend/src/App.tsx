@@ -33,6 +33,7 @@ const Medias = lazy(() => import('./admin/pages/Medias'));
 const Paiements = lazy(() => import('./admin/pages/Paiements'));
 const AdminParametres = lazy(() => import('./admin/pages/Parametres'));
 const GestionUtilisateurs = lazy(() => import('./admin/pages/GestionUtilisateurs'));
+const UserProfile = lazy(() => import('./admin/pages/UserProfile'));
 
 const Organizations = lazy(() => import('./pages/Organizations'));
 const OrganizationsManagement = lazy(() => import('./superadmin/pages/OrganizationsManagement'));
@@ -279,6 +280,16 @@ function App() {
                                             <ProtectedRoute>
                                                 <AdminLayout>
                                                     <AdminParametres />
+                                                </AdminLayout>
+                                            </ProtectedRoute>
+                                        }
+                                    />
+                                    <Route
+                                        path="/profil"
+                                        element={
+                                            <ProtectedRoute>
+                                                <AdminLayout>
+                                                    <UserProfile />
                                                 </AdminLayout>
                                             </ProtectedRoute>
                                         }

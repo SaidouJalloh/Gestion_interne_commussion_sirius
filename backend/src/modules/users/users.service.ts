@@ -108,6 +108,22 @@ export class UsersService {
     return { success: true };
   }
 
+  async updateMyProfile(userId: string, data: { nom?: string, prenom?: string, telephone?: string, avatar_url?: string, preferences?: Record<string, unknown> }) {
+    const updateData: any = {};
+    if (data.nom !== undefined) updateData.nom = data.nom;
+    if (data.prenom !== undefined) updateData.prenom = data.prenom;
+    if (data.telephone !== undefined) updateData.telephone = data.telephone;
+    if (data.avatar_url !== undefined) updateData.avatar_url = data.avatar_url;
+    if (data.preferences !== undefined) updateData.preferences = data.preferences;
+
+    const user = await prisma.profiles.update({
+      where: { id: userId },
+      data: updateData
+    });
+
+    return user;
+  }
+
   async deactivateUser(userId: string, callerId: string) {
     const callerProfile = await prisma.profiles.findUnique({ where: { id: callerId } });
     const targetUser = await prisma.profiles.findUnique({ where: { id: userId } });

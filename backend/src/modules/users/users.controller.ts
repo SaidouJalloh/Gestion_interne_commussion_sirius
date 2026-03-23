@@ -42,6 +42,25 @@ export class UsersController {
     }
   }
 
+  async updateMe(req: Request, res: Response) {
+    try {
+      const callerId = req.tenant?.userId;
+
+      if (!callerId) {
+        return res.status(401).json({ success: false, message: 'Non autorisé' });
+      }
+
+      const result = await usersService.updateMyProfile(callerId, req.body);
+      return res.status(200).json({ success: true, data: result });
+    } catch (error: any) {
+      console.error('Update Me Error:', error);
+      return res.status(error.status || 500).json({
+        success: false,
+        message: error.message || 'Erreur interne du serveur',
+      });
+    }
+  }
+
   async deactivateUser(req: Request, res: Response) {
     try {
       const callerId = req.tenant?.userId;

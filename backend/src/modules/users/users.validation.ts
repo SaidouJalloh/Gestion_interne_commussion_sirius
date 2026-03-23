@@ -98,3 +98,30 @@ export const updateUserSchema: Schema<UpdateUserInput> = {
     };
   },
 };
+
+export interface UpdateMyProfileInput {
+  nom?: string;
+  prenom?: string;
+  telephone?: string;
+  avatar_url?: string;
+  preferences?: Record<string, unknown>;
+}
+
+export const updateMyProfileSchema: Schema<UpdateMyProfileInput> = {
+  parse(data: unknown): UpdateMyProfileInput {
+    const body = ensureObject(data);
+    const nom = toOptionalTrimmedString(body.nom);
+    const prenom = toOptionalTrimmedString(body.prenom);
+    const telephone = toOptionalTrimmedString(body.telephone);
+    const avatar_url = toOptionalTrimmedString(body.avatar_url);
+    const preferences = body.preferences !== undefined ? ensureObject(body.preferences) : undefined;
+
+    return {
+      nom,
+      prenom,
+      telephone,
+      avatar_url,
+      preferences,
+    };
+  },
+};

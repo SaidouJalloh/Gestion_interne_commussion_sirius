@@ -1,6 +1,6 @@
 
 // code avec souscription
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Users, Building2, FileText, CreditCard, FolderPlus, FolderOpen, UserCog, Settings, LogOut, Sun, Moon, Leaf, Plus } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -17,11 +17,24 @@ import type { ReactNode } from 'react';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+    const profileMenuRef = useRef<HTMLDivElement>(null);
+
     const { user, signOut } = useAuth();
     const { profile } = useProfileContext();
     const { darkMode, toggleTheme } = useTheme();
     const navigate = useNavigate();
     const location = useLocation();
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+                setIsProfileMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const handleSignOut = async () => {
         await signOut();
@@ -146,7 +159,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 </div>
 
                 {/* Navigation Links */}
-                <nav className="flex-1 mt-6 px-4 overflow-y-auto space-y-1">
+                <nav className="flex-1 mt-6 px-4 space-y-1">
                     {menuItems.map((item) => (
                         <button
                             key={item.path}
@@ -231,17 +244,70 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                                 <NotificationBell />
                             </div>
 
-                            {/* Avatar Profil Bleu */}
-                            <div className="flex items-center gap-3 ml-3">
-                                {profile?.avatar_url ? (
-                                    <img
-                                        src={profile.avatar_url}
-                                        alt="Avatar"
-                                        className="w-10 h-10 rounded-full object-cover shadow-sm bg-white"
-                                    />
-                                ) : (
-                                    <div className="w-10 h-10 rounded-full bg-[#0066FF] shadow-sm flex items-center justify-center text-white font-bold text-sm">
-                                        {profile?.prenom?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'IA'}
+                            {/* Avatar Profil Bleu avec Dropdown */}
+                            <div className="relative ml-2" ref={profileMenuRef}>
+                                <button 
+                                    onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                                    className="flex items-center gap-3 hover:opacity-80 transition-opacity focus:outline-none"
+                                >
+                                    {profile?.avatar_url ? (
+                                        <img
+                                            src={profile.avatar_url}
+                                            alt="Avatar"
+                                            className="w-10 h-10 rounded-full object-cover shadow-sm bg-white border-2 border-transparent hover:border-blue-100 dark:hover:border-blue-900 transition-colors"
+                                        />
+                                    ) : (
+                                        <div className="w-10 h-10 rounded-full bg-[#0066FF] shadow-sm flex items-center justify-center text-white font-bold text-sm border-2 border-transparent hover:border-blue-100 dark:hover:border-blue-900 transition-colors">
+                                            {profile?.prenom?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'IA'}
+                                        </div>
+                                    )}
+                                </button>
+
+                                {/* Dropdown Menu */}
+                                {isProfileMenuOpen && (
+                                    <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#13151A] rounded-xl shadow-lg border border-slate-100 dark:border-white/10 py-2 z-50 animate-fade-in">
+                                        <div className="px-4 py-3 border-b border-slate-100 dark:border-white/10">
+                                            <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">
+                                                {profile?.prenom} {profile?.nom}
+                                            </p>
+                                            <p className="text-xs text-slate-500 dark:text-gray-400 truncate">
+                                                {user?.email}
+                                            </p>
+                                        </div>
+                                        <div className="py-2">
+                                            <button
+                                                onClick={() => {
+                                                    setIsProfileMenuOpen(false);
+                                                    navigate('/profil');
+                                                }}
+                                                className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 flex items-center gap-2 transition-colors"
+                                            >
+                                                <UserCog className="w-4 h-4" />
+                                                Mon Profil
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setIsProfileMenuOpen(false);
+                                                    navigate('/org/parametres');
+                                                }}
+                                                className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 flex items-center gap-2 transition-colors"
+                                            >
+                                                <Settings className="w-4 h-4" />
+                                                Paramètres d'Organisation
+                                            </button>
+                                        </div>
+                                        <div className="py-2 border-t border-slate-100 dark:border-white/10">
+                                            <button
+                                                onClick={() => {
+                                                    setIsProfileMenuOpen(false);
+                                                    handleSignOut();
+                                                }}
+                                                className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 transition-colors"
+                                            >
+                                                <LogOut className="w-4 h-4" />
+                                                Déconnexion
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
                             </div>

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { usersController } from './users.controller';
 import { validate } from '../../middlewares/validate';
-import { createUserSchema, updateUserSchema } from './users.validation';
+import { createUserSchema, updateUserSchema, updateMyProfileSchema } from './users.validation';
 import { optionalTenantMiddleware } from '../../middlewares/tenant.middleware';
 
 const router = Router();
@@ -18,6 +18,13 @@ router.post(
 router.get(
   '/',
   usersController.getUsers.bind(usersController)
+);
+
+// MUST be defined before /:id to avoid 'me' matching the id param
+router.patch(
+  '/me',
+  validate(updateMyProfileSchema),
+  usersController.updateMe.bind(usersController)
 );
 
 router.put(

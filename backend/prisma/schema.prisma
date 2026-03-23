@@ -275,7 +275,7 @@ model medias {
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model notifications {
   id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  organization_id String         @db.Uuid
+  organization_id String?        @db.Uuid
   type            String
   titre           String
   message         String
@@ -284,7 +284,7 @@ model notifications {
   priorite        String?        @default("normale")
   created_at      DateTime?      @default(now()) @db.Timestamptz(6)
   contrats        contrats?      @relation(fields: [contrat_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  organizations   organizations  @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  organizations   organizations? @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([created_at(sort: Desc)], map: "idx_notifications_created")
   @@index([created_at(sort: Desc)], map: "idx_notifications_created_at")
@@ -351,6 +351,7 @@ model profiles {
   telephone                                     String?
   actif                                         Boolean?               @default(true)
   is_superadmin                                 Boolean?               @default(false)
+  preferences                                   Json?                  @default("{}")
   created_at                                    DateTime?              @default(now()) @db.Timestamptz(6)
   updated_at                                    DateTime?              @default(now()) @db.Timestamptz(6)
   incorporations                                incorporations[]
