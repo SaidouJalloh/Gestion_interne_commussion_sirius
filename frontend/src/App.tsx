@@ -7,15 +7,18 @@ import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import { ProfileProvider } from './context/ProfileContext';
 import { OrganizationProvider } from './context/OrganizationContext';
+import { ClientPortalProvider } from './context/ClientPortalContext';
 
 // Composants de protection unifies
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { RoleProtectedRoute } from './components/RoleProtectedRoute';
+import { ClientProtectedRoute } from './components/ClientProtectedRoute';
 
 // Layouts
 import AdminLayout from './admin/components/AdminLayout';
 import SuperAdminLayout from './superadmin/components/SuperAdminLayout';
 import DefaultLayout from './components/DefaultLayout';
+const ClientLayout = lazy(() => import('./portal/components/ClientLayout'));
 
 // Pages
 const Login = lazy(() => import('./pages/Login'));
@@ -37,6 +40,16 @@ const UserProfile = lazy(() => import('./admin/pages/UserProfile'));
 
 const Organizations = lazy(() => import('./pages/Organizations'));
 const OrganizationsManagement = lazy(() => import('./superadmin/pages/OrganizationsManagement'));
+
+// Client Portal Pages
+const ClientDashboard = lazy(() => import('./portal/pages/Dashboard'));
+const ClientContrats = lazy(() => import('./portal/pages/Contrats'));
+const ClientContratDetail = lazy(() => import('./portal/pages/ContratDetail'));
+const ClientSinistres = lazy(() => import('./portal/pages/Sinistres'));
+const ClientSinistreDetail = lazy(() => import('./portal/pages/SinistreDetail'));
+const DeclarerSinistre = lazy(() => import('./portal/pages/DeclarerSinistre'));
+const DemandeDevis = lazy(() => import('./portal/pages/DemandeDevis'));
+const ClientSouscription = lazy(() => import('./portal/pages/Souscription'));
 
 const LoadingFallback: React.FC = () => (
     <div className="flex items-center justify-center h-screen bg-gradient-to-br from-primary-50 to-blue-50">
@@ -77,6 +90,7 @@ function App() {
                 <AuthProvider>
                     <ProfileProvider>
                         <OrganizationProvider>
+                        <ClientPortalProvider>
                             <Toaster
                                 position="top-right"
                                 toastOptions={{
@@ -307,6 +321,104 @@ function App() {
                                         }
                                     />
 
+                                    {/* Routes Portail Client */}
+                                    <Route
+                                        path="/client/dashboard"
+                                        element={
+                                            <ProtectedRoute>
+                                                <ClientProtectedRoute>
+                                                    <ClientLayout>
+                                                        <ClientDashboard />
+                                                    </ClientLayout>
+                                                </ClientProtectedRoute>
+                                            </ProtectedRoute>
+                                        }
+                                    />
+                                    <Route
+                                        path="/client/contrats"
+                                        element={
+                                            <ProtectedRoute>
+                                                <ClientProtectedRoute>
+                                                    <ClientLayout>
+                                                        <ClientContrats />
+                                                    </ClientLayout>
+                                                </ClientProtectedRoute>
+                                            </ProtectedRoute>
+                                        }
+                                    />
+                                    <Route
+                                        path="/client/contrats/:id"
+                                        element={
+                                            <ProtectedRoute>
+                                                <ClientProtectedRoute>
+                                                    <ClientLayout>
+                                                        <ClientContratDetail />
+                                                    </ClientLayout>
+                                                </ClientProtectedRoute>
+                                            </ProtectedRoute>
+                                        }
+                                    />
+                                    <Route
+                                        path="/client/sinistres"
+                                        element={
+                                            <ProtectedRoute>
+                                                <ClientProtectedRoute>
+                                                    <ClientLayout>
+                                                        <ClientSinistres />
+                                                    </ClientLayout>
+                                                </ClientProtectedRoute>
+                                            </ProtectedRoute>
+                                        }
+                                    />
+                                    <Route
+                                        path="/client/sinistres/:id"
+                                        element={
+                                            <ProtectedRoute>
+                                                <ClientProtectedRoute>
+                                                    <ClientLayout>
+                                                        <ClientSinistreDetail />
+                                                    </ClientLayout>
+                                                </ClientProtectedRoute>
+                                            </ProtectedRoute>
+                                        }
+                                    />
+                                    <Route
+                                        path="/client/sinistre/declarer"
+                                        element={
+                                            <ProtectedRoute>
+                                                <ClientProtectedRoute>
+                                                    <ClientLayout>
+                                                        <DeclarerSinistre />
+                                                    </ClientLayout>
+                                                </ClientProtectedRoute>
+                                            </ProtectedRoute>
+                                        }
+                                    />
+                                    <Route
+                                        path="/client/devis"
+                                        element={
+                                            <ProtectedRoute>
+                                                <ClientProtectedRoute>
+                                                    <ClientLayout>
+                                                        <DemandeDevis />
+                                                    </ClientLayout>
+                                                </ClientProtectedRoute>
+                                            </ProtectedRoute>
+                                        }
+                                    />
+                                    <Route
+                                        path="/client/souscription"
+                                        element={
+                                            <ProtectedRoute>
+                                                <ClientProtectedRoute>
+                                                    <ClientLayout>
+                                                        <ClientSouscription />
+                                                    </ClientLayout>
+                                                </ClientProtectedRoute>
+                                            </ProtectedRoute>
+                                        }
+                                    />
+
                                     {/* Redirections Admin */}
                                     <Route path="/dashboard" element={<Navigate to="/org/dashboard" replace />} />
                                     <Route path="/register" element={<Navigate to="/org/register" replace />} />
@@ -324,6 +436,7 @@ function App() {
                                     <Route path="*" element={<Navigate to="/login" replace />} />
                                 </Routes>
                             </Suspense>
+                        </ClientPortalProvider>
                         </OrganizationProvider>
                     </ProfileProvider>
                 </AuthProvider>

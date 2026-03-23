@@ -72,11 +72,30 @@ export class AuthController {
         organizationRole = organizationMembership?.role || null;
       }
 
-      // 4. Retourner le profil complet
+      // 4. Vérifier si l'utilisateur est un client (assuré)
+      let clientRecord: { id: string; organization_id: string; nom: string; prenom: string } | null = null;
+      try {
+        clientRecord = await prisma.clients.findFirst({
+          where: { user_id: user.id },
+          select: {
+            id: true,
+            organization_id: true,
+            nom: true,
+            prenom: true,
+          },
+        });
+      } catch {
+        // La colonne user_id n'existe peut-être pas encore (migration non exécutée)
+      }
+
+      // 5. Retourner le profil complet
       res.json(apiResponse.success({
         ...profile,
         organization_role: organizationRole,
-        organization_id: orgId || null,
+        organization_id: orgId || clientRecord?.organization_id || null,
+        is_client: !!clientRecord,
+        client_id: clientRecord?.id || null,
+        client_organization_id: clientRecord?.organization_id || null,
       }));
     } catch (error) {
       next(error);

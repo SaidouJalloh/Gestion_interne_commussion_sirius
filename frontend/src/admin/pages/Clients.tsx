@@ -1,6 +1,6 @@
 // Admin Clients Page
 import { useCallback, useMemo, useRef, useState, useEffect } from 'react';
-import { Users, User, Building2, Search, Filter, Mail, Phone, MapPin, Edit2, Trash2, Plus, X, AlertTriangle, Save } from 'lucide-react';
+import { Users, User, Building2, Search, Filter, Mail, Phone, MapPin, Edit2, Trash2, Plus, X, AlertTriangle, Save, UserPlus, Copy, CheckCircle } from 'lucide-react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useProfileContext } from '../../context/ProfileContext';
@@ -10,6 +10,7 @@ import { useKeyboard } from '../hooks/useKeyboard';
 import { useClientsData } from '../hooks/useClientsData';
 import { useClientsMutations } from '../hooks/useClientsMutations';
 import { CardSkeleton } from '../components/LoadingStates';
+import { API_ENDPOINTS, getApiHeaders } from '../../config/api';
 
 type ClientLike = {
     id: string;
@@ -22,6 +23,7 @@ type ClientLike = {
     ville?: string | null;
     code_postal?: string | null;
     notes?: string | null;
+    user_id?: string | null;
     [key: string]: unknown;
 };
 
@@ -56,6 +58,39 @@ export default function Clients() {
     });
     const [formLoading, setFormLoading] = useState(false);
     const [formError, setFormError] = useState('');
+    const [inviteResult, setInviteResult] = useState<{ email: string; temp_password: string } | null>(null);
+    const [invitingId, setInvitingId] = useState<string | null>(null);
+
+    const handleInvite = useCallback(async (client: ClientLike) => {
+        if (!client.email) {
+            toast.error('Le client doit avoir un email pour être invité');
+            return;
+        }
+        if (client.user_id) {
+            toast.error('Ce client a déjà un compte portail');
+            return;
+        }
+        setInvitingId(client.id);
+        try {
+            const headers = await getApiHeaders();
+            const resp = await fetch(API_ENDPOINTS.clientPortal.inviteClient(client.id), {
+                method: 'POST',
+                headers,
+            });
+            const result = await resp.json();
+            if (result.success) {
+                setInviteResult(result.data);
+                toast.success('Compte portail créé avec succès');
+                refetch();
+            } else {
+                toast.error(result.message || 'Erreur lors de l\'invitation');
+            }
+        } catch {
+            toast.error('Erreur réseau');
+        } finally {
+            setInvitingId(null);
+        }
+    }, [refetch]);
 
     // ⚡ OPTIMISATION : Memoize filtrage
     const filteredClients = useMemo(() => {
@@ -380,6 +415,23 @@ export default function Clients() {
                                     <Edit2 className="w-4 h-4" />
                                     Modifier
                                 </button>
+                                {isAdmin && !(client as any).user_id && client.email && (
+                                    <button
+                                        onClick={() => handleInvite(client as ClientLike)}
+                                        disabled={invitingId === client.id}
+                                        className="px-4 py-2 bg-green-50 text-green-600 border border-transparent rounded-lg hover:bg-green-100 font-medium transition-colors flex items-center justify-center gap-1 text-sm disabled:opacity-50"
+                                        title="Inviter au portail client"
+                                    >
+                                        <UserPlus className="w-4 h-4" />
+                                        {invitingId === client.id ? '...' : 'Portail'}
+                                    </button>
+                                )}
+                                {(client as any).user_id && (
+                                    <span className="px-3 py-2 bg-green-50 text-green-600 rounded-lg flex items-center gap-1 text-xs font-medium">
+                                        <CheckCircle className="w-3 h-3" />
+                                        Portail actif
+                                    </span>
+                                )}
                                 {isAdmin && (
                                     <button
                                         onClick={() => setDeleteConfirm(client.id)}
@@ -597,6 +649,55 @@ export default function Clients() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Résultat Invitation */}
+            {inviteResult && (
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 animate-scale-in border border-slate-100">
+                        <div className="flex items-start gap-4 mb-4">
+                            <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center flex-shrink-0 border border-green-100">
+                                <CheckCircle className="w-6 h-6 text-green-600" />
+                            </div>
+                            <div className="pt-1">
+                                <h3 className="text-lg font-bold text-slate-900">Compte portail créé</h3>
+                                <p className="text-sm text-slate-500 mt-1">
+                                    Communiquez ces identifiants au client pour qu'il puisse accéder au portail.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="bg-slate-50 rounded-xl p-4 space-y-3 mb-4">
+                            <div>
+                                <p className="text-xs text-slate-500 mb-1">Email</p>
+                                <p className="text-sm font-medium text-slate-900">{inviteResult.email}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-slate-500 mb-1">Mot de passe temporaire</p>
+                                <div className="flex items-center gap-2">
+                                    <code className="text-sm font-mono bg-white border border-slate-200 px-3 py-1.5 rounded-lg flex-1">
+                                        {inviteResult.temp_password}
+                                    </code>
+                                    <button
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(inviteResult.temp_password);
+                                            toast.success('Mot de passe copié');
+                                        }}
+                                        className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                                        title="Copier"
+                                    >
+                                        <Copy className="w-4 h-4 text-slate-500" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setInviteResult(null)}
+                            className="w-full px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium transition-colors"
+                        >
+                            Fermer
+                        </button>
                     </div>
                 </div>
             )}

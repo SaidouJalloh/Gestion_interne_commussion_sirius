@@ -68,8 +68,9 @@ model users {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model clients {
-  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  organization_id String         @db.Uuid
+  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id String           @db.Uuid
+  user_id         String?          @db.Uuid
   nom             String
   prenom          String
   email           String?
@@ -79,17 +80,19 @@ model clients {
   ville           String?
   code_postal     String?
   notes           String?
-  created_by      String?        @db.Uuid
-  created_at      DateTime?      @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime?      @default(now()) @db.Timestamptz(6)
-  users           users?         @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  organizations   organizations  @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  created_by      String?          @db.Uuid
+  created_at      DateTime?        @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?        @default(now()) @db.Timestamptz(6)
+  users           users?           @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organizations   organizations    @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   contrats        contrats[]
   dossiers        dossiers[]
   medias          medias[]
   sinistres       sinistres[]
+  devis_requests  devis_requests[]
 
   @@unique([email, organization_id], map: "idx_clients_email_org_unique")
+  @@unique([user_id, organization_id], map: "idx_clients_user_org_unique")
   @@index([created_at(sort: Desc)], map: "idx_clients_created_at")
   @@index([email], map: "idx_clients_email")
   @@index([nom], map: "idx_clients_nom")
@@ -97,6 +100,7 @@ model clients {
   @@index([telephone], map: "idx_clients_telephone")
   @@index([type_client], map: "idx_clients_type")
   @@index([organization_id], map: "idx_clients_organization_id")
+  @@index([user_id], map: "idx_clients_user_id")
   @@schema("public")
 }
 
@@ -526,6 +530,25 @@ model vehicules {
   @@schema("public")
 }
 
+model devis_requests {
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id String         @db.Uuid
+  client_id       String         @db.Uuid
+  type_assurance  String
+  details         Json           @default("{}")
+  statut          String         @default("nouveau")
+  notes_admin     String?
+  created_at      DateTime?      @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?      @default(now()) @db.Timestamptz(6)
+  clients         clients        @relation(fields: [client_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  organizations   organizations  @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([client_id], map: "idx_devis_client_id")
+  @@index([organization_id], map: "idx_devis_organization_id")
+  @@index([statut], map: "idx_devis_statut")
+  @@schema("public")
+}
+
 model organizations {
   id                   String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name                 String
@@ -538,6 +561,7 @@ model organizations {
   clients              clients[]
   compagnies           compagnies[]
   contrats             contrats[]
+  devis_requests       devis_requests[]
   dossiers             dossiers[]
   incorporations       incorporations[]
   medias               medias[]

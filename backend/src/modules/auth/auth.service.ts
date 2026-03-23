@@ -109,6 +109,17 @@ export class AuthService {
 
     return data.user.id;
   }
+
+  /**
+   * Chercher un utilisateur Supabase par email via l'Admin API
+   */
+  async findUserByEmail(email: string): Promise<string | null> {
+    const adminClient = createSupabaseAdminClient();
+    const { data, error } = await adminClient.auth.admin.listUsers();
+    if (error || !data?.users) return null;
+    const found = data.users.find(u => u.email === email);
+    return found?.id || null;
+  }
 }
 
 

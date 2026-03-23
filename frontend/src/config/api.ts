@@ -133,6 +133,22 @@ export const API_ENDPOINTS = {
     update: (id: string) => `${API_BASE_URL}/api/users/${id}`,
     delete: (id: string) => `${API_BASE_URL}/api/users/${id}`, // Uses deactivate endpoint
   },
+
+  // Portail Client
+  clientPortal: {
+    me: `${API_BASE_URL}/api/client-portal/me`,
+    dashboard: `${API_BASE_URL}/api/client-portal/dashboard`,
+    contrats: `${API_BASE_URL}/api/client-portal/contrats`,
+    contratById: (id: string) => `${API_BASE_URL}/api/client-portal/contrats/${id}`,
+    sinistres: `${API_BASE_URL}/api/client-portal/sinistres`,
+    sinistreById: (id: string) => `${API_BASE_URL}/api/client-portal/sinistres/${id}`,
+    createSinistre: `${API_BASE_URL}/api/client-portal/sinistres`,
+    sendMessage: (id: string) => `${API_BASE_URL}/api/client-portal/sinistres/${id}/messages`,
+    uploadDocument: (id: string) => `${API_BASE_URL}/api/client-portal/sinistres/${id}/documents`,
+    devis: `${API_BASE_URL}/api/client-portal/devis`,
+    createDevis: `${API_BASE_URL}/api/client-portal/devis`,
+    inviteClient: (id: string) => `${API_BASE_URL}/api/clients/${id}/invite`,
+  },
 } as const;
 
 /**

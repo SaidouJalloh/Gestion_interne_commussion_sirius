@@ -45,6 +45,13 @@ router.delete(
     (req, res, next) => clientController.remove(req, res, next),
 );
 
+// POST /api/clients/:id/invite - Inviter un client au portail
+router.post(
+    '/:id/invite',
+    validate(clientIdParamSchema, 'params'),
+    (req, res, next) => clientController.invite(req, res, next),
+);
+
 export default router;
 
 

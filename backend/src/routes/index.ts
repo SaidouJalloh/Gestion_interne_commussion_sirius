@@ -13,6 +13,7 @@ import searchRouter from '../modules/search/search.route';
 import organizationRouter from '../modules/organization/organization.route';
 import authRouter from '../modules/auth/auth.route';
 import usersRouter from '../modules/users/users.route';
+import clientPortalRouter from '../modules/client-portal/client-portal.route';
 
 const router = Router();
 
@@ -30,6 +31,7 @@ router.use('/vehicules', vehiculeRouter);
 router.use('/incorporations', incorporationRouter);
 router.use('/notifications', notificationRouter);
 router.use('/search', searchRouter);
+router.use('/client-portal', clientPortalRouter);
 
 export default router;
 

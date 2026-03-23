@@ -66,6 +66,8 @@ export default function Login() {
             setLoading(false);
             if (profile?.is_superadmin === true) {
                 navigate('/superadmin/organizations');
+            } else if (profile?.is_client === true) {
+                navigate('/client/dashboard');
             } else {
                 navigate('/org/dashboard');
             }
