@@ -6,150 +6,218 @@ type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-// Helper: attend que la session soit disponible (ou sign-in)
-async function waitForSession(timeoutMs = 8000) {
-  // 1) Essai direct
-  const { data: initData } = await supabase.auth.getSession();
-  if (initData?.session?.user) {
-    return initData.session;
+const API_BASE_URL =
+  process.env.REACT_APP_API_URL && process.env.REACT_APP_API_URL.length > 0
+    ? process.env.REACT_APP_API_URL
+    : 'http://localhost:4000';
+
+/**
+ * Recupere le token d'acces depuis le localStorage Supabase (fast path).
+ * Evite d'appeler getSession() qui peut bloquer pendant un refresh.
+ */
+function getAccessTokenFromStorage(): string | null {
+  try {
+    const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+    if (!supabaseUrl) return null;
+    const projectRef = supabaseUrl.replace(/https?:\/\//, '').split('.')[0];
+    const storageKey = `sb-${projectRef}-auth-token`;
+    const stored = localStorage.getItem(storageKey);
+    if (!stored) return null;
+    const parsed = JSON.parse(stored);
+    return parsed?.access_token || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Fetch le profil via le backend API /api/auth/me au lieu de Supabase directement.
+ * Cela evite le blocage du client Supabase pendant les token refresh.
+ */
+async function fetchProfileFromApi(token: string): Promise<ProfileRow | null> {
+  const orgId = localStorage.getItem('currentOrganizationId');
+  const headers: Record<string, string> = {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  };
+  if (orgId) {
+    headers['X-Organization-Id'] = orgId;
   }
 
-  // 2) Écoute un changement d'état d'auth
-  return await new Promise((resolve, reject) => {
-    const timer = setTimeout(() => {
-      sub?.unsubscribe();
-      reject(new Error('Timeout: session indisponible'));
-    }, timeoutMs);
+  const resp = await fetch(`${API_BASE_URL}/api/auth/me`, { headers });
 
-    const { data: { subscription: sub } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session?.user) {
-          clearTimeout(timer);
-          sub?.unsubscribe();
-          resolve(session);
-        }
-      }
-    );
-  });
+  if (resp.status === 401) {
+    throw new Error('AUTH_ERROR');
+  }
+
+  if (!resp.ok) {
+    throw new Error(`API error: ${resp.status}`);
+  }
+
+  const json = await resp.json();
+  if (json.success && json.data) {
+    return json.data as ProfileRow;
+  }
+  return null;
 }
 
-async function fetchProfileOnce(userId: string, timeoutMs = 5000): Promise<ProfileRow | null> {
-  const timeoutPromise = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error('Timeout: fetchProfile')), timeoutMs)
-  );
+/**
+ * Fetch le profil avec recuperation de session:
+ * 1. Tente avec le token courant
+ * 2. Si 401, refreshSession() puis retry
+ * 3. Si refresh echoue, signOut
+ */
+async function fetchProfileWithRecovery(userId: string): Promise<ProfileRow | null> {
+  const token = getAccessTokenFromStorage();
+  if (!token) {
+    throw new Error('AUTH_ERROR');
+  }
 
-  const fetchPromise = supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .maybeSingle(); // null si non trouvé
+  try {
+    return await fetchProfileFromApi(token);
+  } catch (err) {
+    if (!(err instanceof Error && err.message === 'AUTH_ERROR')) throw err;
 
-  const result = (await Promise.race([fetchPromise, timeoutPromise])) as {
-    data: ProfileRow | null;
-    error: unknown;
-  };
-  const { data, error } = result;
-  if (error) throw error;
-  return data || null;
+    // Token invalide: tenter un refresh
+    const { data, error } = await supabase.auth.refreshSession();
+    if (error || !data.session) {
+      await supabase.auth.signOut();
+      throw new Error('Session expiree');
+    }
+
+    // Retry avec le nouveau token
+    return await fetchProfileFromApi(data.session.access_token);
+  }
 }
 
-export function useProfile() {
+/**
+ * Hook unifie pour charger le profil utilisateur.
+ * Utilise le backend /api/auth/me au lieu de Supabase directement
+ * pour eviter les blocages de token refresh.
+ */
+export function useProfile(userId: string | null) {
   const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [status, setStatus] = useState<'loading' | 'loaded' | 'not_found' | 'error'>('loading');
   const [error, setError] = useState<unknown | null>(null);
-  const retryCountRef = useRef(0);
-  const initializedRef = useRef(false);
-
-  const refresh = useCallback(async () => {
-    try {
-      setStatus('loading');
-      setError(null);
-
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.id) {
-        setProfile(null);
-        setStatus('not_found');
-        return null;
-      }
-
-      // Retry jusqu'à 2 fois si vide
-      let data = null;
-      retryCountRef.current = 0;
-      do {
-        data = await fetchProfileOnce(session.user.id);
-        if (data) break;
-        retryCountRef.current += 1;
-        if (retryCountRef.current <= 2) {
-          await sleep(300 * retryCountRef.current); // backoff
-        }
-      } while (retryCountRef.current <= 2);
-
-      if (!data) {
-        setProfile(null);
-        setStatus('not_found');
-        return null;
-      }
-
-      setProfile(data);
-      setStatus('loaded');
-      return data;
-    } catch (err) {
-      console.error('useProfile.refresh error:', err);
-      setError(err);
-      setStatus('error');
-      return null;
-    }
-  }, []);
+  const inflightRef = useRef<Promise<ProfileRow | null> | null>(null);
+  const lastLoadedUserIdRef = useRef<string | null>(null);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
-    if (initializedRef.current) return;
-    initializedRef.current = true;
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
-    let unsub = null;
-    (async () => {
+  const refresh = useCallback(async (): Promise<ProfileRow | null> => {
+    if (inflightRef.current) {
+      return await inflightRef.current;
+    }
+
+    const p = (async () => {
       try {
-        // Attendre une session valide
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) {
-          try {
-            await waitForSession();
-          } catch {
-            // Pas de session -> on reste en not_found
+        if (mountedRef.current) {
+          setStatus('loading');
+          setError(null);
+        }
+
+        if (!userId) {
+          if (mountedRef.current) {
+            setProfile(null);
             setStatus('not_found');
           }
+          lastLoadedUserIdRef.current = null;
+          return null;
         }
-        await refresh();
-      } catch (e) {
-        console.error('useProfile init error:', e);
-        setStatus('error');
-        setError(e);
+
+        let data: ProfileRow | null = null;
+        try {
+          data = await fetchProfileWithRecovery(userId);
+        } catch {
+          if (mountedRef.current) {
+            setProfile(null);
+            setStatus('not_found');
+          }
+          lastLoadedUserIdRef.current = null;
+          return null;
+        }
+
+        // Retry si profil non trouve
+        if (!data) {
+          let retryCount = 0;
+          while (retryCount < 2 && !data) {
+            retryCount += 1;
+            await sleep(300 * retryCount);
+            const token = getAccessTokenFromStorage();
+            if (token) {
+              try { data = await fetchProfileFromApi(token); } catch { /* retry */ }
+            }
+          }
+        }
+
+        if (!mountedRef.current) return data;
+
+        if (!data) {
+          setProfile(null);
+          setStatus('not_found');
+          lastLoadedUserIdRef.current = null;
+          return null;
+        }
+
+        setProfile(data);
+        setStatus('loaded');
+        lastLoadedUserIdRef.current = userId;
+        return data;
+      } catch (err) {
+        if (mountedRef.current) {
+          setError(err);
+          setStatus('error');
+        }
+        lastLoadedUserIdRef.current = null;
+        return null;
       }
     })();
 
-    // Recharger le profil sur changement d'auth
+    inflightRef.current = p;
+    try {
+      return await p;
+    } finally {
+      inflightRef.current = null;
+    }
+  }, [userId]);
+
+  // Charger le profil quand userId change
+  useEffect(() => {
+    if (!userId) {
+      setProfile(null);
+      setStatus('not_found');
+      lastLoadedUserIdRef.current = null;
+      return;
+    }
+
+    if (lastLoadedUserIdRef.current === userId && profile) {
+      return;
+    }
+
+    refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, refresh]);
+
+  // Ecouter les changements d'auth pour reagir au logout
+  useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_OUT') {
+      async (event) => {
+        if (event === 'SIGNED_OUT' && mountedRef.current) {
           setProfile(null);
           setStatus('not_found');
-          return;
-        }
-        if (event === 'SIGNED_IN') {
-          // Important: éviter d'afficher l'ancien profil juste après un nouveau login
-          setProfile(null);
-          setStatus('loading');
-        }
-        if (session?.user) {
-          await refresh();
+          lastLoadedUserIdRef.current = null;
         }
       }
     );
-    unsub = () => subscription?.unsubscribe();
 
     return () => {
-      unsub?.();
+      subscription.unsubscribe();
     };
-  }, [refresh]);
+  }, []);
 
   return { profile, status, error, refresh };
 }

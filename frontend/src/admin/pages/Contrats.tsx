@@ -1,7 +1,7 @@
 // code avec incorporation
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { useProfileContext } from '../context/ProfileContext';
+import { useProfileContext } from '../../context/ProfileContext';
 import { useDebounce } from '../hooks/useDebounce';
 import { useKeyboard } from '../hooks/useKeyboard';
 import { useContratsData } from '../hooks/useContratsData';

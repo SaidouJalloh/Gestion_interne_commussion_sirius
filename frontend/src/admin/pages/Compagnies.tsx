@@ -1,6 +1,6 @@
 // code optimisé rapide (TypeScript)
 import { useState, useCallback, useMemo } from 'react';
-import { useProfileContext } from '../context/ProfileContext';
+import { useProfileContext } from '../../context/ProfileContext';
 import { useCompagniesData } from '../hooks/useCompagniesData';
 import { useCompagniesMutations } from '../hooks/useCompagniesMutations';
 import { CompagniesHeader } from '../components/compagnies/CompagniesHeader';

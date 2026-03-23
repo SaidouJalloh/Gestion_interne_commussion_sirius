@@ -11,9 +11,13 @@ import incorporationRouter from '../modules/incorporation/incorporation.route';
 import notificationRouter from '../modules/notification/notification.route';
 import searchRouter from '../modules/search/search.route';
 import organizationRouter from '../modules/organization/organization.route';
+import authRouter from '../modules/auth/auth.route';
+import usersRouter from '../modules/users/users.route';
 
 const router = Router();
 
+router.use('/auth', authRouter);
+router.use('/users', usersRouter);
 router.use('/organizations', organizationRouter);
 router.use('/compagnies', companyRouter);
 router.use('/clients', clientRouter);

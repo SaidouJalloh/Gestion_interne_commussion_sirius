@@ -2,8 +2,12 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useProfileContext } from '../context/ProfileContext';
 import { useOrganization } from '../context/OrganizationContext';
+
+const API_BASE_URL =
+    process.env.REACT_APP_API_URL && process.env.REACT_APP_API_URL.length > 0
+        ? process.env.REACT_APP_API_URL
+        : 'http://localhost:4000';
 
 export default function Login() {
     const [email, setEmail] = useState('');
@@ -13,7 +17,6 @@ export default function Login() {
 
     const navigate = useNavigate();
     const { signIn } = useAuth();
-    const { refresh: refreshProfile } = useProfileContext();
     const { refreshOrganizations } = useOrganization();
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -22,37 +25,50 @@ export default function Login() {
         setLoading(true);
 
         try {
-            const { error } = await signIn(email, password);
+            const { data, error } = await signIn(email, password);
 
             if (error) {
                 throw error;
             }
 
-            // Rafraîchir explicitement le profil (rôle) avant de naviguer
-            try {
-                const refreshedProfile = await refreshProfile();
-                
-                // Si superadmin, rediriger immédiatement
-                // Vérifier is_superadmin (type attendu: boolean | null)
-                const rawIsSuperAdmin = refreshedProfile?.is_superadmin;
-                const isSuperAdmin = rawIsSuperAdmin === true;
-                if (isSuperAdmin) {
-                    setLoading(false);
-                    navigate('/superadmin/organizations');
-                    return;
-                }
-
-                // Rediriger tous les utilisateurs non-superadmin vers le dashboard
-                // Seul le superadmin peut accéder à /superadmin/organizations
+            // Recuperer le token frais directement depuis le resultat du signIn
+            const token = data?.session?.access_token;
+            if (!token) {
+                setError('Erreur d\'authentification. Reessayez.');
                 setLoading(false);
-                navigate('/org/dashboard');
-            } catch (err) {
-                // En cas d'erreur, rediriger vers /org/dashboard par défaut
-                console.error('Erreur lors de la vérification du rôle:', err);
-                setLoading(false);
-                navigate('/org/dashboard');
+                return;
             }
 
+            // Appeler /api/auth/me directement avec le token frais
+            // (le context refresh utilise un closure stale a ce stade)
+            let profile = null;
+            try {
+                const resp = await fetch(`${API_BASE_URL}/api/auth/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+                if (resp.ok) {
+                    const json = await resp.json();
+                    if (json.success && json.data) {
+                        profile = json.data;
+                    }
+                }
+            } catch {
+                // Profil non disponible via le backend, on redirige par defaut
+            }
+
+            // Rafraichir les organisations en arriere-plan
+            refreshOrganizations().catch(() => {});
+
+            // Rediriger selon le role
+            setLoading(false);
+            if (profile?.is_superadmin === true) {
+                navigate('/superadmin/organizations');
+            } else {
+                navigate('/org/dashboard');
+            }
         } catch (error: unknown) {
             const message =
                 error instanceof Error

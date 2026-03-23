@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["-e", "var p=require('path');var d=p.join(process.cwd(),'frontend');process.chdir(d);require(p.join(d,'node_modules','react-scripts','scripts','start'))"],
+      "port": 3000
+    },
+    {
+      "name": "backend",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["-e", "var p=require('path');var d=p.join(process.cwd(),'backend');process.chdir(d);process.argv=['node','ts-node-dev','--respawn','--transpile-only','src/server.ts'];require(p.join(d,'node_modules','ts-node-dev','lib','bin.js'))"],
+      "port": 4000,
+      "autoPort": false
+    }
+  ],
+  "autoVerify": true
+}

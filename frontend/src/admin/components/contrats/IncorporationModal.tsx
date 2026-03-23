@@ -419,7 +419,7 @@
 import type { ChangeEvent, FormEvent } from 'react';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../../context/AuthContext';
 import { calculerPrimeNette, calculerCommission, isAutoFlotte } from '../../utils/incorporationHelpers';
 import { API_ENDPOINTS } from '../../../config/api';
 import { apiRequest } from '../../utils/apiClient';

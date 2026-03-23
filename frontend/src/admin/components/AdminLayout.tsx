@@ -2,9 +2,9 @@
 // code avec souscription
 import { useState, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useProfileContext } from '../context/ProfileContext';
-import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
+import { useProfileContext } from '../../context/ProfileContext';
+import { useTheme } from '../../context/ThemeContext';
 import { NotificationBell } from './notifications/NotificationBell';
 // import NotificationBell from './notifications/NotificationBell';
 import { OrganizationSelector } from '../../components/OrganizationSelector';

@@ -5,7 +5,6 @@ import { useAuth } from '../context/AuthContext';
 export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
     const { user, loading } = useAuth();
 
-    // Afficher un loader seulement si on charge ET qu'on n'a pas encore d'utilisateur
     if (loading && !user) {
         return (
             <div className="flex items-center justify-center min-h-screen">

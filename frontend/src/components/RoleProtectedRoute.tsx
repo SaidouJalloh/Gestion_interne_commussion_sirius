@@ -10,43 +10,31 @@ type RoleProtectedRouteProps = {
     redirectTo?: string;
 };
 
-export const RoleProtectedRoute = ({ children, allowedRoles, redirectTo = '/login' }: RoleProtectedRouteProps) => {
+export const RoleProtectedRoute = ({ children, allowedRoles, redirectTo = '/org/dashboard' }: RoleProtectedRouteProps) => {
     const { user, loading } = useAuth();
     const { profile, status, refresh } = useProfileContext();
     const triedRefreshRef = useRef(false);
     const refreshRef = useRef(refresh);
     const [profileRefreshing, setProfileRefreshing] = useState(false);
 
-    // Mettre à jour la référence de refresh sans déclencher de re-render
     refreshRef.current = refresh;
 
-    // Toujours appeler les hooks avant tout return
     useEffect(() => {
         const run = async () => {
-            if (user && !profile && !triedRefreshRef.current && status === 'loading') {
-                console.log('🔄 RoleProtectedRoute: Tentative de rechargement du profil...');
+            if (user && !profile && !triedRefreshRef.current && status !== 'loaded') {
                 triedRefreshRef.current = true;
                 setProfileRefreshing(true);
 
-                // Timeout de sécurité pour éviter le blocage infini (30 secondes pour connexions lentes)
                 const safetyTimeout = setTimeout(() => {
-                    console.warn('⚠️ RoleProtectedRoute: Timeout de sécurité atteint (30s), arrêt du chargement');
                     setProfileRefreshing(false);
-                }, 30000);
+                }, 15000);
 
                 try {
-                    console.log('🔄 RoleProtectedRoute: Appel de refresh()...');
-                    const result = await refreshRef.current();
-                    console.log('✅ RoleProtectedRoute: Résultat refresh:', result ? 'Succès' : 'Échec (null)');
-
-                    if (!result) {
-                        console.error('❌ RoleProtectedRoute: refreshProfile n\'a rien retourné');
-                    }
-                } catch (error) {
-                    console.error('❌ RoleProtectedRoute: Erreur lors du refresh:', error);
+                    await refreshRef.current();
+                } catch {
+                    // Erreur geree dans le hook useProfile
                 } finally {
                     clearTimeout(safetyTimeout);
-                    // Arrêter immédiatement l'état "refreshing" (pas de délai artificiel)
                     setProfileRefreshing(false);
                 }
             }
@@ -54,7 +42,7 @@ export const RoleProtectedRoute = ({ children, allowedRoles, redirectTo = '/logi
         run();
     }, [user, profile, status]);
 
-    // Afficher un loader pendant la vérification
+    // Loader pendant verification auth
     if (loading && !user) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -66,13 +54,13 @@ export const RoleProtectedRoute = ({ children, allowedRoles, redirectTo = '/logi
         );
     }
 
-    // Si pas connecté, rediriger vers login
+    // Pas connecte -> login
     if (!user) {
         return <Navigate to="/login" replace />;
     }
 
-    // Pendant le rafraîchissement du profil, afficher un loader seulement si on est vraiment en "loading"
-    if (user && !profile && profileRefreshing && status === 'loading') {
+    // Profil en cours de chargement
+    if (user && !profile && (profileRefreshing || status === 'loading')) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
                 <div className="text-center">
@@ -83,7 +71,7 @@ export const RoleProtectedRoute = ({ children, allowedRoles, redirectTo = '/logi
         );
     }
 
-    // Si pas de profil après chargement complet, afficher une erreur (différencier not_found vs error)
+    // Profil non trouve apres chargement
     if (!profile && status !== 'loading') {
         return (
             <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -96,26 +84,50 @@ export const RoleProtectedRoute = ({ children, allowedRoles, redirectTo = '/logi
                     </h2>
                     <p className="text-gray-600 dark:text-gray-400 mb-4">
                         {status === 'error'
-                            ? 'Impossible de récupérer la session (Supabase). Réessayez.'
+                            ? 'Impossible de récupérer votre profil. Réessayez.'
                             : 'Votre compte n\'a pas de profil associé dans la base de données.'}
                     </p>
-                    <button
-                        onClick={() => {
-                            triedRefreshRef.current = false;
-                            setProfileRefreshing(false);
-                            refreshRef.current().catch(() => { });
-                        }}
-                        className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                        Réessayer
-                    </button>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                        User ID: <code className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{user?.id}</code>
+                    </p>
+                    <div className="space-y-3">
+                        <button
+                            onClick={() => {
+                                triedRefreshRef.current = false;
+                                setProfileRefreshing(false);
+                                refreshRef.current().catch(() => {});
+                            }}
+                            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            Réessayer
+                        </button>
+                        <button
+                            onClick={() => {
+                                localStorage.clear();
+                                window.location.href = '/login';
+                            }}
+                            className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                        >
+                            Se déconnecter
+                        </button>
+                    </div>
                 </div>
             </div>
         );
     }
 
-    // Vérifier si l'utilisateur a le bon rôle
-    if (profile && allowedRoles && Array.isArray(allowedRoles) && !allowedRoles.includes(profile.role)) {
+    // Mapping des rôles BDD -> Frontend attendus (owner -> admin, admin -> gestionnaire, member -> user)
+    const getMappedOrgRole = (role?: string | null) => {
+        if (role === 'owner') return 'admin';
+        if (role === 'admin') return 'gestionnaire';
+        if (role === 'member') return 'user';
+        return role;
+    };
+
+    const effectiveRole = profile?.is_superadmin ? 'superadmin' : getMappedOrgRole(profile?.organization_role) || profile?.role;
+
+    // Verifier le role
+    if (profile && allowedRoles && Array.isArray(allowedRoles) && (!effectiveRole || !allowedRoles.includes(effectiveRole as string))) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
                 <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg max-w-md">
@@ -126,18 +138,20 @@ export const RoleProtectedRoute = ({ children, allowedRoles, redirectTo = '/logi
                     <p className="text-gray-600 dark:text-gray-400 mb-4">
                         Vous n'avez pas les permissions nécessaires pour accéder à cette page.
                     </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-500 mb-6">
+                        Rôle actuel : <span className="font-semibold text-primary-600 dark:text-primary-400">{effectiveRole || 'Aucun'}</span>
+                    </p>
                     <button
                         onClick={() => window.location.href = redirectTo}
                         className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
                     >
-                        Retour
+                        Retour à l'accueil
                     </button>
                 </div>
             </div>
         );
     }
 
-    // Si tout est bon, afficher le contenu
     return children;
 };
 

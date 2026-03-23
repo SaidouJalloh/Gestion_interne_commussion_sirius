@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, type FormEvent } from 'react';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
-import { useProfileContext } from '../context/ProfileContext';
+import { useProfileContext } from '../../context/ProfileContext';
 import { useOrganization } from '../../context/OrganizationContext';
 import { API_ENDPOINTS } from '../../config/api';
 import { apiRequest } from '../utils/apiClient';
@@ -45,50 +45,12 @@ export default function GestionUtilisateurs() {
             setLoading(true);
 
             if (isSuperAdminMode) {
-                // Mode superadmin : Afficher les admins sans organisation avec is_superadmin = true
-                // Récupérer tous les profils avec is_superadmin = true
-                const { data: superAdminProfiles, error: superAdminError } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('is_superadmin', true)
-                    .order('created_at', { ascending: false });
-
-                if (superAdminError) throw superAdminError;
-
-                // Pour vérifier quels superadmins n'ont pas d'organisation, on récupère toutes les organisations
-                // et leurs membres via l'API backend
-                if (superAdminProfiles && superAdminProfiles.length > 0) {
-                    try {
-                        // Récupérer toutes les organisations
-                        const organizations = await apiRequest<Array<{ id: string }>>(API_ENDPOINTS.organizations.list);
-
-                        // Récupérer tous les membres de toutes les organisations
-                        const allMemberUserIds = new Set<string>();
-                        for (const org of organizations) {
-                            try {
-                                const members = await apiRequest<Array<{ user_id: string }>>(
-                                    API_ENDPOINTS.organizations.members(org.id)
-                                );
-                                members.forEach(m => allMemberUserIds.add(m.user_id));
-                            } catch (err) {
-                                // Ignorer les erreurs pour certaines organisations
-                                console.warn(`Erreur récupération membres pour org ${org.id}:`, err);
-                            }
-                        }
-
-                        // Filtrer pour ne garder que ceux sans organisation
-                        const superAdminsWithoutOrg = superAdminProfiles.filter(
-                            profile => !allMemberUserIds.has(profile.id)
-                        );
-                        setUsers(superAdminsWithoutOrg);
-                    } catch (apiError) {
-                        console.error('Erreur récupération organisations/membres:', apiError);
-                        // En cas d'erreur API, afficher tous les superadmins
-                        setUsers(superAdminProfiles);
-                    }
-                } else {
-                    setUsers([]);
-                }
+                // Mode superadmin : Afficher les superadmins via l'API backend
+                const superAdmins = await apiRequest<UserProfile[]>(
+                    `${API_ENDPOINTS.users.list}?isSuperAdminMode=true`
+                );
+                
+                setUsers(superAdmins || []);
             } else {
                 // Mode admin : Afficher les utilisateurs de l'organisation actuelle
                 if (!currentOrganization?.id) {
@@ -97,25 +59,12 @@ export default function GestionUtilisateurs() {
                     return;
                 }
 
-                // Récupérer les membres de l'organisation via l'API backend
-                const members = await apiRequest<Array<{ user_id: string }>>(
-                    API_ENDPOINTS.organizations.members(currentOrganization.id)
+                // Récupérer les utilisateurs via l'API backend
+                const orgUsers = await apiRequest<UserProfile[]>(
+                    API_ENDPOINTS.users.list
                 );
 
-                if (members && members.length > 0) {
-                    const userIds = members.map(m => m.user_id);
-                    // Récupérer les profils des membres via Supabase
-                    const { data: profiles, error: profilesError } = await supabase
-                        .from('profiles')
-                        .select('*')
-                        .in('id', userIds)
-                        .order('created_at', { ascending: false });
-
-                    if (profilesError) throw profilesError;
-                    setUsers(profiles || []);
-                } else {
-                    setUsers([]);
-                }
+                setUsers(orgUsers || []);
             }
         } catch (error) {
             console.error('Erreur récupération utilisateurs:', error);
@@ -132,29 +81,19 @@ export default function GestionUtilisateurs() {
     const handleCreateUser = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         try {
-            // 1. Créer l'utilisateur dans Auth
-            const { data: authData, error: authError } = await supabase.auth.signUp({
-                email: formData.email,
-                password: formData.password,
+            // Appeler l'API backend pour créer l'utilisateur
+            await apiRequest(API_ENDPOINTS.users.create, {
+                method: 'POST',
+                body: JSON.stringify({
+                    email: formData.email,
+                    password: formData.password || undefined,
+                    nom: formData.nom,
+                    prenom: formData.prenom,
+                    role: formData.role,
+                    telephone: formData.telephone,
+                    actif: formData.actif
+                }),
             });
-
-            if (authError) throw authError;
-
-            // 2. Mettre à jour le profil avec les infos complètes
-            if (authData.user) {
-                const { error: profileError } = await supabase
-                    .from('profiles')
-                    .update({
-                        nom: formData.nom,
-                        prenom: formData.prenom,
-                        role: formData.role,
-                        telephone: formData.telephone,
-                        actif: formData.actif
-                    })
-                    .eq('id', authData.user.id);
-
-                if (profileError) throw profileError;
-            }
 
             alert('✅ Utilisateur créé avec succès !');
             setShowModal(false);
@@ -170,18 +109,17 @@ export default function GestionUtilisateurs() {
         e.preventDefault();
         try {
             if (!selectedUser?.id) throw new Error('Utilisateur non sélectionné');
-            const { error } = await supabase
-                .from('profiles')
-                .update({
+            
+            await apiRequest(API_ENDPOINTS.users.update(selectedUser.id), {
+                method: 'PUT',
+                body: JSON.stringify({
                     nom: formData.nom,
                     prenom: formData.prenom,
                     role: formData.role,
                     telephone: formData.telephone,
                     actif: formData.actif
-                })
-                .eq('id', selectedUser.id);
-
-            if (error) throw error;
+                }),
+            });
 
             alert('✅ Utilisateur modifié avec succès !');
             setShowModal(false);
@@ -197,14 +135,9 @@ export default function GestionUtilisateurs() {
         if (!window.confirm('⚠️ Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) return;
 
         try {
-            // Note: La suppression dans auth.users nécessite des permissions spéciales
-            // Pour l'instant, on désactive juste l'utilisateur
-            const { error } = await supabase
-                .from('profiles')
-                .update({ actif: false })
-                .eq('id', userId);
-
-            if (error) throw error;
+            await apiRequest(API_ENDPOINTS.users.delete(userId), {
+                method: 'DELETE',
+            });
 
             alert('✅ Utilisateur désactivé avec succès !');
             fetchUsers();
@@ -478,7 +411,9 @@ export default function GestionUtilisateurs() {
                                         <option value="user">Utilisateur</option>
                                         <option value="gestionnaire">Gestionnaire</option>
                                         <option value="admin">Admin</option>
-                                        <option value="superadmin">Super Admin</option>
+                                        {profile?.is_superadmin && (
+                                            <option value="superadmin">Super Admin</option>
+                                        )}
                                     </select>
                                 </div>
 

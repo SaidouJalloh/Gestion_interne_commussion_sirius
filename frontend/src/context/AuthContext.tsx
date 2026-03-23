@@ -32,7 +32,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         const initAuth = async () => {
             try {
-                // Récupérer la session actuelle
+                // getSession() lit le localStorage. Le token est valide automatiquement
+                // par autoRefreshToken: true. Si le token est perime, onAuthStateChange
+                // declenchera SIGNED_OUT. Les erreurs auth sont gerees dans useProfile
+                // via fetchProfileWithSessionRecovery.
                 const { data: { session } } = await supabase.auth.getSession();
 
                 if (session?.user) {
@@ -76,12 +79,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             if (data.user) {
                 setUser(data.user);
-                // Forcer un rafraîchissement de session pour propager les nouveaux tokens immédiatement
-                try {
-                    await supabase.auth.refreshSession();
-                } catch (e) {
-                    console.warn('refreshSession a échoué (non bloquant):', e);
-                }
             }
 
             return { data, error: null };
@@ -117,13 +114,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    // Déconnexion
+    // Deconnexion - nettoie localStorage directement pour eviter
+    // le blocage du client Supabase (signOut peut hang comme les requetes REST)
     const signOut = async (): Promise<void> => {
         try {
-            const { error } = await supabase.auth.signOut();
-            if (error) throw error;
-
+            // Nettoyer l'etat React immediatement
             setUser(null);
+
+            // Nettoyer localStorage (token Supabase + organisation)
+            const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+            if (supabaseUrl) {
+                const projectRef = supabaseUrl.replace(/https?:\/\//, '').split('.')[0];
+                localStorage.removeItem(`sb-${projectRef}-auth-token`);
+            }
+            localStorage.removeItem('currentOrganizationId');
+
+            // Tenter le signOut Supabase en arriere-plan (non bloquant)
+            supabase.auth.signOut().catch(() => {});
         } catch (error) {
             console.error('Erreur déconnexion:', error);
         }

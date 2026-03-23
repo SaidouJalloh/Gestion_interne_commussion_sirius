@@ -9,6 +9,7 @@ declare global {
       tenant?: {
         organizationId: string;
         userId: string;
+        isSuperAdmin?: boolean;
       };
     }
   }
@@ -62,21 +63,39 @@ export const tenantMiddleware = async (
 
     const userId = user.id;
 
-    // 2. Extraire organization_id depuis différentes sources
+    // 2. Verifier si l'utilisateur est superadmin (bypass des restrictions d'organisation)
+    const profile = await prisma.profiles.findUnique({
+      where: { id: userId },
+      select: { is_superadmin: true },
+    });
+
+    const headerOrgId = req.headers['x-organization-id'] as string | undefined;
+
+    if (profile?.is_superadmin) {
+      // Superadmin: acceder a n'importe quelle organisation sans verification de membership
+      req.tenant = {
+        organizationId: headerOrgId || '',
+        userId,
+        isSuperAdmin: true,
+      };
+      next();
+      return;
+    }
+
+    // 3. Extraire organization_id depuis differentes sources
     let organizationId: string | null = null;
 
-    // Priorité 1: Header X-Organization-Id
-    const headerOrgId = req.headers['x-organization-id'] as string | undefined;
+    // Priorite 1: Header X-Organization-Id
     if (headerOrgId) {
       organizationId = headerOrgId;
     } else {
-      // Priorité 2: Token JWT (claim organization_id)
+      // Priorite 2: Token JWT (claim organization_id)
       const tokenOrgId = (user.user_metadata as { organization_id?: string })
         ?.organization_id;
       if (tokenOrgId) {
         organizationId = tokenOrgId;
       } else {
-        // Priorité 3: Organisation par défaut (première organisation active de l'utilisateur)
+        // Priorite 3: Organisation par defaut (premiere organisation active de l'utilisateur)
         const defaultOrg = await prisma.organization_members.findFirst({
           where: {
             user_id: userId,
@@ -96,7 +115,7 @@ export const tenantMiddleware = async (
       }
     }
 
-    // 3. Valider que l'utilisateur appartient à l'organisation
+    // 4. Valider que l'utilisateur appartient a l'organisation
     if (!organizationId) {
       res.status(403).json(
         apiResponse.error(
@@ -107,7 +126,7 @@ export const tenantMiddleware = async (
       return;
     }
 
-    // Vérifier l'appartenance à l'organisation
+    // Verifier l'appartenance a l'organisation
     const membership = await prisma.organization_members.findFirst({
       where: {
         organization_id: organizationId,
@@ -125,7 +144,7 @@ export const tenantMiddleware = async (
       return;
     }
 
-    // 4. Ajouter l'organization_id et user_id au req pour usage dans les controllers/services
+    // 5. Ajouter l'organization_id et user_id au req pour usage dans les controllers/services
     req.tenant = {
       organizationId,
       userId,

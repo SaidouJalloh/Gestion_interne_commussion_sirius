@@ -2,7 +2,7 @@
 import { useCallback, useMemo, useRef, useState, useEffect } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useProfileContext } from '../context/ProfileContext';
+import { useProfileContext } from '../../context/ProfileContext';
 import toast from 'react-hot-toast';
 import { useDebounce } from '../hooks/useDebounce';
 import { useKeyboard } from '../hooks/useKeyboard';

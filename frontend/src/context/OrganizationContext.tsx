@@ -29,6 +29,26 @@ export const useOrganization = () => {
   return context;
 };
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
+
+/**
+ * Lit le token depuis localStorage sans passer par supabase.auth.getSession()
+ * qui peut deadlock dans les callbacks onAuthStateChange.
+ */
+function getTokenFromStorage(): string | null {
+  try {
+    const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+    if (!supabaseUrl) return null;
+    const projectRef = supabaseUrl.replace(/https?:\/\//, '').split('.')[0];
+    const storageKey = `sb-${projectRef}-auth-token`;
+    const stored = localStorage.getItem(storageKey);
+    if (!stored) return null;
+    return JSON.parse(stored)?.access_token || null;
+  } catch {
+    return null;
+  }
+}
+
 interface OrganizationProviderProps {
   children: ReactNode;
 }
@@ -38,21 +58,19 @@ export const OrganizationProvider = ({ children }: OrganizationProviderProps) =>
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Charger les organisations depuis l'API
   const refreshOrganizations = async (): Promise<Organization[]> => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
+      const token = getTokenFromStorage();
+      if (!token) {
         setOrganizations([]);
         setCurrentOrganizationState(null);
         setLoading(false);
         return [];
       }
 
-      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
       const response = await fetch(`${API_BASE_URL}/api/organizations`, {
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -63,19 +81,16 @@ export const OrganizationProvider = ({ children }: OrganizationProviderProps) =>
           const orgs = result.data as Organization[];
           setOrganizations(orgs);
 
-          // Restaurer l'organisation sélectionnée depuis localStorage
           const savedOrgId = localStorage.getItem('currentOrganizationId');
           if (savedOrgId) {
             const savedOrg = orgs.find((org) => org.id === savedOrgId);
             if (savedOrg) {
               setCurrentOrganizationState(savedOrg);
             } else if (orgs.length > 0) {
-              // Si l'organisation sauvegardée n'existe plus, utiliser la première
               setCurrentOrganizationState(orgs[0]);
               localStorage.setItem('currentOrganizationId', orgs[0].id);
             }
           } else if (orgs.length > 0) {
-            // Aucune organisation sauvegardée, utiliser la première
             setCurrentOrganizationState(orgs[0]);
             localStorage.setItem('currentOrganizationId', orgs[0].id);
           }
@@ -98,11 +113,13 @@ export const OrganizationProvider = ({ children }: OrganizationProviderProps) =>
     refreshOrganizations();
   }, []);
 
-  // Écouter les changements d'authentification
+  // Ecouter les changements d'authentification
+  // IMPORTANT: ne pas await dans onAuthStateChange pour eviter les deadlocks
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN') {
-        await refreshOrganizations();
+        // Declencher en arriere-plan sans bloquer le callback Supabase
+        setTimeout(() => refreshOrganizations(), 0);
       } else if (event === 'SIGNED_OUT') {
         setOrganizations([]);
         setCurrentOrganizationState(null);

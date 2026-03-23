@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/Users/diopb/dev/sirius -type f -name *.prisma)",
+      "Bash(find ./frontend -type f -name *auth*)",
+      "Bash(grep -E \"\\\\.\\(ts|tsx|js|jsx\\)$\")",
+      "Bash(find ./backend -type f -name *auth*)",
+      "Bash(find ./frontend/src -type f \\\\\\(-name *.ts -o -name *.tsx \\\\\\))",
+      "Bash(find /c/Users/diopb/dev/sirius/frontend -maxdepth 1 \\\\\\(-name .env* -o -name tsconfig.json \\\\\\))",
+      "Bash(find ./backend/src -type f -name \"*.ts\" -exec grep -l \"tenant\\\\|organization_id\" {})",
+      "Bash(echo \"EXIT_CODE=$?\")",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(echo \"FRONTEND=$?\")",
+      "Bash(echo \"BACKEND=$?\")",
+      "Bash(git status:*)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(netstat -ano)",
+      "Bash(npm --version)",
+      "Bash(ls /c/Users/diopb/dev/sirius/backend/node_modules/.bin/ts-node-dev*)",
+      "Bash(ls /c/Users/diopb/dev/sirius/frontend/node_modules/.bin/react-scripts*)"
+    ]
+  }
+}

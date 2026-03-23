@@ -124,6 +124,15 @@ export const API_ENDPOINTS = {
     acceptInvitation: (id: string) =>
       `${API_BASE_URL}/api/organizations/${id}/accept-invitation`,
   },
+
+  // Utilisateurs
+  users: {
+    list: `${API_BASE_URL}/api/users`,
+    byId: (id: string) => `${API_BASE_URL}/api/users/${id}`,
+    create: `${API_BASE_URL}/api/users`,
+    update: (id: string) => `${API_BASE_URL}/api/users/${id}`,
+    delete: (id: string) => `${API_BASE_URL}/api/users/${id}`, // Uses deactivate endpoint
+  },
 } as const;
 
 /**
