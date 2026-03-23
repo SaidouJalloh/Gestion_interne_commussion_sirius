@@ -1,17 +1,16 @@
 import { useState, useEffect } from 'react';
-import { User, Shield, Bell, LogOut, Loader2, Save, Upload, Trash2, Camera } from 'lucide-react';
+import { User, Shield, Bell, LogOut, Loader2, Save, Camera } from 'lucide-react';
 import { useProfileContext } from '../../context/ProfileContext';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-hot-toast';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../../lib/supabaseClient';
 import { useTheme } from '../../context/ThemeContext';
 
 export default function UserProfile() {
-    const { profile, fetchProfile } = useProfileContext();
+    const { profile, refresh } = useProfileContext();
     const { user, signOut } = useAuth();
     const { darkMode, toggleTheme } = useTheme();
 
-    const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
     // Form inputs
@@ -21,7 +20,7 @@ export default function UserProfile() {
     const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || '');
 
     // Preferences
-    const rawPreferences = typeof profile?.preferences === 'object' && profile?.preferences !== null ? profile.preferences : {};
+    const rawPreferences = typeof (profile as any)?.preferences === 'object' && (profile as any)?.preferences !== null ? (profile as any).preferences : {};
     const [emailNotifications, setEmailNotifications] = useState<boolean>(
         (rawPreferences as any).emailNotifications ?? true
     );
@@ -40,7 +39,7 @@ export default function UserProfile() {
             setPrenom(profile.prenom || '');
             setTelephone(profile.telephone || '');
             setAvatarUrl(profile.avatar_url || '');
-            const raw = typeof profile.preferences === 'object' && profile.preferences !== null ? profile.preferences : {};
+            const raw = typeof (profile as any).preferences === 'object' && (profile as any).preferences !== null ? (profile as any).preferences : {};
             setEmailNotifications((raw as any).emailNotifications ?? true);
             setPushNotifications((raw as any).pushNotifications ?? false);
         }
@@ -53,7 +52,8 @@ export default function UserProfile() {
             const token = tokenResponse.data.session?.access_token;
             if (!token) throw new Error("Non authentifié");
 
-            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/users/me`, {
+            const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:4000';
+            const res = await fetch(`${baseUrl}/api/users/me`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -76,7 +76,7 @@ export default function UserProfile() {
             if (!data.success) throw new Error(data.message);
 
             toast.success("Profil mis à jour avec succès");
-            fetchProfile(); // refresh context
+            refresh(); // refresh context
         } catch (error: any) {
             console.error(error);
             toast.error(error.message || "Erreur lors de la mise à jour du profil");

@@ -1,6 +1,6 @@
 // Admin Clients Page
 import { useCallback, useMemo, useRef, useState, useEffect } from 'react';
-import { Users, User, Building2, Search, Filter, Mail, Phone, MapPin, Edit2, Trash2, Plus, X, AlertTriangle, CheckCircle2, Save } from 'lucide-react';
+import { Users, User, Building2, Search, Filter, Mail, Phone, MapPin, Edit2, Trash2, Plus, X, AlertTriangle, Save } from 'lucide-react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useProfileContext } from '../../context/ProfileContext';

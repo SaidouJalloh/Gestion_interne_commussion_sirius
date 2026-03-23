@@ -8,7 +8,6 @@ import { useProfileContext } from '../../context/ProfileContext';
 import { useTheme } from '../../context/ThemeContext';
 import { NotificationBell } from './notifications/NotificationBell';
 // import NotificationBell from './notifications/NotificationBell';
-import { OrganizationSelector } from '../../components/OrganizationSelector';
 
 import GlobalSearch from './GlobalSearch';
 import Footer from './Footer';
@@ -109,27 +108,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     }, [profile, allMenuItems]);
 
     const isActive = (path: string) => location.pathname === path;
-
-    // Badge de rôle avec couleurs
-    const getRoleBadge = () => {
-        if (!profile) return null;
-
-        const roleConfig = {
-            superadmin: { label: 'Super Admin', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' },
-            admin: { label: 'Admin', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
-            gestionnaire: { label: 'Gestionnaire', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' },
-            user: { label: 'Utilisateur', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' }
-        };
-
-        const key = (profile.role ?? 'user') as keyof typeof roleConfig;
-        const config = roleConfig[key] || roleConfig.user;
-
-        return (
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${config.color}`}>
-                {config.label}
-            </span>
-        );
-    };
 
     return (
         <div className="flex h-screen bg-[#f8fafc] dark:bg-[#0B0C10] transition-colors">
@@ -284,16 +262,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                                             >
                                                 <UserCog className="w-4 h-4" />
                                                 Mon Profil
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    setIsProfileMenuOpen(false);
-                                                    navigate('/org/parametres');
-                                                }}
-                                                className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 flex items-center gap-2 transition-colors"
-                                            >
-                                                <Settings className="w-4 h-4" />
-                                                Paramètres d'Organisation
                                             </button>
                                         </div>
                                         <div className="py-2 border-t border-slate-100 dark:border-white/10">

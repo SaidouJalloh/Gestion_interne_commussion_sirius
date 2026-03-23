@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { ChangeEvent, FormEvent } from 'react';
+import type { ChangeEvent } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useOrganization } from '../../context/OrganizationContext';
 import { exportDashboardPDF, exportDashboardExcel, exportClientsExcel, exportContratsExcel } from '../utils/exportUtils';
 import { API_ENDPOINTS } from '../../config/api';
 import { apiRequest } from '../utils/apiClient';
-import { Building2, Settings, Download, Shield, Bell, Users, Save, Loader2, Camera, Percent, DollarSign, Clock, Mail } from 'lucide-react';
+import { Building2, Download, Shield, Bell, Save, Loader2, Camera, Percent, Mail } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 export default function Parametres() {
@@ -84,7 +84,7 @@ export default function Parametres() {
             const token = tokenResponse.data.session?.access_token;
             if (!token) throw new Error("Non authentifié");
 
-            const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:4000';
             const res = await fetch(`${baseUrl}/api/organizations/${currentOrganization.id}`, {
                 method: 'PATCH',
                 headers: {
@@ -160,8 +160,8 @@ export default function Parametres() {
             const clients = Array.isArray(clientsAll) ? clientsAll : [];
             const contratsArr = Array.isArray(contratsAll) ? contratsAll : [];
             const contratsActifs = contratsArr.filter((c: any) => c?.statut === 'actif');
-            const paiements = Array.isArray(paiementsAll) ? paiementsAll : [];
-            const compagnies = Array.isArray(compagniesAll) ? compagniesAll : [];
+            // const paiements = Array.isArray(paiementsAll) ? paiementsAll : [];
+            // const compagnies = Array.isArray(compagniesAll) ? compagniesAll : [];
 
             // ... Logique d'aggrégation omise pour la brièveté, mais fonctionnelle ...
             const dashboardStats = {

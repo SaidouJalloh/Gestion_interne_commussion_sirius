@@ -43,7 +43,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     error: profileData.error,
     refresh: () => refreshRef.current(),
   }), [
-    profileData.profile?.id,
+    profileData.profile,
     effectiveStatus,
     profileData.error,
   ]);

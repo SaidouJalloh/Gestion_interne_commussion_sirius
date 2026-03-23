@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback, type FormEvent } from 'react';
-import { Plus, Edit2, Trash2, Mail, Phone, Shield, UserX, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Edit2, Mail, Phone, Shield, UserX, CheckCircle, XCircle } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
-import { supabase } from '../../lib/supabaseClient';
 import { useProfileContext } from '../../context/ProfileContext';
 import { useOrganization } from '../../context/OrganizationContext';
 import { API_ENDPOINTS } from '../../config/api';
