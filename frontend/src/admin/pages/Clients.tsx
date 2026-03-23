@@ -1,5 +1,6 @@
 // Admin Clients Page
 import { useCallback, useMemo, useRef, useState, useEffect } from 'react';
+import { Users, User, Building2, Search, Filter, Mail, Phone, MapPin, Edit2, Trash2, Plus, X, AlertTriangle, CheckCircle2, Save } from 'lucide-react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useProfileContext } from '../../context/ProfileContext';
@@ -244,86 +245,77 @@ export default function Clients() {
             <div className="mb-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900 mb-2">👥 Clients</h1>
-                        <p className="text-gray-600">Gérez votre portefeuille clients</p>
+                        <h1 className="text-3xl font-bold font-title text-slate-900 mb-2">Clients</h1>
+                        <p className="text-slate-500 text-sm">Gérez votre portefeuille clients</p>
                     </div>
                     <button
                         onClick={handleAdd}
-                        className="px-6 py-3 bg-primary-600 text-white rounded-lg hover-lift flex items-center gap-2 font-medium"
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2 font-medium text-sm"
                     >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
+                        <Plus className="w-4 h-4" />
                         Nouveau client
-                        <span className="hidden sm:inline text-xs opacity-75">(Ctrl+N)</span>
+                        <span className="hidden sm:inline text-xs opacity-75 font-normal">(Ctrl+N)</span>
                     </button>
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                    <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-lg hover-lift">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
+                    <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-blue-100 text-sm font-medium">Total Clients</p>
-                                <p className="text-3xl font-bold mt-1">{stats.total}</p>
+                                <p className="text-blue-100 text-sm font-medium uppercase tracking-wider">Total Clients</p>
+                                <p className="text-4xl font-mono font-bold mt-2">{stats.total}</p>
                             </div>
-                            <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center text-2xl">
-                                👥
-                            </div>
+                            <Users className="w-10 h-10 opacity-80" />
                         </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl shadow-lg hover-lift">
+                    <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-green-100 text-sm font-medium">Particuliers</p>
-                                <p className="text-3xl font-bold mt-1">{stats.particuliers}</p>
+                                <p className="text-emerald-100 text-sm font-medium uppercase tracking-wider">Particuliers</p>
+                                <p className="text-4xl font-mono font-bold mt-2">{stats.particuliers}</p>
                             </div>
-                            <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center text-2xl">
-                                👤
-                            </div>
+                            <User className="w-10 h-10 opacity-80" />
                         </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-xl shadow-lg hover-lift">
+                    <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-purple-100 text-sm font-medium">Entreprises</p>
-                                <p className="text-3xl font-bold mt-1">{stats.entreprises}</p>
+                                <p className="text-purple-100 text-sm font-medium uppercase tracking-wider">Entreprises</p>
+                                <p className="text-4xl font-mono font-bold mt-2">{stats.entreprises}</p>
                             </div>
-                            <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center text-2xl">
-                                🏢
-                            </div>
+                            <Building2 className="w-10 h-10 opacity-80" />
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Filtres */}
-            <div className="bg-white rounded-xl shadow-soft p-4 mb-6">
-                <div className="flex flex-col sm:flex-row gap-4">
-                    <div className="flex-1 relative">
-                        <input
-                            ref={searchRef}
-                            type="text"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            placeholder="Rechercher un client... (Appuyez sur /)"
-                            className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
-                        />
-                        <svg className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </div>
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                <div className="flex-1 relative">
+                    <input
+                        ref={searchRef}
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Rechercher un client... (Appuyez sur /)"
+                        className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white shadow-sm font-medium text-slate-700"
+                    />
+                    <Search className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                </div>
+                <div className="relative">
                     <select
                         value={filterType}
                         onChange={(e) => setFilterType(e.target.value)}
-                        className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
+                        className="appearance-none pl-10 pr-10 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white shadow-sm text-slate-700 font-medium whitespace-nowrap cursor-pointer"
                     >
                         <option value="all">Tous les types</option>
                         <option value="particulier">Particuliers</option>
                         <option value="entreprise">Entreprises</option>
                     </select>
+                    <Filter className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
             </div>
 
@@ -333,25 +325,23 @@ export default function Clients() {
                     {[...Array(6)].map((_, i) => <CardSkeleton key={i} />)}
                 </div>
             ) : filteredClients.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-xl shadow-soft">
-                    <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    <p className="text-gray-500 text-lg font-medium">Aucun client trouvé</p>
+                <div className="text-center py-12 bg-white rounded-2xl shadow-sm border border-slate-100">
+                    <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-slate-300" />
+                    <p className="text-slate-500 text-lg font-medium">Aucun client trouvé</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredClients.map((client) => (
-                        <div key={client.id} className="bg-white rounded-xl shadow-soft p-6 hover-lift">
+                        <div key={client.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover-lift hover:shadow-md transition-all">
                             <div className="flex items-start justify-between mb-4">
                                 <div className="flex items-center gap-3">
-                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl ${client.type_client === 'entreprise' ? 'bg-purple-100' : 'bg-blue-100'
+                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${client.type_client === 'entreprise' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'
                                         }`}>
-                                        {client.type_client === 'entreprise' ? '🏢' : '👤'}
+                                        {client.type_client === 'entreprise' ? <Building2 className="w-6 h-6" /> : <User className="w-6 h-6" />}
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-gray-900">{client.nom} {client.prenom}</h3>
-                                        <span className={`text-xs px-2 py-0.5 rounded-full ${client.type_client === 'entreprise'
+                                        <h3 className="font-bold font-title text-slate-900">{client.nom} {client.prenom}</h3>
+                                        <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded-md mt-1 inline-block ${client.type_client === 'entreprise'
                                             ? 'bg-purple-100 text-purple-700'
                                             : 'bg-blue-100 text-blue-700'
                                             }`}>
@@ -363,47 +353,39 @@ export default function Clients() {
 
                             <div className="space-y-2 mb-4">
                                 {client.email && (
-                                    <p className="text-sm text-gray-600 flex items-center gap-2">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                        </svg>
+                                    <p className="text-sm text-slate-600 flex items-center gap-2">
+                                        <Mail className="w-4 h-4 text-slate-400" />
                                         {client.email}
                                     </p>
                                 )}
                                 {client.telephone && (
-                                    <p className="text-sm text-gray-600 flex items-center gap-2">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                        </svg>
+                                    <p className="text-sm text-slate-600 flex items-center gap-2">
+                                        <Phone className="w-4 h-4 text-slate-400" />
                                         {client.telephone}
                                     </p>
                                 )}
                                 {client.ville && (
-                                    <p className="text-sm text-gray-600 flex items-center gap-2">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
+                                    <p className="text-sm text-slate-600 flex items-center gap-2">
+                                        <MapPin className="w-4 h-4 text-slate-400" />
                                         {client.ville}
                                     </p>
                                 )}
                             </div>
 
-                            <div className="flex gap-2 pt-4 border-t">
+                            <div className="flex gap-2 pt-4 border-t border-slate-100 mt-4">
                                 <button
                                     onClick={() => handleEdit(client)}
-                                    className="flex-1 px-4 py-2 bg-primary-50 text-primary-600 rounded-lg hover:bg-primary-100 font-medium transition-colors"
+                                    className="flex-1 px-4 py-2 bg-slate-50 text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-100 font-medium transition-colors flex items-center justify-center gap-2 text-sm"
                                 >
+                                    <Edit2 className="w-4 h-4" />
                                     Modifier
                                 </button>
                                 {isAdmin && (
                                     <button
                                         onClick={() => setDeleteConfirm(client.id)}
-                                        className="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 font-medium transition-colors"
+                                        className="px-4 py-2 bg-red-50 text-red-600 border border-transparent rounded-lg hover:bg-red-100 font-medium transition-colors flex items-center justify-center p-2"
                                     >
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
+                                        <Trash2 className="w-4 h-4" />
                                     </button>
                                 )}
                             </div>
@@ -414,14 +396,12 @@ export default function Clients() {
 
             {/* Modal Formulaire */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in">
-                    <div className="bg-white rounded-xl shadow-strong max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-scale-in">
-                        <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center z-10">
-                            <h2 className="text-xl font-bold">{selectedClient ? 'Modifier' : 'Nouveau'} client</h2>
-                            <button onClick={closeModal} className="p-2 hover:bg-gray-100 rounded-lg">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+                    <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-scale-in border border-slate-100">
+                        <div className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-slate-100 px-6 py-4 flex justify-between items-center z-10">
+                            <h2 className="text-xl font-semibold font-title text-slate-900">{selectedClient ? 'Modifier' : 'Nouveau'} client</h2>
+                            <button onClick={closeModal} className="p-2 hover:bg-slate-100 text-slate-500 rounded-xl transition-colors">
+                                <X className="w-5 h-5" />
                             </button>
                         </div>
 
@@ -439,19 +419,19 @@ export default function Clients() {
                                     <button
                                         type="button"
                                         onClick={() => handleTypeChange('particulier')}
-                                        className={`p-4 border-2 rounded-lg transition-all ${formData.type_client === 'particulier'
-                                            ? 'border-primary-500 bg-primary-50'
-                                            : 'border-gray-200 hover:border-primary-300'
+                                        className={`p-4 border-2 rounded-xl transition-all text-left ${formData.type_client === 'particulier'
+                                            ? 'border-blue-500 bg-blue-50/50'
+                                            : 'border-slate-200 hover:border-blue-300 bg-white'
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${formData.type_client === 'particulier' ? 'bg-primary-100' : 'bg-gray-100'
+                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${formData.type_client === 'particulier' ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500'
                                                 }`}>
-                                                👤
+                                                <User className="w-5 h-5" />
                                             </div>
-                                            <div className="text-left">
-                                                <p className="font-semibold">Particulier</p>
-                                                <p className="text-xs text-gray-500">Personne physique</p>
+                                            <div>
+                                                <p className="font-semibold text-slate-900 text-sm">Particulier</p>
+                                                <p className="text-xs text-slate-500 mt-0.5">Personne physique</p>
                                             </div>
                                         </div>
                                     </button>
@@ -459,19 +439,19 @@ export default function Clients() {
                                     <button
                                         type="button"
                                         onClick={() => handleTypeChange('entreprise')}
-                                        className={`p-4 border-2 rounded-lg transition-all ${formData.type_client === 'entreprise'
-                                            ? 'border-primary-500 bg-primary-50'
-                                            : 'border-gray-200 hover:border-primary-300'
+                                        className={`p-4 border-2 rounded-xl transition-all text-left ${formData.type_client === 'entreprise'
+                                            ? 'border-purple-500 bg-purple-50/50'
+                                            : 'border-slate-200 hover:border-purple-300 bg-white'
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${formData.type_client === 'entreprise' ? 'bg-primary-100' : 'bg-gray-100'
+                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${formData.type_client === 'entreprise' ? 'bg-purple-100 text-purple-600' : 'bg-slate-100 text-slate-500'
                                                 }`}>
-                                                🏢
+                                                <Building2 className="w-5 h-5" />
                                             </div>
-                                            <div className="text-left">
-                                                <p className="font-semibold">Entreprise</p>
-                                                <p className="text-xs text-gray-500">Personne morale</p>
+                                            <div>
+                                                <p className="font-semibold text-slate-900 text-sm">Entreprise</p>
+                                                <p className="text-xs text-slate-500 mt-0.5">Personne morale</p>
                                             </div>
                                         </div>
                                     </button>
@@ -495,7 +475,7 @@ export default function Clients() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium mb-2">
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">
                                         Prénom <span className="text-red-500">*</span>
                                     </label>
                                     <input
@@ -503,7 +483,7 @@ export default function Clients() {
                                         name="prenom"
                                         value={formData.prenom}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
+                                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
                                         required
                                         placeholder="Jean"
                                     />
@@ -513,24 +493,24 @@ export default function Clients() {
                             {/* Email & Téléphone */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium mb-2">Email</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
                                     <input
                                         type="email"
                                         name="email"
                                         value={formData.email}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
+                                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
                                         placeholder="jean.dupont@email.com"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium mb-2">Téléphone</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Téléphone</label>
                                     <input
                                         type="tel"
                                         name="telephone"
                                         value={formData.telephone}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
+                                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
                                         placeholder="+221 77 123 45 67"
                                     />
                                 </div>
@@ -538,13 +518,13 @@ export default function Clients() {
 
                             {/* Adresse */}
                             <div>
-                                <label className="block text-sm font-medium mb-2">Adresse</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">Adresse</label>
                                 <input
                                     type="text"
                                     name="adresse"
                                     value={formData.adresse}
                                     onChange={handleChange}
-                                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
+                                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
                                     placeholder="123 Rue de la Paix"
                                 />
                             </div>
@@ -552,24 +532,24 @@ export default function Clients() {
                             {/* Ville & Code Postal */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium mb-2">Ville</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Ville</label>
                                     <input
                                         type="text"
                                         name="ville"
                                         value={formData.ville}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
+                                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
                                         placeholder="Dakar"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium mb-2">Code postal</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Code postal</label>
                                     <input
                                         type="text"
                                         name="code_postal"
                                         value={formData.code_postal}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
+                                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
                                         placeholder="10000"
                                     />
                                 </div>
@@ -577,23 +557,23 @@ export default function Clients() {
 
                             {/* Notes */}
                             <div>
-                                <label className="block text-sm font-medium mb-2">Notes</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-2">Notes</label>
                                 <textarea
                                     name="notes"
                                     value={formData.notes}
                                     onChange={handleChange}
                                     rows={3}
-                                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none resize-none transition-all"
+                                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none transition-all text-sm"
                                     placeholder="Informations complémentaires..."
                                 />
                             </div>
 
                             {/* Actions */}
-                            <div className="flex gap-3 pt-4 border-t">
+                            <div className="flex gap-3 pt-6 border-t border-slate-100">
                                 <button
                                     type="button"
                                     onClick={closeModal}
-                                    className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                                    className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 font-medium transition-colors"
                                     disabled={formLoading}
                                 >
                                     Annuler
@@ -601,7 +581,7 @@ export default function Clients() {
                                 <button
                                     type="submit"
                                     disabled={formLoading}
-                                    className="flex-1 px-4 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
+                                    className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium disabled:opacity-50 flex items-center justify-center gap-2 transition-colors shadow-sm"
                                 >
                                     {formLoading ? (
                                         <>
@@ -610,9 +590,7 @@ export default function Clients() {
                                         </>
                                     ) : (
                                         <>
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                            </svg>
+                                            <Save className="w-5 h-5" />
                                             {selectedClient ? 'Mettre à jour' : 'Créer'}
                                         </>
                                     )}
@@ -625,29 +603,27 @@ export default function Clients() {
 
             {/* Modal Confirmation Suppression */}
             {deleteConfirm && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in">
-                    <div className="bg-white rounded-xl shadow-strong max-w-md w-full p-6 animate-scale-in">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 animate-scale-in border border-slate-100">
+                        <div className="flex items-start gap-4 mb-6">
+                            <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center flex-shrink-0 border border-red-100">
+                                <AlertTriangle className="w-6 h-6 text-red-600" />
                             </div>
-                            <div>
-                                <h3 className="text-lg font-bold text-gray-900">Confirmer la suppression</h3>
-                                <p className="text-sm text-gray-600">Cette action est irréversible</p>
+                            <div className="pt-1">
+                                <h3 className="text-lg font-bold font-title text-slate-900">Confirmer la suppression</h3>
+                                <p className="text-sm text-slate-500 mt-1">Cette action est irréversible et supprimera toutes les données.</p>
                             </div>
                         </div>
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setDeleteConfirm(null)}
-                                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                                className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 font-medium transition-colors"
                             >
                                 Annuler
                             </button>
                             <button
                                 onClick={() => handleDelete(deleteConfirm)}
-                                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors"
+                                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 font-medium transition-colors shadow-sm"
                             >
                                 Supprimer
                             </button>

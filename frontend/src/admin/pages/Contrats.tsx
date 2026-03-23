@@ -1,6 +1,13 @@
 // code avec incorporation
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import toast from 'react-hot-toast';
+import { 
+    FileText, 
+    CheckCircle2, 
+    Banknote, 
+    TrendingUp, 
+    Plus
+} from 'lucide-react';
 import { useProfileContext } from '../../context/ProfileContext';
 import { useDebounce } from '../hooks/useDebounce';
 import { useKeyboard } from '../hooks/useKeyboard';
@@ -375,59 +382,57 @@ export default function Contrats() {
             <div className="mb-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900 mb-2">📋 Contrats</h1>
-                        <p className="text-gray-600">Gérez vos contrats d'assurance</p>
+                        <h1 className="text-3xl font-bold font-title text-slate-900 mb-2">Contrats</h1>
+                        <p className="text-slate-500 text-sm">Gérez vos contrats d'assurance</p>
                     </div>
                     <button
                         onClick={handleAdd}
-                        className="px-6 py-3 bg-primary-600 text-white rounded-lg hover-lift flex items-center gap-2 font-medium"
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2 font-medium text-sm"
                     >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
+                        <Plus className="w-4 h-4" />
                         Nouveau contrat
-                        <span className="hidden sm:inline text-xs opacity-75">(Ctrl+N)</span>
+                        <span className="hidden sm:inline text-xs opacity-75 font-normal">(Ctrl+N)</span>
                     </button>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-lg hover-lift">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                    <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-blue-100 text-sm font-medium">Total Contrats</p>
-                                <p className="text-3xl font-bold mt-1">{stats.total}</p>
+                                <p className="text-blue-100 text-sm font-medium uppercase tracking-wider">Total Contrats</p>
+                                <p className="text-4xl font-mono font-bold mt-2">{stats.total}</p>
                             </div>
-                            <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center text-2xl">📋</div>
+                            <FileText className="w-10 h-10 opacity-80" />
                         </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl shadow-lg hover-lift">
+                    <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-green-100 text-sm font-medium">Actifs</p>
-                                <p className="text-3xl font-bold mt-1">{stats.actifs}</p>
+                                <p className="text-emerald-100 text-sm font-medium uppercase tracking-wider">Actifs</p>
+                                <p className="text-4xl font-mono font-bold mt-2">{stats.actifs}</p>
                             </div>
-                            <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center text-2xl">✅</div>
+                            <CheckCircle2 className="w-10 h-10 opacity-80" />
                         </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-xl shadow-lg hover-lift">
+                    <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-purple-100 text-sm font-medium">Total Primes TTC</p>
-                                <p className="text-2xl font-bold mt-1">{stats.totalPrimes.toLocaleString()} FCFA</p>
+                                <p className="text-purple-100 text-sm font-medium uppercase tracking-wider">Total Primes TTC</p>
+                                <p className="text-2xl font-mono font-bold mt-2">{stats.totalPrimes.toLocaleString()} FCFA</p>
                             </div>
-                            <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center text-2xl">💰</div>
+                            <Banknote className="w-10 h-10 opacity-80" />
                         </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-6 rounded-xl shadow-lg hover-lift">
+                    <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-orange-100 text-sm font-medium">Total Commissions</p>
-                                <p className="text-2xl font-bold mt-1">{stats.totalCommissions.toLocaleString()} FCFA</p>
+                                <p className="text-orange-100 text-sm font-medium uppercase tracking-wider">Total Commissions</p>
+                                <p className="text-2xl font-mono font-bold mt-2">{stats.totalCommissions.toLocaleString()} FCFA</p>
                             </div>
-                            <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center text-2xl">💵</div>
+                            <TrendingUp className="w-10 h-10 opacity-80" />
                         </div>
                     </div>
                 </div>

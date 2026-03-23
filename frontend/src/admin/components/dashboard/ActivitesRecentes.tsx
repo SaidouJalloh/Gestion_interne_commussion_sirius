@@ -29,13 +29,13 @@ export const ActivitesRecentes = ({ activites }: { activites: Activites }) => {
     return (
         <div className="grid lg:grid-cols-3 gap-6">
             {/* Derniers contrats */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft p-6">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Derniers contrats</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 p-6">
+                <h2 className="text-lg font-semibold font-title text-slate-800 dark:text-white mb-4">Derniers contrats</h2>
                 <div className="space-y-3">
                     {activites.derniers_contrats.map((contrat) => (
                         <div
                             key={contrat.id}
-                            className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors cursor-pointer"
+                            className="p-3 bg-slate-50 dark:bg-gray-700/50 rounded-xl border border-transparent hover:border-slate-200 dark:hover:border-gray-600 transition-colors cursor-pointer"
                             onClick={() => navigate('/org/contrats')}
                         >
                             <div className="flex items-center gap-2 mb-1">
@@ -61,13 +61,13 @@ export const ActivitesRecentes = ({ activites }: { activites: Activites }) => {
             </div>
 
             {/* Derniers paiements */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft p-6">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Derniers paiements</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 p-6">
+                <h2 className="text-lg font-semibold font-title text-slate-800 dark:text-white mb-4">Derniers paiements</h2>
                 <div className="space-y-3">
                     {activites.derniers_paiements.map((paiement) => (
                         <div
                             key={paiement.id}
-                            className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors cursor-pointer"
+                            className="p-3 bg-slate-50 dark:bg-gray-700/50 rounded-xl border border-transparent hover:border-slate-200 dark:hover:border-gray-600 transition-colors cursor-pointer"
                             onClick={() => navigate('/org/paiements')}
                         >
                             <p className="font-medium text-gray-900 dark:text-white text-sm">
@@ -85,14 +85,14 @@ export const ActivitesRecentes = ({ activites }: { activites: Activites }) => {
             </div>
 
             {/* Contrats expirants */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft p-6">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Contrats à renouveler</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 p-6">
+                <h2 className="text-lg font-semibold font-title text-slate-800 dark:text-white mb-4">Contrats à renouveler</h2>
                 <div className="space-y-3">
                     {activites.contrats_expirants.length > 0 ? (
                         activites.contrats_expirants.map((contrat) => (
                             <div
                                 key={contrat.id}
-                                className="p-3 bg-warning-50 dark:bg-warning-900 rounded-lg hover:bg-warning-100 dark:hover:bg-warning-800 transition-colors cursor-pointer"
+                                className="p-3 bg-red-50 dark:bg-red-900/30 rounded-xl border border-red-100 dark:border-red-900/50 hover:border-red-200 dark:hover:border-red-800 transition-colors cursor-pointer"
                                 onClick={() => navigate('/org/contrats')}
                             >
                                 <p className="font-medium text-gray-900 dark:text-white text-sm">

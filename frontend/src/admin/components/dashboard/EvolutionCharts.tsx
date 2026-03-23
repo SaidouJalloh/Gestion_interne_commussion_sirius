@@ -10,8 +10,8 @@ export const EvolutionCharts = ({ graphiques }: { graphiques: any }) => {
     return (
         <div className="grid lg:grid-cols-2 gap-6">
             {/* Évolution clients */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft p-6">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 p-6">
+                <h2 className="text-lg font-semibold font-title text-slate-800 dark:text-white mb-4">
                     Évolution des clients (6 mois)
                 </h2>
                 <div className="space-y-3">
@@ -33,8 +33,8 @@ export const EvolutionCharts = ({ graphiques }: { graphiques: any }) => {
             </div>
 
             {/* Évolution commissions */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft p-6">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 p-6">
+                <h2 className="text-lg font-semibold font-title text-slate-800 dark:text-white mb-4">
                     Évolution commissions (6 mois)
                 </h2>
                 <div className="space-y-3">

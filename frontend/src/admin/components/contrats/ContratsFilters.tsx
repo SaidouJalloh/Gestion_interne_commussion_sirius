@@ -1,6 +1,7 @@
 // src/components/contrats/ContratsFilters.tsx
 
 import type { Dispatch, RefObject, SetStateAction } from 'react';
+import { Search, Filter } from 'lucide-react';
 
 type ContratsFiltersProps = {
     searchTerm: string;
@@ -18,31 +19,30 @@ export const ContratsFilters = ({
     searchRef,
 }: ContratsFiltersProps) => {
     return (
-        <div className="bg-white rounded-xl shadow-soft p-4 mb-6">
-            <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1 relative">
-                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <input
-                        ref={searchRef}
-                        type="text"
-                        placeholder="Rechercher un contrat..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                    />
-                </div>
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="flex-1 relative">
+                <input
+                    ref={searchRef}
+                    type="text"
+                    placeholder="Rechercher un contrat..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white shadow-sm font-medium text-slate-700"
+                />
+                <Search className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            </div>
+            <div className="relative">
                 <select
                     value={filterStatut}
                     onChange={(e) => setFilterStatut(e.target.value)}
-                    className="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none bg-white"
+                    className="appearance-none pl-10 pr-10 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white shadow-sm text-slate-700 font-medium whitespace-nowrap cursor-pointer"
                 >
                     <option value="all">Tous les statuts</option>
                     <option value="actif">Actifs</option>
                     <option value="expiré">Expirés</option>
                     <option value="annulé">Annulés</option>
                 </select>
+                <Filter className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
         </div>
     );

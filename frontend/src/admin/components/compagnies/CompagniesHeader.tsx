@@ -1,4 +1,5 @@
 import type { FC } from 'react';
+import { Plus } from 'lucide-react';
 
 type CompagniesHeaderProps = {
   count: number;
@@ -24,21 +25,9 @@ export const CompagniesHeader: FC<CompagniesHeaderProps> = ({
         <button
           onClick={onAdd}
           type="button"
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors shadow-soft"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-all shadow-sm hover:shadow-md"
         >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
+          <Plus className="w-5 h-5" />
           Ajouter une compagnie
         </button>
       </div>

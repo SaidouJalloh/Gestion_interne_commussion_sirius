@@ -11,15 +11,15 @@ type CompanyPerf = {
 
 export const PerformanceCompagnies = ({ compagnies }: { compagnies: CompanyPerf[] }) => {
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft p-6">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 p-6">
+            <h2 className="text-lg font-semibold font-title text-slate-800 dark:text-white mb-4">
                 Performance par compagnie
             </h2>
             <div className="space-y-4">
                 {compagnies.map((comp, index) => (
                     <div
                         key={index}
-                        className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                        className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-gray-700/50 rounded-xl border border-transparent"
                     >
                         <div
                             className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0 ${index === 0 ? 'bg-yellow-500' :

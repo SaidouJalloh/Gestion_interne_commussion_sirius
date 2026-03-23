@@ -1,5 +1,6 @@
 import type { FC } from 'react';
 import { useState, useEffect } from 'react';
+import { X, AlertTriangle, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { isSanteType, normalizeTypeName } from '../../utils/compagnieHelpers';
 import { useCompagniesMutations } from '../../hooks/useCompagniesMutations';
@@ -273,33 +274,21 @@ export const TauxModal: FC<TauxModalProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in">
-            <div className="bg-white rounded-xl shadow-strong max-w-4xl w-full max-h-[85vh] overflow-hidden animate-scale-in flex flex-col">
-                <div className="border-b px-6 py-4 flex justify-between items-center bg-gradient-to-r from-primary-50 to-primary-100">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+            <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[85vh] overflow-hidden animate-scale-in flex flex-col border border-slate-100">
+                <div className="border-b border-slate-100 px-6 py-4 flex justify-between items-center bg-white">
                     <div className="flex items-center gap-3">
                         <div>
-                            <h2 className="text-xl font-bold text-gray-900">
+                            <h2 className="text-xl font-bold text-slate-800">
                                 {compagnie.nom}
                             </h2>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm font-medium text-slate-500">
                                 Configuration des taux de commissions
                             </p>
                         </div>
                         {hasChanges && (
-                            <span className="px-3 py-1 bg-warning-100 text-warning-700 rounded-full text-xs font-semibold flex items-center gap-1">
-                                <svg
-                                    className="w-4 h-4"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                                    />
-                                </svg>
+                            <span className="px-3 py-1 bg-amber-100/50 text-amber-700 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 border border-amber-200/50">
+                                <AlertTriangle className="w-4 h-4" />
                                 Non sauvegardé
                             </span>
                         )}
@@ -307,22 +296,10 @@ export const TauxModal: FC<TauxModalProps> = ({
                     <button
                         type="button"
                         onClick={handleClose}
-                        className="p-2 hover:bg-white rounded-lg transition-colors"
+                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
                         disabled={saving}
                     >
-                        <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M6 18L18 6M6 6l12 12"
-                            />
-                        </svg>
+                        <X className="w-5 h-5" />
                     </button>
                 </div>
 
@@ -795,23 +772,11 @@ export const TauxModal: FC<TauxModalProps> = ({
                     </div>
                 </div>
 
-                <div className="border-t px-6 py-4 bg-gray-50 flex justify-between items-center gap-3">
-                    <div className="text-sm text-gray-600">
+                <div className="border-t border-slate-100 px-6 py-4 bg-slate-50 flex justify-between items-center gap-3">
+                    <div className="text-sm font-medium text-slate-600">
                         {hasChanges && (
-                            <span className="flex items-center gap-2 text-warning-700 font-medium">
-                                <svg
-                                    className="w-5 h-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                                    />
-                                </svg>
+                            <span className="flex items-center gap-2 text-amber-600 font-bold">
+                                <AlertTriangle className="w-5 h-5" />
                                 Modifications non sauvegardées
                             </span>
                         )}
@@ -821,7 +786,7 @@ export const TauxModal: FC<TauxModalProps> = ({
                             type="button"
                             onClick={handleClose}
                             disabled={saving}
-                            className="px-5 py-2.5 border-2 border-gray-300 rounded-lg hover:bg-white font-semibold transition-colors disabled:opacity-50"
+                            className="px-5 py-2.5 border border-slate-200 text-slate-700 rounded-xl hover:bg-white font-bold transition-colors disabled:opacity-50"
                         >
                             Annuler
                         </button>
@@ -829,7 +794,7 @@ export const TauxModal: FC<TauxModalProps> = ({
                             type="button"
                             onClick={saveTaux}
                             disabled={saving || !hasChanges}
-                            className="px-5 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-semibold transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold transition-all shadow-sm hover:shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {saving ? (
                                 <>
@@ -838,19 +803,7 @@ export const TauxModal: FC<TauxModalProps> = ({
                                 </>
                             ) : (
                                 <>
-                                    <svg
-                                        className="w-5 h-5"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M5 13l4 4L19 7"
-                                        />
-                                    </svg>
+                                    <Save className="w-5 h-5" />
                                     Enregistrer
                                 </>
                             )}

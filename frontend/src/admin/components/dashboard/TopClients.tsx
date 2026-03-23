@@ -14,15 +14,15 @@ export const TopClients = ({ particuliers, entreprises }: { particuliers: TopCli
     return (
         <div className="grid lg:grid-cols-2 gap-6">
             {/* Top particuliers */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft p-6">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 p-6">
+                <h2 className="text-lg font-semibold font-title text-slate-800 dark:text-white mb-4">
                     Top clients particuliers
                 </h2>
                 <div className="space-y-3">
                     {particuliers.map((client, index) => (
                         <div
                             key={client.id}
-                            className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                            className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-gray-700/50 rounded-xl border border-transparent"
                         >
                             <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold flex-shrink-0">
                                 {index + 1}
@@ -46,15 +46,15 @@ export const TopClients = ({ particuliers, entreprises }: { particuliers: TopCli
             </div>
 
             {/* Top entreprises */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft p-6">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 p-6">
+                <h2 className="text-lg font-semibold font-title text-slate-800 dark:text-white mb-4">
                     Top clients entreprises
                 </h2>
                 <div className="space-y-3">
                     {entreprises.map((client, index) => (
                         <div
                             key={client.id}
-                            className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                            className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-gray-700/50 rounded-xl border border-transparent"
                         >
                             <div className="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold flex-shrink-0">
                                 {index + 1}

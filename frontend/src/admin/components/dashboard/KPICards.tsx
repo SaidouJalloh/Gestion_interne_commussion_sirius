@@ -1,4 +1,5 @@
 // src/components/dashboard/KPICards.jsx
+import { Users, BarChart3, CheckCircle2, Clock } from 'lucide-react';
 import { formatCurrency } from '../../utils/dashboardHelpers';
 
 type DashboardStats = {
@@ -19,37 +20,37 @@ export const KPICards = ({ stats }: { stats: DashboardStats }) => {
             titre: 'Clients totaux',
             valeur: stats.totalClients,
             subtext: `${stats.clientsParticuliers} particuliers • ${stats.clientsEntreprises} entreprises`,
-            icon: '👥',
-            color: 'from-blue-500 to-blue-600',
-            bgLight: 'bg-blue-50 dark:bg-blue-900',
-            textColor: 'text-blue-600 dark:text-blue-400'
+            icon: <Users className="w-6 h-6" />,
+            borderColor: 'border-blue-500',
+            bgIcon: 'bg-blue-50 dark:bg-blue-900',
+            iconColor: 'text-blue-600 dark:text-blue-400'
         },
         {
             titre: 'Taux de conversion',
             valeur: `${stats.tauxConversion}%`,
             subtext: `${stats.contratsActifs} contrats actifs`,
-            icon: '📊',
-            color: 'from-green-500 to-green-600',
-            bgLight: 'bg-green-50 dark:bg-green-900',
-            textColor: 'text-green-600 dark:text-green-400'
+            icon: <BarChart3 className="w-6 h-6" />,
+            borderColor: 'border-emerald-500',
+            bgIcon: 'bg-emerald-50 dark:bg-emerald-900',
+            iconColor: 'text-emerald-600 dark:text-emerald-400'
         },
         {
             titre: 'Commissions encaissées',
             valeur: formatCurrency(stats.commissionsEncaissees),
             subtext: `Sur ${formatCurrency(stats.commissionsTotal)} total`,
-            icon: '✅',
-            color: 'from-purple-500 to-purple-600',
-            bgLight: 'bg-purple-50 dark:bg-purple-900',
-            textColor: 'text-purple-600 dark:text-purple-400'
+            icon: <CheckCircle2 className="w-6 h-6" />,
+            borderColor: 'border-purple-500',
+            bgIcon: 'bg-purple-50 dark:bg-purple-900',
+            iconColor: 'text-purple-600 dark:text-purple-400'
         },
         {
             titre: 'Commissions en attente',
             valeur: formatCurrency(stats.commissionsEnAttente),
             subtext: `${stats.contratsExpirants} contrats à renouveler`,
-            icon: '⏳',
-            color: 'from-orange-500 to-orange-600',
-            bgLight: 'bg-orange-50 dark:bg-orange-900',
-            textColor: 'text-orange-600 dark:text-orange-400'
+            icon: <Clock className="w-6 h-6" />,
+            borderColor: 'border-amber-500',
+            bgIcon: 'bg-amber-50 dark:bg-amber-900',
+            iconColor: 'text-amber-600 dark:text-amber-400'
         }
     ];
 
@@ -58,18 +59,25 @@ export const KPICards = ({ stats }: { stats: DashboardStats }) => {
             {kpis.map((kpi, index) => (
                 <div
                     key={index}
-                    className="bg-white dark:bg-gray-800 rounded-xl shadow-soft overflow-hidden hover:shadow-medium transition-shadow"
+                    className={`bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow relative border-t-4 ${kpi.borderColor}`}
                 >
-                    <div className={`h-2 bg-gradient-to-r ${kpi.color}`}></div>
                     <div className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className={`w-12 h-12 rounded-lg ${kpi.bgLight} flex items-center justify-center text-2xl`}>
+                        <div className="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                                    {kpi.titre}
+                                </h3>
+                                <p className="text-3xl font-mono font-bold text-slate-900 dark:text-white">
+                                    {kpi.valeur}
+                                </p>
+                            </div>
+                            <div className={`w-12 h-12 rounded-full ${kpi.bgIcon} flex items-center justify-center ${kpi.iconColor}`}>
                                 {kpi.icon}
                             </div>
                         </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{kpi.titre}</p>
-                        <p className={`text-2xl font-bold ${kpi.textColor} mb-1`}>{kpi.valeur}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-500">{kpi.subtext}</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                            {kpi.subtext}
+                        </p>
                     </div>
                 </div>
             ))}

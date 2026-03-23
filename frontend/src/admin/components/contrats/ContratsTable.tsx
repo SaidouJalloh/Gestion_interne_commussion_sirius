@@ -663,8 +663,16 @@
 
 
 import type { SyntheticEvent } from 'react';
+import { 
+    FileText, 
+    Edit2, 
+    Trash2, 
+    CreditCard, 
+    Car, 
+    FolderPlus 
+} from 'lucide-react';
 import { peutIncorporer } from '../../utils/incorporationHelpers';
-import { getStatutBadge, isAutoContract } from '../../utils/contratHelpers'; // 👈 AJOUT de isAutoContract
+import { getStatutBadge, isAutoContract } from '../../utils/contratHelpers';
 
 type VehiculeLike = { actif?: boolean | null; immatriculation?: string | null };
 type ClientLike = { nom?: string | null; prenom?: string | null; type_client?: string | null };
@@ -719,34 +727,32 @@ export const ContratsTable = ({
 
     if (contrats.length === 0) {
         return (
-            <div className="text-center py-12">
-                <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <p className="text-gray-500 text-lg font-medium">Aucun contrat trouvé</p>
+            <div className="text-center py-12 bg-white rounded-2xl shadow-sm border border-slate-100">
+                <FileText className="w-12 h-12 mx-auto mb-4 text-slate-300" />
+                <p className="text-slate-500 text-lg font-medium">Aucun contrat trouvé</p>
             </div>
         );
     }
 
     return (
-        <div className="bg-white rounded-xl shadow-soft overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
             <div className="overflow-x-auto">
                 <table className="w-full">
-                    <thead className="bg-gray-50 border-b">
+                    <thead className="bg-slate-50/80 border-b border-slate-100">
                         <tr>
-                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Client</th>
-                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Compagnie</th>
-                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Type</th>
-                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Véhicules</th>
-                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Taux</th>
-                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Prime TTC</th>
-                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Prime Nette</th>
-                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Commission</th>
-                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Statut</th>
-                            <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase">Actions</th>
+                            <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Client</th>
+                            <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Compagnie</th>
+                            <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Type</th>
+                            <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Véhicules</th>
+                            <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Taux</th>
+                            <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Prime TTC</th>
+                            <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Prime Nette</th>
+                            <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Commission</th>
+                            <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Statut</th>
+                            <th className="px-6 py-4 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y">
+                    <tbody className="divide-y divide-slate-100">
                         {contrats.map((contrat) => {
                             const vehiculesActifs = contrat.vehicules?.filter((v) => v.actif !== false) || [];
                             const nbVehicules = vehiculesActifs.length;
@@ -788,17 +794,17 @@ export const ContratsTable = ({
                                             // Pour les contrats Auto/Moto/Flotte
                                             contrat.is_flotte ? (
                                                 <div className="flex items-center gap-2">
-                                                    <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-lg text-xs font-semibold">
-                                                        🚙 FLOTTE
+                                                    <span className="px-2 py-1 bg-orange-100/50 text-orange-700 rounded-md text-[10px] font-bold uppercase tracking-wider border border-orange-200/50">
+                                                        Flotte
                                                     </span>
-                                                    <span className="text-sm text-gray-600">
+                                                    <span className="text-xs font-medium text-slate-500">
                                                         {nbVehicules} véh.
                                                     </span>
                                                 </div>
                                             ) : (
-                                                <div className="flex items-center gap-1">
-                                                    <span className="text-lg">🚗</span>
-                                                    <span className="text-xs text-gray-500">
+                                                <div className="flex items-center gap-1.5">
+                                                    <Car className="w-4 h-4 text-slate-400" />
+                                                    <span className="text-xs font-medium text-slate-600">
                                                         {contrat.immatriculation || 'N/A'}
                                                     </span>
                                                 </div>
@@ -841,9 +847,7 @@ export const ContratsTable = ({
                                                     className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                                     title="Incorporer"
                                                 >
-                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                                    </svg>
+                                                    <FolderPlus className="w-4 h-4" />
                                                 </button>
                                             )}
 
@@ -855,44 +859,36 @@ export const ContratsTable = ({
                                                     className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
                                                     title="Gérer la flotte"
                                                 >
-                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                                                    </svg>
+                                                    <Car className="w-4 h-4" />
                                                 </button>
                                             )}
 
                                             {/* Bouton Gérer paiements */}
                                             <button
                                                 onClick={() => onOpenPaiements(contrat)}
-                                                className="p-2 text-success-600 hover:bg-success-50 rounded-lg transition-colors"
+                                                className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
                                                 title="Gérer paiements"
                                             >
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                                                </svg>
+                                                <CreditCard className="w-4 h-4" />
                                             </button>
 
                                             {/* Bouton Modifier */}
                                             <button
                                                 onClick={() => onEdit(contrat)}
-                                                className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                                 title="Modifier"
                                             >
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                </svg>
+                                                <Edit2 className="w-4 h-4" />
                                             </button>
 
                                             {/* Bouton Supprimer */}
                                             {canDelete && (
                                                 <button
                                                     onClick={() => onDelete(contrat.id)}
-                                                    className="p-2 text-danger-600 hover:bg-danger-50 rounded-lg transition-colors"
+                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                     title="Supprimer"
                                                 >
-                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                    </svg>
+                                                    <Trash2 className="w-4 h-4" />
                                                 </button>
                                             )}
                                         </div>

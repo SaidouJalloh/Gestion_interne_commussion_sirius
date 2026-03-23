@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, type FormEvent } from 'react';
+import { Plus, Edit2, Trash2, Mail, Phone, Shield, UserX, CheckCircle, XCircle } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useProfileContext } from '../../context/ProfileContext';
@@ -181,10 +182,10 @@ export default function GestionUtilisateurs() {
 
     const getRoleColor = (role: string) => {
         const colors: Record<string, string> = {
-            superadmin: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
-            admin: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-            gestionnaire: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-            user: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+            superadmin: 'bg-purple-100/50 text-purple-700 border border-purple-200/50',
+            admin: 'bg-blue-100/50 text-blue-700 border border-blue-200/50',
+            gestionnaire: 'bg-emerald-100/50 text-emerald-700 border border-emerald-200/50',
+            user: 'bg-slate-100 text-slate-700 border border-slate-200'
         };
         return colors[role] || colors.user;
     };
@@ -201,8 +202,8 @@ export default function GestionUtilisateurs() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-96">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+            <div className="flex items-center justify-center p-12 bg-white rounded-2xl shadow-sm border border-slate-100">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
         );
     }
@@ -212,122 +213,143 @@ export default function GestionUtilisateurs() {
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gestion des Utilisateurs</h1>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1">
+                    <h1 className="text-2xl font-bold text-slate-800">Gestion des Utilisateurs</h1>
+                    <p className="text-slate-500 font-medium mt-1">
                         {isSuperAdminMode
-                            ? 'Gérez les superadmins sans organisation'
-                            : `Gérez les utilisateurs de l'organisation ${currentOrganization?.name || ''}`}
+                            ? 'Gérez les superadmins de la plateforme'
+                            : `Gérez les membres de l'organisation ${currentOrganization?.name || ''}`}
                     </p>
                 </div>
                 <button
                     onClick={openCreateModal}
-                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
+                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-all shadow-sm hover:shadow-md flex items-center gap-2"
                 >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
+                    <Plus className="w-5 h-5" />
                     Nouvel utilisateur
                 </button>
             </div>
 
             {/* Tableau des utilisateurs */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead className="bg-gray-50 dark:bg-gray-700">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Utilisateur
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Email
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Rôle
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Téléphone
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Statut
-                            </th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Actions
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        {users.map((user) => (
-                            <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="flex items-center">
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold">
-                                            {user.email?.[0]?.toUpperCase()}
-                                        </div>
-                                        <div className="ml-3">
-                                            <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                                {user.nom && user.prenom ? `${user.prenom} ${user.nom}` : 'Non renseigné'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-                                    {user.email || 'N/A'}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${getRoleColor(String(user.role ?? 'user'))}`}>
-                                        {getRoleLabel(String(user.role ?? 'user'))}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-                                    {user.telephone || 'N/A'}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    {user.actif ? (
-                                        <span className="px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                            Actif
-                                        </span>
-                                    ) : (
-                                        <span className="px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                                            Inactif
-                                        </span>
-                                    )}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <button
-                                        onClick={() => openEditModal(user)}
-                                        className="text-primary-600 dark:text-primary-400 hover:text-primary-900 dark:hover:text-primary-300 mr-3"
-                                        disabled={user.id === profile?.id && user.role === 'superadmin'}
-                                    >
-                                        Modifier
-                                    </button>
-                                    <button
-                                        onClick={() => handleDeleteUser(user.id)}
-                                        className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
-                                        disabled={user.id === profile?.id}
-                                    >
-                                        Désactiver
-                                    </button>
-                                </td>
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-slate-100">
+                        <thead className="bg-slate-50/50">
+                            <tr>
+                                <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                    Utilisateur
+                                </th>
+                                <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                    Contact
+                                </th>
+                                <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                    Rôle
+                                </th>
+                                <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                    Statut
+                                </th>
+                                <th className="px-6 py-4 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                    Actions
+                                </th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-slate-100">
+                            {users.map((user) => (
+                                <tr key={user.id} className="hover:bg-slate-50/80 transition-colors group">
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold border border-blue-200">
+                                                {user.email?.[0]?.toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-slate-800">
+                                                    {user.nom && user.prenom ? `${user.prenom} ${user.nom}` : 'Utilisateur'}
+                                                </p>
+                                                <p className="text-xs text-slate-500 font-medium">Créé le {new Date(user.created_at || '').toLocaleDateString('fr-FR')}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="flex flex-col gap-1">
+                                            <div className="flex items-center gap-2 text-sm text-slate-600 font-medium">
+                                                <Mail className="w-4 h-4 text-slate-400" />
+                                                {user.email || 'N/A'}
+                                            </div>
+                                            <div className="flex items-center gap-2 text-sm text-slate-600 font-medium">
+                                                <Phone className="w-4 h-4 text-slate-400" />
+                                                {user.telephone || 'N/A'}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="flex items-center gap-2">
+                                            <Shield className={`w-4 h-4 ${user.role === 'superadmin' ? 'text-purple-500' : 'text-slate-400'}`} />
+                                            <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full ${getRoleColor(String(user.role ?? 'user'))}`}>
+                                                {getRoleLabel(String(user.role ?? 'user'))}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        {user.actif ? (
+                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full bg-emerald-100/50 text-emerald-700 border border-emerald-200/50">
+                                                <CheckCircle className="w-3.5 h-3.5" />
+                                                Actif
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                                                <XCircle className="w-3.5 h-3.5" />
+                                                Inactif
+                                            </span>
+                                        )}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button
+                                                onClick={() => openEditModal(user)}
+                                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-colors disabled:opacity-30"
+                                                disabled={user.id === profile?.id && user.role === 'superadmin'}
+                                                title="Modifier"
+                                            >
+                                                <Edit2 className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteUser(user.id)}
+                                                className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-colors disabled:opacity-30"
+                                                disabled={user.id === profile?.id}
+                                                title="Désactiver"
+                                            >
+                                                <UserX className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             {/* Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-                        <div className="p-6">
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                                {selectedUser ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur'}
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-scale-in border border-slate-100">
+                        <div className="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 flex justify-between items-center z-10">
+                            <h2 className="text-xl font-bold text-slate-800">
+                                {selectedUser ? "Modifier l'utilisateur" : 'Nouvel utilisateur'}
                             </h2>
-
+                            <button
+                                type="button"
+                                onClick={() => setShowModal(false)}
+                                className="p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-xl transition-colors"
+                            >
+                                <XCircle className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-6">
                             <form onSubmit={selectedUser ? handleUpdateUser : handleCreateUser} className="space-y-4">
                                 {/* Email */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                        Email *
+                                    <label className="block text-sm font-bold text-slate-700 mb-2">
+                                        Email <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         type="email"
@@ -335,22 +357,22 @@ export default function GestionUtilisateurs() {
                                         disabled={!!selectedUser}
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white disabled:opacity-50"
+                                        className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all shadow-sm font-medium text-slate-700 disabled:opacity-50 disabled:bg-slate-50"
                                     />
                                 </div>
 
                                 {/* Password (uniquement création) */}
                                 {!selectedUser && (
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                            Mot de passe *
+                                        <label className="block text-sm font-bold text-slate-700 mb-2">
+                                            Mot de passe <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             type="password"
                                             required
                                             value={formData.password}
                                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
+                                            className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all shadow-sm font-medium text-slate-700"
                                             placeholder="Min. 6 caractères"
                                             minLength={6}
                                         />
@@ -359,53 +381,53 @@ export default function GestionUtilisateurs() {
 
                                 {/* Nom */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    <label className="block text-sm font-bold text-slate-700 mb-2">
                                         Nom
                                     </label>
                                     <input
                                         type="text"
                                         value={formData.nom}
                                         onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
+                                        className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all shadow-sm font-medium text-slate-700"
                                     />
                                 </div>
 
                                 {/* Prénom */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    <label className="block text-sm font-bold text-slate-700 mb-2">
                                         Prénom
                                     </label>
                                     <input
                                         type="text"
                                         value={formData.prenom}
                                         onChange={(e) => setFormData({ ...formData, prenom: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
+                                        className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all shadow-sm font-medium text-slate-700"
                                     />
                                 </div>
 
                                 {/* Téléphone */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    <label className="block text-sm font-bold text-slate-700 mb-2">
                                         Téléphone
                                     </label>
                                     <input
                                         type="tel"
                                         value={formData.telephone}
                                         onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
+                                        className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all shadow-sm font-medium text-slate-700"
                                     />
                                 </div>
 
                                 {/* Rôle */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                        Rôle *
+                                    <label className="block text-sm font-bold text-slate-700 mb-2">
+                                        Rôle <span className="text-red-500">*</span>
                                     </label>
                                     <select
                                         required
                                         value={formData.role}
                                         onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
+                                        className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all shadow-sm font-medium text-slate-700 disabled:opacity-50 disabled:bg-slate-50"
                                         disabled={selectedUser?.id === profile?.id && selectedUser?.role === 'superadmin'}
                                     >
                                         <option value="user">Utilisateur</option>
@@ -418,34 +440,34 @@ export default function GestionUtilisateurs() {
                                 </div>
 
                                 {/* Statut */}
-                                <div className="flex items-center">
+                                <div className="flex items-center gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
                                     <input
                                         type="checkbox"
                                         id="actif"
                                         checked={formData.actif}
                                         onChange={(e) => setFormData({ ...formData, actif: e.target.checked })}
-                                        className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                                        className="w-5 h-5 text-blue-600 border-slate-300 rounded focus:ring-blue-500 transition-colors"
                                         disabled={selectedUser?.id === profile?.id}
                                     />
-                                    <label htmlFor="actif" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                                        Utilisateur actif
+                                    <label htmlFor="actif" className="text-sm font-bold text-slate-700">
+                                        Compte utilisateur actif
                                     </label>
                                 </div>
 
                                 {/* Boutons */}
-                                <div className="flex gap-3 pt-4">
+                                <div className="flex gap-3 pt-6 border-t border-slate-100">
                                     <button
                                         type="button"
                                         onClick={() => setShowModal(false)}
-                                        className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
+                                        className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 font-bold transition-colors"
                                     >
                                         Annuler
                                     </button>
                                     <button
                                         type="submit"
-                                        className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                                        className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold shadow-sm hover:shadow-md transition-all"
                                     >
-                                        {selectedUser ? 'Modifier' : 'Créer'}
+                                        {selectedUser ? 'Enregistrer les modifications' : 'Créer l\'utilisateur'}
                                     </button>
                                 </div>
                             </form>

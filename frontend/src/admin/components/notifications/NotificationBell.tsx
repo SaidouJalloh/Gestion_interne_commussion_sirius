@@ -1,5 +1,6 @@
 // src/components/notifications/NotificationBell.jsx
 import { useEffect, useRef, useState } from 'react';
+import { Bell } from 'lucide-react';
 import { useNotifications } from '../../hooks/useNotifications';
 import { NotificationItem } from './NotificationItem';
 
@@ -26,18 +27,12 @@ export const NotificationBell = () => {
             {/* Bouton cloche */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="relative p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="relative p-2.5 bg-white dark:bg-[#13151A] rounded-full hover:bg-slate-50 dark:hover:bg-white/5 transition-colors text-slate-600 dark:text-slate-300 shadow-sm border border-slate-100 dark:border-white/10"
             >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
+                <Bell className="w-4 h-4" />
 
-                {/* Badge compteur */}
-                {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-danger-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
-                        {unreadCount > 9 ? '9+' : unreadCount}
-                    </span>
-                )}
+                {/* Badge compteur (point vert pomme selon la capture) */}
+                <span className="absolute top-2 right-2.5 w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_0_2px_white] dark:shadow-[0_0_0_2px_#374151]"></span>
             </button>
 
             {/* Dropdown */}

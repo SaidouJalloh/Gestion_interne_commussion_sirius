@@ -1,6 +1,5 @@
 
 import { useDashboardData } from '../hooks/useDashboardData';
-import { DashboardHeader } from '../components/dashboard/DashboardHeader';
 import { KPICards } from '../components/dashboard/KPICards';
 import { EvolutionCharts } from '../components/dashboard/EvolutionCharts';
 import { TopTypesAssurance } from '../components/dashboard/TopTypesAssurance';
@@ -22,8 +21,6 @@ export default function Dashboard() {
 
     return (
         <div className="space-y-6">
-            <DashboardHeader />
-
             <KPICards stats={stats} />
 
             <EvolutionCharts graphiques={graphiques} />

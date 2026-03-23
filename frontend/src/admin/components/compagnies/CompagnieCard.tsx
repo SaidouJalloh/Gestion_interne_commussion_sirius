@@ -1,4 +1,5 @@
 import type { FC } from 'react';
+import { Edit2, Trash2, Settings } from 'lucide-react';
 import type { Tables } from '../../../types/supabase';
 import { getInitials } from '../../utils/compagnieHelpers';
 
@@ -20,7 +21,7 @@ export const CompagnieCard: FC<CompagnieCardProps> = ({
   canDelete,
 }) => {
   return (
-    <div className="bg-white rounded-xl shadow-soft hover:shadow-medium transition-all duration-300 overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-sm hover:shadow-md border border-slate-100 transition-all duration-300 overflow-hidden">
       <div className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -47,15 +48,15 @@ export const CompagnieCard: FC<CompagnieCardProps> = ({
               {getInitials(compagnie.sigle ?? '')}
             </div>
             <div>
-              <h3 className="font-bold text-gray-900">{compagnie.nom}</h3>
-              <p className="text-sm text-gray-500">{compagnie.sigle}</p>
+              <h3 className="font-bold text-slate-800">{compagnie.nom}</h3>
+              <p className="text-sm font-medium text-slate-500">{compagnie.sigle}</p>
             </div>
           </div>
           <span
-            className={`px-2 py-1 rounded-full text-xs font-medium ${
+            className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
               compagnie.actif
-                ? 'bg-success-100 text-success-700'
-                : 'bg-gray-100 text-gray-700'
+                ? 'bg-emerald-100/50 text-emerald-700 border border-emerald-200/50'
+                : 'bg-slate-100 text-slate-700 border border-slate-200'
             }`}
           >
             {compagnie.actif ? 'Actif' : 'Inactif'}
@@ -63,16 +64,16 @@ export const CompagnieCard: FC<CompagnieCardProps> = ({
         </div>
 
         {compagnie.description && (
-          <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+          <p className="text-sm text-slate-600 mb-4 line-clamp-2">
             {compagnie.description}
           </p>
         )}
 
         <div className="mb-4">
-          <p className="text-sm font-medium text-gray-700 mb-2">
+          <p className="text-xs uppercase tracking-wider font-semibold text-slate-500 mb-1">
             Types d&apos;assurances
           </p>
-          <p className="text-2xl font-bold text-primary-600">
+          <p className="text-2xl font-bold text-slate-800">
             {Object.keys((compagnie.taux_commissions as Record<string, unknown>) || {}).length}
           </p>
         </div>
@@ -81,50 +82,27 @@ export const CompagnieCard: FC<CompagnieCardProps> = ({
           <button
             type="button"
             onClick={() => onEditTaux(compagnie)}
-            className="flex-1 px-3 py-2 bg-primary-50 text-primary-600 rounded-lg hover:bg-primary-100 transition-colors text-sm font-medium"
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-50/50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors text-sm font-medium border border-blue-100/50"
           >
-            ⚙️ Gérer les taux
+            <Settings className="w-4 h-4" />
+            Gérer les taux
           </button>
           <button
             type="button"
             onClick={() => onEdit(compagnie)}
-            className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+            className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
             title="Modifier"
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-              />
-            </svg>
+            <Edit2 className="w-4 h-4" />
           </button>
           {canDelete && (
             <button
               type="button"
               onClick={() => onDelete(compagnie.id)}
-              className="p-2 text-danger-600 hover:bg-danger-50 rounded-lg transition-colors"
+              className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
               title="Supprimer"
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                />
-              </svg>
+              <Trash2 className="w-4 h-4" />
             </button>
           )}
         </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Search, SearchX, Building2 } from 'lucide-react';
 import { API_ENDPOINTS } from '../../config/api';
 import { apiRequest } from '../utils/apiClient';
 
@@ -115,20 +116,18 @@ export default function GlobalSearch() {
     return (
         <div ref={searchRef} className="relative flex-1 max-w-md">
             {/* Barre de recherche */}
-            <div className="relative">
+            <div className="relative w-full">
                 <input
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Rechercher clients, contrats, compagnies..."
-                    className="w-full pl-10 pr-4 py-2.5 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="Rechercher..."
+                    className="w-full pl-11 pr-4 py-2.5 bg-white dark:bg-[#13151A] border border-slate-200 dark:border-white/10 rounded-full focus:outline-none focus:ring-2 focus:ring-[#0066FF]/20 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 shadow-[0_2px_10px_rgba(0,0,0,0.02)] dark:shadow-none transition-shadow hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] dark:hover:shadow-none text-sm"
                 />
-                <svg className="absolute left-3 top-3 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-slate-400" />
                 {loading && (
-                    <div className="absolute right-3 top-3">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-600"></div>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-slate-200 border-t-[#0066FF]"></div>
                     </div>
                 )}
             </div>
@@ -138,9 +137,7 @@ export default function GlobalSearch() {
                 <div className="absolute top-full mt-2 w-full bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 max-h-96 overflow-y-auto z-50">
                     {getTotalResults() === 0 ? (
                         <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-                            <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+                            <SearchX className="w-12 h-12 mx-auto mb-3 opacity-50" />
                             <p>Aucun résultat pour "{query}"</p>
                         </div>
                     ) : (
@@ -230,9 +227,7 @@ export default function GlobalSearch() {
                                             className="w-full px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left flex items-center gap-3"
                                         >
                                             <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-                                                <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                                </svg>
+                                                <Building2 className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                                             </div>
                                             <div className="flex-1">
                                                 <p className="font-medium text-gray-900 dark:text-white">{compagnie.nom}</p>
