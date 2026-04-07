@@ -1,12 +1,20 @@
 import type { FC, FormEvent } from 'react';
 import { useState, useCallback } from 'react';
-import { X, AlertCircle, Save, Info } from 'lucide-react';
+import { X, AlertCircle, Save, Info, Settings, Building2, ToggleLeft, ToggleRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { LogoUpload } from './LogoUpload';
 import { useCompagniesMutations } from '../../hooks/useCompagniesMutations';
 import type { Tables } from '../../../types/supabase';
 
 type Compagnie = Tables<'compagnies'>;
+
+type ApiConfigForm = {
+    enabled: boolean;
+    provider: string;
+    base_url: string;
+    app_client: string;
+    pv_code: string;
+};
 
 export type CompagnieFormData = {
     nom: string;
@@ -15,6 +23,7 @@ export type CompagnieFormData = {
     logo_url: string;
     lien_souscription: string;
     actif: boolean;
+    api_config: ApiConfigForm;
 };
 
 type CompagnieModalProps = {
@@ -26,6 +35,8 @@ type CompagnieModalProps = {
     onSuccess: () => void | Promise<void>;
 };
 
+type Tab = 'general' | 'api';
+
 export const CompagnieModal: FC<CompagnieModalProps> = ({
     isOpen,
     onClose,
@@ -36,6 +47,7 @@ export const CompagnieModal: FC<CompagnieModalProps> = ({
 }) => {
     const [formLoading, setFormLoading] = useState(false);
     const [formError, setFormError] = useState('');
+    const [activeTab, setActiveTab] = useState<Tab>('general');
     const { createCompagnie, updateCompagnie } = useCompagniesMutations();
 
     const handleChange = useCallback(
@@ -43,6 +55,16 @@ export const CompagnieModal: FC<CompagnieModalProps> = ({
             const value =
                 e.target.type === 'checkbox' ? e.target.checked : e.target.value;
             setFormData((prev) => ({ ...prev, [e.target.name]: value }));
+        },
+        [setFormData],
+    );
+
+    const handleApiConfigChange = useCallback(
+        (field: keyof ApiConfigForm, value: string | boolean) => {
+            setFormData((prev) => ({
+                ...prev,
+                api_config: { ...prev.api_config, [field]: value },
+            }));
         },
         [setFormData],
     );
@@ -78,27 +100,57 @@ export const CompagnieModal: FC<CompagnieModalProps> = ({
                     }
                 }
 
-                const dataToSubmit = {
+                // Validate API config if enabled
+                if (formData.api_config.enabled) {
+                    if (!formData.api_config.base_url?.trim()) {
+                        setFormError('L\'URL de base de l\'API est obligatoire');
+                        setActiveTab('api');
+                        setFormLoading(false);
+                        return;
+                    }
+                    if (!formData.api_config.app_client?.trim()) {
+                        setFormError('Le App Client est obligatoire');
+                        setActiveTab('api');
+                        setFormLoading(false);
+                        return;
+                    }
+                    if (!formData.api_config.pv_code?.trim()) {
+                        setFormError('Le Code PV est obligatoire');
+                        setActiveTab('api');
+                        setFormLoading(false);
+                        return;
+                    }
+                }
+
+                const dataToSubmit: Record<string, unknown> = {
                     nom: formData.nom.trim(),
                     sigle: formData.sigle.trim().toUpperCase(),
                     description: formData.description?.trim() || '',
                     logo_url: formData.logo_url || '',
                     lien_souscription: formData.lien_souscription?.trim() || null,
                     actif: formData.actif,
+                    api_config: formData.api_config.enabled
+                        ? {
+                            provider: formData.api_config.provider,
+                            base_url: formData.api_config.base_url.trim(),
+                            app_client: formData.api_config.app_client.trim(),
+                            pv_code: formData.api_config.pv_code.trim(),
+                        }
+                        : null,
                 };
 
                 if (selectedCompagnie) {
-                    const promise = updateCompagnie(selectedCompagnie.id, dataToSubmit);
+                    const promise = updateCompagnie(selectedCompagnie.id, dataToSubmit as any);
                     await toast.promise(promise, {
                         loading: 'Mise à jour...',
-                        success: 'Compagnie mise à jour ! 🎉',
+                        success: 'Compagnie mise à jour !',
                         error: 'Erreur lors de la mise à jour',
                     });
                 } else {
-                    const promise = createCompagnie(dataToSubmit);
+                    const promise = createCompagnie(dataToSubmit as any);
                     await toast.promise(promise, {
                         loading: 'Création...',
-                        success: 'Compagnie créée ! 🎉',
+                        success: 'Compagnie créée !',
                         error: 'Erreur lors de la création',
                     });
                 }
@@ -118,11 +170,17 @@ export const CompagnieModal: FC<CompagnieModalProps> = ({
 
     const handleClose = useCallback(() => {
         if (!formLoading) {
+            setActiveTab('general');
             onClose();
         }
     }, [formLoading, onClose]);
 
     if (!isOpen) return null;
+
+    const tabs: { key: Tab; label: string; icon: typeof Building2 }[] = [
+        { key: 'general', label: 'Informations', icon: Building2 },
+        { key: 'api', label: 'Configuration API', icon: Settings },
+    ];
 
     return (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
@@ -141,6 +199,25 @@ export const CompagnieModal: FC<CompagnieModalProps> = ({
                     </button>
                 </div>
 
+                {/* Tabs */}
+                <div className="flex border-b border-slate-100 px-6">
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.key}
+                            type="button"
+                            onClick={() => setActiveTab(tab.key)}
+                            className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${
+                                activeTab === tab.key
+                                    ? 'border-blue-600 text-blue-600'
+                                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                            }`}
+                        >
+                            <tab.icon className="w-4 h-4" />
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
+
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
                     {formError && (
                         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-center gap-2 font-medium">
@@ -149,94 +226,196 @@ export const CompagnieModal: FC<CompagnieModalProps> = ({
                         </div>
                     )}
 
-                    <div>
-                        <label className="block text-sm font-medium mb-2">
-                            Nom de la compagnie <span className="text-danger-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            name="nom"
-                            value={formData.nom}
-                            onChange={handleChange}
-                            className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all"
-                            required
-                            placeholder="Ex: ASKIA ASSURANCES"
-                            disabled={formLoading}
-                        />
-                    </div>
+                    {/* Tab: Informations generales */}
+                    {activeTab === 'general' && (
+                        <>
+                            <div>
+                                <label className="block text-sm font-medium mb-2">
+                                    Nom de la compagnie <span className="text-danger-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    name="nom"
+                                    value={formData.nom}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+                                    required
+                                    placeholder="Ex: ASKIA ASSURANCES"
+                                    disabled={formLoading}
+                                />
+                            </div>
 
-                    <div>
-                        <label className="block text-sm font-medium mb-2">
-                            Sigle <span className="text-danger-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            name="sigle"
-                            value={formData.sigle}
-                            onChange={handleChange}
-                            className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all uppercase"
-                            required
-                            placeholder="Ex: ASKIA"
-                            disabled={formLoading}
-                            maxLength={10}
-                        />
-                        <p className="text-xs text-gray-500 mt-1">
-                            Le sigle sera automatiquement en majuscules
-                        </p>
-                    </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-2">
+                                    Sigle <span className="text-danger-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    name="sigle"
+                                    value={formData.sigle}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all uppercase"
+                                    required
+                                    placeholder="Ex: ASKIA"
+                                    disabled={formLoading}
+                                    maxLength={10}
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Le sigle sera automatiquement en majuscules
+                                </p>
+                            </div>
 
-                    <LogoUpload
-                        currentLogo={formData.logo_url}
-                        onLogoChange={handleLogoChange}
-                    />
+                            <LogoUpload
+                                currentLogo={formData.logo_url}
+                                onLogoChange={handleLogoChange}
+                            />
 
-                    <div>
-                        <label className="block text-sm font-medium mb-2">Description</label>
-                        <textarea
-                            name="description"
-                            value={formData.description}
-                            onChange={handleChange}
-                            rows={3}
-                            className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none resize-none transition-all"
-                            placeholder="Description de la compagnie..."
-                            disabled={formLoading}
-                        />
-                    </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-2">Description</label>
+                                <textarea
+                                    name="description"
+                                    value={formData.description}
+                                    onChange={handleChange}
+                                    rows={3}
+                                    className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none resize-none transition-all"
+                                    placeholder="Description de la compagnie..."
+                                    disabled={formLoading}
+                                />
+                            </div>
 
-                    <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4">
-                        <label className="block text-sm font-bold text-blue-900 mb-2 flex items-center gap-2">
-                            Lien de souscription
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">Optionnel</span>
-                        </label>
-                        <input
-                            type="url"
-                            name="lien_souscription"
-                            value={formData.lien_souscription || ''}
-                            onChange={handleChange}
-                            className="w-full px-4 py-2 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white font-medium text-slate-700"
-                            placeholder="https://portail-compagnie.com/login"
-                            disabled={formLoading}
-                        />
-                        <div className="flex items-start gap-2 mt-3">
-                            <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
-                            <p className="text-xs text-blue-700 font-medium">
-                                Ce lien permettra d&apos;accéder au portail de souscription de
-                                cette compagnie depuis le menu <strong>Souscription</strong>.
-                            </p>
-                        </div>
-                    </div>
+                            <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4">
+                                <label className="block text-sm font-bold text-blue-900 mb-2 flex items-center gap-2">
+                                    Lien de souscription
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">Optionnel</span>
+                                </label>
+                                <input
+                                    type="url"
+                                    name="lien_souscription"
+                                    value={formData.lien_souscription || ''}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-2 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white font-medium text-slate-700"
+                                    placeholder="https://portail-compagnie.com/login"
+                                    disabled={formLoading}
+                                />
+                                <div className="flex items-start gap-2 mt-3">
+                                    <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                                    <p className="text-xs text-blue-700 font-medium">
+                                        Ce lien permettra d&apos;accéder au portail de souscription de
+                                        cette compagnie depuis le menu <strong>Souscription</strong>.
+                                    </p>
+                                </div>
+                            </div>
 
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            name="actif"
-                            checked={formData.actif}
-                            onChange={handleChange}
-                            className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
-                            disabled={formLoading}
-                        />
-                        <label className="text-sm font-medium">Compagnie active</label>
-                    </div>
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    name="actif"
+                                    checked={formData.actif}
+                                    onChange={handleChange}
+                                    className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                                    disabled={formLoading}
+                                />
+                                <label className="text-sm font-medium">Compagnie active</label>
+                            </div>
+                        </>
+                    )}
+
+                    {/* Tab: Configuration API */}
+                    {activeTab === 'api' && (
+                        <>
+                            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                <div>
+                                    <p className="text-sm font-bold text-slate-800">
+                                        Activer l&apos;intégration API
+                                    </p>
+                                    <p className="text-xs text-slate-500 mt-0.5">
+                                        Permet la simulation de tarifs et l&apos;accès aux référentiels
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => handleApiConfigChange('enabled', !formData.api_config.enabled)}
+                                    className="flex-shrink-0"
+                                    disabled={formLoading}
+                                >
+                                    {formData.api_config.enabled ? (
+                                        <ToggleRight className="w-10 h-10 text-blue-600" />
+                                    ) : (
+                                        <ToggleLeft className="w-10 h-10 text-slate-400" />
+                                    )}
+                                </button>
+                            </div>
+
+                            {formData.api_config.enabled && (
+                                <div className="space-y-4 animate-fade-in">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">
+                                            Fournisseur <span className="text-danger-500">*</span>
+                                        </label>
+                                        <select
+                                            value={formData.api_config.provider}
+                                            onChange={(e) => handleApiConfigChange('provider', e.target.value)}
+                                            className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all bg-white"
+                                            disabled={formLoading}
+                                        >
+                                            <option value="askia">ASKIA</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">
+                                            URL de base <span className="text-danger-500">*</span>
+                                        </label>
+                                        <input
+                                            type="url"
+                                            value={formData.api_config.base_url}
+                                            onChange={(e) => handleApiConfigChange('base_url', e.target.value)}
+                                            className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all font-mono text-sm"
+                                            placeholder="https://api.askia.com"
+                                            disabled={formLoading}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">
+                                            App Client <span className="text-danger-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={formData.api_config.app_client}
+                                            onChange={(e) => handleApiConfigChange('app_client', e.target.value)}
+                                            className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+                                            placeholder="Identifiant client ASKIA"
+                                            disabled={formLoading}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">
+                                            Code PV <span className="text-danger-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={formData.api_config.pv_code}
+                                            onChange={(e) => handleApiConfigChange('pv_code', e.target.value)}
+                                            className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+                                            placeholder="Code point de vente"
+                                            disabled={formLoading}
+                                        />
+                                    </div>
+
+                                    <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                                        <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                                        <p className="text-xs text-amber-700 font-medium">
+                                            Ces informations sont fournies par votre partenaire ASKIA.
+                                            Elles permettent d&apos;effectuer des simulations de tarifs
+                                            et d&apos;accéder aux données référentielles.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    )}
 
                     <div className="flex gap-3 pt-4 border-t border-slate-100">
                         <button
@@ -270,5 +449,3 @@ export const CompagnieModal: FC<CompagnieModalProps> = ({
         </div>
     );
 };
-
-

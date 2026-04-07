@@ -5,8 +5,10 @@ import { useVehicules } from '../../hooks/useVehicules';
 import { useClientsMutations } from '../../hooks/useClientsMutations';
 import { useContractsMutations } from '../../hooks/useContractsMutations';
 import { VehiculesInput } from './VehiculesInput';
+import { SimulationForm } from './SimulationForm';
 import { API_ENDPOINTS } from '../../../config/api';
 import { apiRequest } from '../../utils/apiClient';
+import type { SimulationResult } from '../../hooks/useInsuranceProvider';
 
 type TauxSante = {
     commission_base: number;
@@ -36,6 +38,7 @@ export type ContratFormData = Record<string, unknown> & {
     taux_commission: string | number | null;
     commission: string | number | null;
     is_flotte?: boolean;
+    provider_ref?: Record<string, unknown> | null;
 };
 
 type ContratLike = Record<string, unknown> & { id: string };
@@ -215,6 +218,7 @@ export const ContratModal = ({
                 commission: commission,
                 evacuation_sanitaire: toNullableNumber(formData.evacuation_sanitaire),
                 prime_regulation: toNullableNumber(formData.prime_regulation),
+                provider_ref: formData.provider_ref ?? undefined,
             };
 
             if (selectedContrat) {
@@ -275,6 +279,33 @@ export const ContratModal = ({
 
     const handleVehiculesChange = (newVehicules: VehiculeLike[]) => {
         setLocalVehicules(newVehicules);
+    };
+
+    // Check if selected compagnie has an API provider configured
+    const selectedCompagnie = compagnies.find(c => c.id === formData.compagnie_id);
+    const hasProvider = !!(
+        selectedCompagnie &&
+        (selectedCompagnie as any).api_config &&
+        typeof (selectedCompagnie as any).api_config === 'object' &&
+        (selectedCompagnie as any).api_config.provider
+    );
+
+    const handleSimulationResult = (result: SimulationResult) => {
+        setFormData(prev => ({
+            ...prev,
+            prime_ttc: String(result.prime_ttc),
+            prime_nette: String(result.prime_nette),
+            montant_accessoire: String(result.accessoire),
+            fga: String(result.fga),
+            taxes: String(result.taxe),
+            commission: String(result.commission),
+            taux_commission: prev.taux_commission || '0',
+            provider_ref: {
+                provider: ((selectedCompagnie as any)?.api_config as any)?.provider ?? 'unknown',
+                id_saisie: result.id_saisie,
+                simulated_at: new Date().toISOString(),
+            },
+        }));
     };
 
     return (
@@ -409,67 +440,93 @@ export const ContratModal = ({
                         </div>
                     )}
 
-                    <div className="grid md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-2">Prime TTC (FCFA) <span className="text-danger-500">*</span></label>
-                            <input type="number" step="0.01" name="prime_ttc" value={formData.prime_ttc ?? ''} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" required />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-2">Taux de commission <span className="text-danger-500">*</span></label>
-                            <div className="relative">
-                                <input type="number" step="0.01" name="taux_commission" value={formData.taux_commission ?? ''} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none pr-12" required />
-                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">%</span>
+                    {/* ─── Simulation Form (when provider configured) ─── */}
+                    {hasProvider && formData.type_contrat && !selectedContrat && (
+                        <SimulationForm
+                            compagnieId={formData.compagnie_id}
+                            typeContrat={formData.type_contrat}
+                            onSimulationResult={handleSimulationResult}
+                        />
+                    )}
+
+                    {/* ─── Manual premium inputs (when NO provider or editing) ─── */}
+                    {(!hasProvider || selectedContrat) && (
+                        <>
+                            <div className="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Prime TTC (FCFA) <span className="text-danger-500">*</span></label>
+                                    <input type="number" step="0.01" name="prime_ttc" value={formData.prime_ttc ?? ''} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" required />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Taux de commission <span className="text-danger-500">*</span></label>
+                                    <div className="relative">
+                                        <input type="number" step="0.01" name="taux_commission" value={formData.taux_commission ?? ''} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none pr-12" required />
+                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">%</span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
 
-                    {/* ✅ MODIFICATION : Grille adaptative selon le type de contrat */}
-                    <div className={`grid gap-4 ${isAutoContract(formData.type_contrat) ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
-                        <div>
-                            <label className="block text-sm font-medium mb-2">Montant accessoire (FCFA)</label>
-                            <input type="number" step="0.01" name="montant_accessoire" value={formData.montant_accessoire ?? ''} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" />
-                        </div>
+                            <div className={`grid gap-4 ${isAutoContract(formData.type_contrat) ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Montant accessoire (FCFA)</label>
+                                    <input type="number" step="0.01" name="montant_accessoire" value={formData.montant_accessoire ?? ''} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" />
+                                </div>
 
-                        {/* ✅ FGA - Uniquement pour Auto/Moto/Flotte */}
-                        {isAutoContract(formData.type_contrat) && (
-                            <div>
-                                <label className="block text-sm font-medium mb-2">
-                                    FGA (FCFA)
-                                    <span className="text-xs text-primary-600 ml-2">(Fonds de Garantie Auto)</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    name="fga"
-                                    value={formData.fga ?? ''}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                                    placeholder="0.00"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">
-                                    ⚠️ Uniquement pour Auto, Moto et Flotte
+                                {isAutoContract(formData.type_contrat) && (
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">
+                                            FGA (FCFA)
+                                            <span className="text-xs text-primary-600 ml-2">(Fonds de Garantie Auto)</span>
+                                        </label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            name="fga"
+                                            value={formData.fga ?? ''}
+                                            onChange={handleChange}
+                                            className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                                            placeholder="0.00"
+                                        />
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            Uniquement pour Auto, Moto et Flotte
+                                        </p>
+                                    </div>
+                                )}
+
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Taxes (FCFA)</label>
+                                    <input type="number" step="0.01" name="taxes" value={formData.taxes ?? ''} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" />
+                                </div>
+                            </div>
+
+                            <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-4">
+                                <label className="block text-sm font-medium mb-2">Prime nette calculee (FCFA)</label>
+                                <input type="number" step="0.01" name="prime_nette" value={formData.prime_nette ?? ''} className="w-full px-4 py-2.5 border rounded-lg bg-white font-semibold text-primary-600" readOnly />
+                                <p className="text-xs text-gray-600 mt-1">
+                                    {isAutoContract(formData.type_contrat)
+                                        ? "Prime TTC - Accessoires - FGA - Taxes"
+                                        : formData.type_contrat && isSanteContract(formData.type_contrat)
+                                            ? "Prime TTC - Frais gestion - Taxes - Assistance"
+                                            : "Prime TTC - Accessoires - Taxes"}
                                 </p>
                             </div>
-                        )}
+                        </>
+                    )}
 
-                        <div>
-                            <label className="block text-sm font-medium mb-2">Taxes (FCFA)</label>
-                            <input type="number" step="0.01" name="taxes" value={formData.taxes ?? ''} onChange={handleChange} className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" />
+                    {/* ─── Summary when values come from simulation ─── */}
+                    {hasProvider && formData.provider_ref && !selectedContrat && (
+                        <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-4 space-y-2">
+                            <p className="text-sm font-medium text-slate-700">Valeurs issues de la simulation</p>
+                            <div className="grid grid-cols-3 gap-3 text-sm">
+                                <div><span className="text-slate-500">Prime TTC:</span> <span className="font-semibold">{Number(formData.prime_ttc).toLocaleString('fr-FR')} FCFA</span></div>
+                                <div><span className="text-slate-500">Prime nette:</span> <span className="font-semibold">{Number(formData.prime_nette).toLocaleString('fr-FR')} FCFA</span></div>
+                                <div><span className="text-slate-500">FGA:</span> <span className="font-semibold">{Number(formData.fga).toLocaleString('fr-FR')} FCFA</span></div>
+                                <div><span className="text-slate-500">Taxes:</span> <span className="font-semibold">{Number(formData.taxes).toLocaleString('fr-FR')} FCFA</span></div>
+                                <div><span className="text-slate-500">Accessoire:</span> <span className="font-semibold">{Number(formData.montant_accessoire).toLocaleString('fr-FR')} FCFA</span></div>
+                                <div><span className="text-slate-500">Commission:</span> <span className="font-semibold">{Number(formData.commission).toLocaleString('fr-FR')} FCFA</span></div>
+                            </div>
                         </div>
-                    </div>
-
-                    <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-4">
-                        <label className="block text-sm font-medium mb-2">Prime nette calculée (FCFA)</label>
-                        <input type="number" step="0.01" name="prime_nette" value={formData.prime_nette ?? ''} className="w-full px-4 py-2.5 border rounded-lg bg-white font-semibold text-primary-600" readOnly />
-                        {/* ✅ MODIFICATION : Formule adaptée selon le type de contrat (3 cas) */}
-                        <p className="text-xs text-gray-600 mt-1">
-                            {isAutoContract(formData.type_contrat)
-                                ? "Prime TTC - Accessoires - FGA - Taxes"
-                                : formData.type_contrat && isSanteContract(formData.type_contrat)
-                                    ? "Prime TTC - Frais gestion - Taxes - Assistance"
-                                    : "Prime TTC - Accessoires - Taxes"}
-                        </p>
-                    </div>
+                    )}
 
                     {formData.type_contrat && isSanteContract(formData.type_contrat) && (
                         <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 space-y-4">

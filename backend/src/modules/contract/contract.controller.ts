@@ -111,6 +111,7 @@ export class ContractController {
           payload.prime_ttc_initial === null || typeof payload.prime_ttc_initial === 'undefined'
             ? null
             : toDecimalString(payload.prime_ttc_initial as any),
+        provider_ref: payload.provider_ref ?? undefined,
       };
 
       const created = await service.create(data, organizationId);

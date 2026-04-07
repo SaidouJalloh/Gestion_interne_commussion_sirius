@@ -13,6 +13,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import { useKeyboard } from '../hooks/useKeyboard';
 import { useContratsData } from '../hooks/useContratsData';
 import { useContractsMutations } from '../hooks/useContractsMutations';
+import { useInsuranceProvider } from '../hooks/useInsuranceProvider';
 import { ContratsFilters } from '../components/contrats/ContratsFilters';
 import { ContratsTable } from '../components/contrats/ContratsTable';
 import { ContratModal, type ContratFormData } from '../components/contrats/ContratModal';
@@ -38,6 +39,7 @@ export default function Contrats() {
     const { profile } = useProfileContext();
     const { contrats, clients, compagnies, loading, refetch } = useContratsData();
     const { deleteContract } = useContractsMutations();
+    const { fetchReferentiel } = useInsuranceProvider();
 
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [filterStatut, setFilterStatut] = useState<string>('all');
@@ -73,6 +75,7 @@ export default function Contrats() {
         client_email: '',
         evacuation_sanitaire: '',
         prime_regulation: '',
+        provider_ref: null,
     });
 
     const [typesDisponibles, setTypesDisponibles] = useState<string[]>([]);
@@ -110,21 +113,31 @@ export default function Contrats() {
     }, [contrats, debouncedSearch, filterStatut]);
 
     useEffect(() => {
-        if (formData.compagnie_id) {
-            const compagnie: any = compagnies.find((c: any) => c.id === formData.compagnie_id);
-            if (compagnie?.taux_commissions) {
-                const types = Object.keys(compagnie.taux_commissions);
-                setTypesDisponibles(types);
-            } else {
-                setTypesDisponibles([]);
-            }
-        } else {
+        if (!formData.compagnie_id) {
             setTypesDisponibles([]);
             setTauxSante(null);
+            return;
         }
-    }, [formData.compagnie_id, compagnies]);
+
+        const compagnie: any = compagnies.find((c: any) => c.id === formData.compagnie_id);
+        const hasApiConfig = compagnie?.api_config?.provider;
+
+        if (hasApiConfig) {
+            // Show the 4 main ASKIA product types
+            setTypesDisponibles(['AUTOMOBILE', 'VOYAGE', 'MRH', 'RAPATRIEMENT']);
+        } else if (compagnie?.taux_commissions) {
+            setTypesDisponibles(Object.keys(compagnie.taux_commissions));
+        } else {
+            setTypesDisponibles([]);
+        }
+    }, [formData.compagnie_id, compagnies, fetchReferentiel]);
 
     useEffect(() => {
+        // Reset provider_ref when type changes (new simulation needed)
+        if (formData.provider_ref) {
+            setFormData(prev => ({ ...prev, provider_ref: null }));
+        }
+
         if (formData.compagnie_id && formData.type_contrat) {
             const compagnie: any = compagnies.find((c: any) => c.id === formData.compagnie_id);
 
@@ -165,6 +178,9 @@ export default function Contrats() {
     }, [formData.type_contrat, formData.fga]);
 
     useEffect(() => {
+        // Skip auto-calculation when values come from provider simulation
+        if (formData.provider_ref) return;
+
         const typeContrat = String(formData.type_contrat ?? '');
         const primeTtc = parseFloat(String(formData.prime_ttc ?? 0)) || 0;
         const accessoire = parseFloat(String(formData.montant_accessoire ?? 0)) || 0;
@@ -201,9 +217,13 @@ export default function Contrats() {
         formData.evacuation_sanitaire,
         formData.type_contrat,
         formData.prime_nette,
+        formData.provider_ref,
     ]);
 
     useEffect(() => {
+        // Skip auto-calculation when values come from provider simulation
+        if (formData.provider_ref) return;
+
         if (!formData.prime_nette || !formData.taux_commission) {
             return;
         }
@@ -241,6 +261,7 @@ export default function Contrats() {
         formData.evacuation_sanitaire,
         formData.prime_regulation,
         formData.prime_nette,
+        formData.provider_ref,
         tauxSante,
     ]);
 
@@ -266,6 +287,7 @@ export default function Contrats() {
             client_email: '',
             evacuation_sanitaire: '',
             prime_regulation: '',
+            provider_ref: null,
         });
         setTypesDisponibles([]);
         setTauxSante(null);

@@ -16,6 +16,14 @@ import type { Tables } from '../../types/supabase';
 type Compagnie = Tables<'compagnies'>;
 type Profile = Tables<'profiles'>;
 
+type ApiConfigForm = {
+  enabled: boolean;
+  provider: string;
+  base_url: string;
+  app_client: string;
+  pv_code: string;
+};
+
 type CompagnieFormData = {
   nom: string;
   sigle: string;
@@ -23,6 +31,7 @@ type CompagnieFormData = {
   logo_url: string;
   lien_souscription: string;
   actif: boolean;
+  api_config: ApiConfigForm;
 };
 
 interface ProfileContextValue {
@@ -51,6 +60,7 @@ export default function Compagnies() {
     logo_url: '',
     lien_souscription: '',
     actif: true,
+    api_config: { enabled: false, provider: 'askia', base_url: '', app_client: '', pv_code: '' },
   });
 
   // ⚡ OPTIMISATION : Memoize le filtrage
@@ -77,6 +87,7 @@ export default function Compagnies() {
       logo_url: '',
       lien_souscription: '',
       actif: true,
+      api_config: { enabled: false, provider: 'askia', base_url: '', app_client: '', pv_code: '' },
     });
   }, []);
 
@@ -90,6 +101,7 @@ export default function Compagnies() {
   // ⚡ OPTIMISATION : useCallback pour handleEdit
   const handleEdit = useCallback((compagnie: Compagnie) => {
     setSelectedCompagnie(compagnie);
+    const cfg = (compagnie as any).api_config as Record<string, string> | null;
     setFormData({
       nom: compagnie.nom || '',
       sigle: compagnie.sigle || '',
@@ -97,6 +109,9 @@ export default function Compagnies() {
       logo_url: compagnie.logo_url || '',
       lien_souscription: compagnie.lien_souscription || '',
       actif: compagnie.actif ?? true,
+      api_config: cfg
+        ? { enabled: true, provider: cfg.provider || 'askia', base_url: cfg.base_url || '', app_client: cfg.app_client || '', pv_code: cfg.pv_code || '' }
+        : { enabled: false, provider: 'askia', base_url: '', app_client: '', pv_code: '' },
     });
     setIsModalOpen(true);
   }, []);

@@ -21,6 +21,7 @@ export interface CreateContractInput {
     taxes?: number | string | null;
     is_flotte?: boolean;
     prime_ttc_initial?: number | string | null;
+    provider_ref?: Record<string, unknown> | null;
 }
 
 export interface UpdateContractInput
@@ -134,6 +135,9 @@ export const createContractSchema: Schema<CreateContractInput> = {
             taxes: toNullableNumberLike(body.taxes) ?? undefined,
             is_flotte: typeof body.is_flotte === 'boolean' ? body.is_flotte : undefined,
             prime_ttc_initial: toNullableNumberLike(body.prime_ttc_initial) ?? undefined,
+            provider_ref: body.provider_ref && typeof body.provider_ref === 'object'
+                ? body.provider_ref as Record<string, unknown>
+                : undefined,
         };
     },
 };

@@ -17,7 +17,13 @@
       "Bash(netstat -ano)",
       "Bash(npm --version)",
       "Bash(ls /c/Users/diopb/dev/sirius/backend/node_modules/.bin/ts-node-dev*)",
-      "Bash(ls /c/Users/diopb/dev/sirius/frontend/node_modules/.bin/react-scripts*)"
+      "Bash(ls /c/Users/diopb/dev/sirius/frontend/node_modules/.bin/react-scripts*)",
+      "Bash(taskkill //F //PID 23420)",
+      "Bash(npx prisma:*)",
+      "Bash(PGPASSWORD=\"599TqYSpGKQo5qjn\" psql -h aws-1-eu-north-1.pooler.supabase.com -p 5432 -U postgres.vyuhqagimyvfrkuhkfyy -d postgres -c \":*)",
+      "Bash(node -e \":*)",
+      "Bash(git add:*)",
+      "Bash(git push:*)"
     ]
   }
 }

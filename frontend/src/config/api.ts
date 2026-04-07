@@ -149,6 +149,15 @@ export const API_ENDPOINTS = {
     createDevis: `${API_BASE_URL}/api/client-portal/devis`,
     inviteClient: (id: string) => `${API_BASE_URL}/api/clients/${id}/invite`,
   },
+
+  // Insurance Provider (simulation, referentiel)
+  insuranceProvider: {
+    simulate: `${API_BASE_URL}/api/insurance-provider/simulate`,
+    referentiel: (compagnieId: string) =>
+      `${API_BASE_URL}/api/insurance-provider/${compagnieId}/referentiel`,
+    info: (compagnieId: string) =>
+      `${API_BASE_URL}/api/insurance-provider/${compagnieId}/info`,
+  },
 } as const;
 
 /**

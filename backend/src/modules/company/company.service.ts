@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '../../core/prisma';
 import type {
   CreateCompanyInput,
@@ -77,6 +78,7 @@ export class CompanyService {
       lien_souscription:
         payload.lien_souscription?.trim() || undefined,
       actif: typeof payload.actif === 'boolean' ? payload.actif : true,
+      api_config: payload.api_config !== undefined ? (payload.api_config as any) : undefined,
     };
 
     const compagnie = await prisma.compagnies.create({ data });
@@ -95,7 +97,7 @@ export class CompanyService {
       return null;
     }
 
-    const data: UpdateCompanyInput = {};
+    const data: Record<string, unknown> = {};
 
     if (typeof payload.nom === 'string') {
       data.nom = payload.nom.trim();
@@ -124,6 +126,12 @@ export class CompanyService {
 
     if ('taux_commissions' in payload) {
       data.taux_commissions = payload.taux_commissions as unknown as any;
+    }
+
+    if ('api_config' in payload) {
+      (data as any).api_config = payload.api_config === null
+        ? Prisma.JsonNull
+        : payload.api_config as unknown as any;
     }
 
     const updated = await prisma.compagnies.update({

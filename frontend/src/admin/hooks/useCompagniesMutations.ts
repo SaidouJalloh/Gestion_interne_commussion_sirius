@@ -5,6 +5,13 @@ import { apiRequest } from '../utils/apiClient';
 
 type CompagnieRow = Tables<'compagnies'>;
 
+export type ApiConfig = {
+  provider: string;
+  base_url: string;
+  app_client: string;
+  pv_code: string;
+};
+
 export type CompagnieMutationPayload = {
   nom: string;
   sigle: string;
@@ -12,6 +19,7 @@ export type CompagnieMutationPayload = {
   logo_url?: string;
   lien_souscription?: string | null;
   actif: boolean;
+  api_config?: ApiConfig | null;
 };
 
 export const useCompagniesMutations = () => {

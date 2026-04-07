@@ -7,6 +7,7 @@ export interface CreateCompanyInput {
     logo_url?: string | null;
     lien_souscription?: string | null;
     actif?: boolean;
+    api_config?: { provider: string; base_url: string; [key: string]: unknown } | null;
 }
 
 export interface UpdateCompanyInput {
@@ -19,6 +20,7 @@ export interface UpdateCompanyInput {
     // JSON libre pour conserver la flexibilité actuelle des taux
     // et rester compatible avec le type Json du modèle Prisma.
     taux_commissions?: any;
+    api_config?: { provider: string; base_url: string; [key: string]: unknown } | null;
 }
 
 export interface CompanyIdParams {
@@ -59,6 +61,16 @@ export const createCompanySchema: Schema<CreateCompanyInput> = {
         const actif =
             typeof body.actif === 'boolean' ? body.actif : (true as boolean);
 
+        let api_config: CreateCompanyInput['api_config'] = undefined;
+        if (body.api_config && typeof body.api_config === 'object') {
+            const cfg = body.api_config as Record<string, unknown>;
+            if (typeof cfg.provider === 'string' && typeof cfg.base_url === 'string') {
+                api_config = cfg as CreateCompanyInput['api_config'];
+            }
+        } else if (body.api_config === null) {
+            api_config = null;
+        }
+
         return {
             nom,
             sigle,
@@ -66,6 +78,7 @@ export const createCompanySchema: Schema<CreateCompanyInput> = {
             logo_url,
             lien_souscription,
             actif,
+            api_config,
         };
     },
 };
@@ -127,6 +140,17 @@ export const updateCompanySchema: Schema<UpdateCompanyInput> = {
 
         if ('taux_commissions' in body) {
             result.taux_commissions = body.taux_commissions;
+        }
+
+        if ('api_config' in body) {
+            if (body.api_config === null) {
+                result.api_config = null;
+            } else if (typeof body.api_config === 'object') {
+                const cfg = body.api_config as Record<string, unknown>;
+                if (typeof cfg.provider === 'string' && typeof cfg.base_url === 'string') {
+                    result.api_config = cfg as UpdateCompanyInput['api_config'];
+                }
+            }
         }
 
         return result;
