@@ -10,8 +10,8 @@ import { supabase } from '../lib/supabaseClient';
  * sinon utilise l'URL par dÃ©faut en dÃ©veloppement
  */
 export const API_BASE_URL =
-  process.env.REACT_APP_API_URL && process.env.REACT_APP_API_URL.length > 0
-    ? process.env.REACT_APP_API_URL
+  import.meta.env.VITE_API_URL && import.meta.env.VITE_API_URL.length > 0
+    ? import.meta.env.VITE_API_URL
     : 'http://localhost:4000';
 
 /**
@@ -186,7 +186,7 @@ export const getApiHeaders = async (
   
   try {
     // Essayer d'abord depuis le storage directement (évite le blocage de getSession)
-    const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     if (supabaseUrl) {
       // Supabase stocke la session avec une clé basée sur l'URL du projet
       // Format: sb-{project_ref}-auth-token

@@ -122,7 +122,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(null);
 
             // Nettoyer localStorage (token Supabase + organisation)
-            const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
             if (supabaseUrl) {
                 const projectRef = supabaseUrl.replace(/https?:\/\//, '').split('.')[0];
                 localStorage.removeItem(`sb-${projectRef}-auth-token`);

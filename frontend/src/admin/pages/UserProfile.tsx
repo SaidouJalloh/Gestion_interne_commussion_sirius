@@ -52,7 +52,7 @@ export default function UserProfile() {
             const token = tokenResponse.data.session?.access_token;
             if (!token) throw new Error("Non authentifié");
 
-            const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:4000';
+            const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
             const res = await fetch(`${baseUrl}/api/users/me`, {
                 method: 'PATCH',
                 headers: {

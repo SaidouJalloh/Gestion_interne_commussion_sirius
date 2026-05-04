@@ -5,8 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import { useOrganization } from '../context/OrganizationContext';
 
 const API_BASE_URL =
-    process.env.REACT_APP_API_URL && process.env.REACT_APP_API_URL.length > 0
-        ? process.env.REACT_APP_API_URL
+    import.meta.env.VITE_API_URL && import.meta.env.VITE_API_URL.length > 0
+        ? import.meta.env.VITE_API_URL
         : 'http://localhost:4000';
 
 export default function Login() {

@@ -29,7 +29,7 @@ export const useOrganization = () => {
   return context;
 };
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 /**
  * Lit le token depuis localStorage sans passer par supabase.auth.getSession()
@@ -37,7 +37,7 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
  */
 function getTokenFromStorage(): string | null {
   try {
-    const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     if (!supabaseUrl) return null;
     const projectRef = supabaseUrl.replace(/https?:\/\//, '').split('.')[0];
     const storageKey = `sb-${projectRef}-auth-token`;
