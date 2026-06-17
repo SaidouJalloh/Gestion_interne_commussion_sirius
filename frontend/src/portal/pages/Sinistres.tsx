@@ -7,12 +7,12 @@ import { Card, Badge } from '../components/ui';
 type BadgeVariant = 'primary' | 'success' | 'warning' | 'danger' | 'secondary';
 
 const STATUS_MAP: Record<string, { label: string; variant: BadgeVariant }> = {
-  recu: { label: 'Recu', variant: 'primary' },
+  recu: { label: 'Reçu', variant: 'primary' },
   en_cours: { label: 'En cours', variant: 'warning' },
   expertise: { label: 'Expertise', variant: 'primary' },
-  traite: { label: 'Traite', variant: 'success' },
-  cloture: { label: 'Cloture', variant: 'secondary' },
-  rejete: { label: 'Rejete', variant: 'danger' },
+  traite: { label: 'Traité', variant: 'success' },
+  cloture: { label: 'Clôturé', variant: 'secondary' },
+  rejete: { label: 'Rejeté', variant: 'danger' },
 };
 
 const getStatusInfo = (statut: string) =>
@@ -59,7 +59,7 @@ const Sinistres: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Mes Sinistres</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
-            Suivez l'avancement de vos declarations de sinistres.
+            Suivez l'avancement de vos déclarations de sinistres.
           </p>
         </div>
         <button
@@ -67,7 +67,7 @@ const Sinistres: React.FC = () => {
           className="inline-flex items-center gap-2 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg shadow-primary-500/25 transition-all duration-200"
         >
           <Plus className="w-4 h-4" />
-          Declarer un sinistre
+          Déclarer un sinistre
         </button>
       </div>
 
@@ -80,10 +80,10 @@ const Sinistres: React.FC = () => {
             </div>
             <div className="text-center">
               <p className="text-gray-600 dark:text-gray-400 font-medium">
-                Aucun sinistre declare
+                Aucun sinistre déclaré
               </p>
               <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
-                Vos declarations de sinistres apparaitront ici.
+                Vos déclarations de sinistres apparaîtront ici.
               </p>
             </div>
           </div>

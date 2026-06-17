@@ -17,12 +17,12 @@ import { Card, Badge } from '../components/ui';
 type BadgeVariant = 'primary' | 'success' | 'warning' | 'danger' | 'secondary';
 
 const STATUS_MAP: Record<string, { label: string; variant: BadgeVariant }> = {
-  recu: { label: 'Recu', variant: 'primary' },
+  recu: { label: 'Reçu', variant: 'primary' },
   en_cours: { label: 'En cours', variant: 'warning' },
   expertise: { label: 'Expertise', variant: 'primary' },
-  traite: { label: 'Traite', variant: 'success' },
-  cloture: { label: 'Cloture', variant: 'secondary' },
-  rejete: { label: 'Rejete', variant: 'danger' },
+  traite: { label: 'Traité', variant: 'success' },
+  cloture: { label: 'Clôturé', variant: 'secondary' },
+  rejete: { label: 'Rejeté', variant: 'danger' },
 };
 
 const getStatusInfo = (statut: string) =>
@@ -97,7 +97,7 @@ const SinistreDetail: React.FC = () => {
       const response = await fetch(API_ENDPOINTS.clientPortal.sendMessage(id), {
         method: 'POST',
         headers,
-        body: JSON.stringify({ contenu: message.trim() }),
+        body: JSON.stringify({ message: message.trim() }),
       });
       const result = await response.json();
       if (result.success) {
@@ -209,7 +209,7 @@ const SinistreDetail: React.FC = () => {
                 <div className="absolute -left-4 top-1 w-3 h-3 rounded-full border-2 border-primary-500 bg-white dark:bg-gray-800" />
                 <div>
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {entry.action || entry.titre || 'Mise a jour'}
+                    {entry.action || entry.titre || 'Mise à jour'}
                   </p>
                   {entry.commentaire && (
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
@@ -293,7 +293,7 @@ const SinistreDetail: React.FC = () => {
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-bl-md'
                     }`}
                   >
-                    <p className="text-sm">{msg.contenu}</p>
+                    <p className="text-sm">{msg.message}</p>
                     <p
                       className={`text-xs mt-1 ${
                         isClient ? 'text-primary-200' : 'text-gray-400 dark:text-gray-500'
@@ -314,7 +314,7 @@ const SinistreDetail: React.FC = () => {
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Ecrire un message..."
+              placeholder="Écrire un message..."
               rows={2}
               className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-600 transition-all duration-200 resize-none dark:text-white text-sm"
             />

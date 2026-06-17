@@ -8,6 +8,14 @@ import { Card, Button, InputField, SelectField, TextAreaField, StepIndicator } f
 import { API_ENDPOINTS, getApiHeaders } from '../../config/api';
 import toast from 'react-hot-toast';
 
+const colorClasses: Record<string, { bg: string; text: string; darkBg: string; darkText: string }> = {
+  primary:   { bg: 'bg-primary-100',   text: 'text-primary-600',   darkBg: 'dark:bg-primary-900/30',   darkText: 'dark:text-primary-400' },
+  secondary: { bg: 'bg-secondary-100', text: 'text-secondary-600', darkBg: 'dark:bg-secondary-900/30', darkText: 'dark:text-secondary-400' },
+  success:   { bg: 'bg-success-100',   text: 'text-success-600',   darkBg: 'dark:bg-success-900/30',   darkText: 'dark:text-success-400' },
+  warning:   { bg: 'bg-warning-100',   text: 'text-warning-600',   darkBg: 'dark:bg-warning-900/30',   darkText: 'dark:text-warning-400' },
+  danger:    { bg: 'bg-danger-100',    text: 'text-danger-600',    darkBg: 'dark:bg-danger-900/30',    darkText: 'dark:text-danger-400' },
+};
+
 const insuranceTypes = [
   { id: 'auto', name: 'Automobile', icon: Car, color: 'primary', desc: 'Véhicules personnels et professionnels' },
   { id: 'habitation', name: 'Habitation', icon: Home, color: 'secondary', desc: 'Maison, appartement, studio' },
@@ -111,8 +119,8 @@ const DemandeDevis: React.FC = () => {
                     : ''
                 }`}
               >
-                <div className={`w-12 h-12 bg-${type.color}-100 dark:bg-${type.color}-900/30 rounded-xl flex items-center justify-center mx-auto mb-3`}>
-                  <type.icon className={`w-6 h-6 text-${type.color}-600 dark:text-${type.color}-400`} />
+                <div className={`w-12 h-12 ${colorClasses[type.color].bg} ${colorClasses[type.color].darkBg} rounded-xl flex items-center justify-center mx-auto mb-3`}>
+                  <type.icon className={`w-6 h-6 ${colorClasses[type.color].text} ${colorClasses[type.color].darkText}`} />
                 </div>
                 <p className="font-semibold text-gray-800 dark:text-white text-sm">{type.name}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{type.desc}</p>

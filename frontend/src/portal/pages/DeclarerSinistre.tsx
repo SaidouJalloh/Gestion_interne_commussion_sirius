@@ -26,14 +26,14 @@ import {
   StepIndicator,
 } from '../components/ui';
 
-const STEPS = ['Type de sinistre', 'Informations', 'Details', 'Confirmation'];
+const STEPS = ['Type de sinistre', 'Informations', 'Détails', 'Confirmation'];
 
 const SINISTRE_TYPES = [
   { value: 'accident_auto', label: 'Accident Auto', icon: Car, color: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800' },
   { value: 'vol', label: 'Vol', icon: ShieldAlert, color: 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800' },
-  { value: 'degat_des_eaux', label: 'Degat des Eaux', icon: Droplets, color: 'bg-cyan-50 dark:bg-cyan-900/20 text-cyan-600 dark:text-cyan-400 border-cyan-200 dark:border-cyan-800' },
+  { value: 'degat_des_eaux', label: 'Dégât des Eaux', icon: Droplets, color: 'bg-cyan-50 dark:bg-cyan-900/20 text-cyan-600 dark:text-cyan-400 border-cyan-200 dark:border-cyan-800' },
   { value: 'incendie', label: 'Incendie', icon: Flame, color: 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800' },
-  { value: 'sante', label: 'Sante', icon: Stethoscope, color: 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800' },
+  { value: 'sante', label: 'Santé', icon: Stethoscope, color: 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800' },
   { value: 'voyage', label: 'Voyage', icon: Plane, color: 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800' },
 ];
 
@@ -176,10 +176,10 @@ const DeclarerSinistre: React.FC = () => {
           <CheckCircle2 className="w-16 h-16 text-success-500" />
         </div>
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          Declaration envoyee !
+          Déclaration envoyée !
         </h2>
         <p className="text-gray-500 dark:text-gray-400 text-center max-w-md mb-6">
-          Votre declaration de sinistre a ete soumise avec succes. Vous pouvez suivre son avancement dans la liste de vos sinistres.
+          Votre déclaration de sinistre a été soumise avec succès. Vous pouvez suivre son avancement dans la liste de vos sinistres.
         </p>
         <Button onClick={() => navigate('/client/sinistres')} icon={ArrowRight} iconPosition="right">
           Voir mes sinistres
@@ -199,9 +199,9 @@ const DeclarerSinistre: React.FC = () => {
           <ArrowLeft className="w-4 h-4" />
           Retour aux sinistres
         </button>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Declarer un sinistre</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Déclarer un sinistre</h1>
         <p className="text-gray-500 dark:text-gray-400 mt-1">
-          Remplissez le formulaire ci-dessous pour declarer un nouveau sinistre.
+          Remplissez le formulaire ci-dessous pour déclarer un nouveau sinistre.
         </p>
       </div>
 
@@ -214,10 +214,10 @@ const DeclarerSinistre: React.FC = () => {
         {currentStep === 1 && (
           <div>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Quel type de sinistre souhaitez-vous declarer ?
+              Quel type de sinistre souhaitez-vous déclarer ?
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-              Selectionnez le type correspondant a votre situation.
+              Sélectionnez le type correspondant à votre situation.
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {SINISTRE_TYPES.map((type) => {
@@ -256,10 +256,10 @@ const DeclarerSinistre: React.FC = () => {
         {currentStep === 2 && (
           <div className="space-y-5">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Informations generales
+              Informations générales
             </h2>
             <SelectField
-              label="Contrat concerne"
+              label="Contrat concerné"
               required
               options={contratOptions}
               value={formData.contrat_id}
@@ -296,25 +296,25 @@ const DeclarerSinistre: React.FC = () => {
         {currentStep === 3 && (
           <div className="space-y-5">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Details du sinistre
+              Détails du sinistre
             </h2>
             <TextAreaField
               label="Description"
               required
-              placeholder="Decrivez brievement ce qui s'est passe..."
+              placeholder="Décrivez brièvement ce qui s'est passé..."
               value={formData.description}
               onChange={(e) => updateField('description', e.target.value)}
             />
             <TextAreaField
               label="Circonstances"
-              placeholder="Detaillez les circonstances du sinistre..."
-              helper="Indiquez les conditions, les temoins eventuels, etc."
+              placeholder="Détaillez les circonstances du sinistre..."
+              helper="Indiquez les conditions, les témoins éventuels, etc."
               value={formData.circonstances}
               onChange={(e) => updateField('circonstances', e.target.value)}
             />
             <TextAreaField
               label="Dommages constates"
-              placeholder="Listez les dommages materiels et/ou corporels..."
+              placeholder="Listez les dommages matériels et/ou corporels..."
               value={formData.dommages}
               onChange={(e) => updateField('dommages', e.target.value)}
             />
@@ -332,10 +332,10 @@ const DeclarerSinistre: React.FC = () => {
         {currentStep === 4 && (
           <div>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Recapitulatif
+              Récapitulatif
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-              Verifiez les informations avant de soumettre votre declaration.
+              Vérifiez les informations avant de soumettre votre déclaration.
             </p>
 
             <div className="space-y-4">
@@ -358,7 +358,7 @@ const DeclarerSinistre: React.FC = () => {
                   <span className="text-sm text-gray-500 dark:text-gray-400">Date</span>
                   <span className="text-sm font-medium text-gray-900 dark:text-white">
                     {formData.date_sinistre || 'N/A'}
-                    {formData.heure_sinistre ? ` a ${formData.heure_sinistre}` : ''}
+                    {formData.heure_sinistre ? ` à ${formData.heure_sinistre}` : ''}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -423,7 +423,7 @@ const DeclarerSinistre: React.FC = () => {
           disabled={currentStep === 1}
           icon={ArrowLeft}
         >
-          Precedent
+          Précédent
         </Button>
 
         {currentStep < 4 ? (
